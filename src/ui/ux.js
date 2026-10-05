@@ -34,7 +34,7 @@
     }
 
     /* ===================== 1. 收藏 / 最近使用 ===================== */
-    function favs() { return read(LS_FAV, []); }
+    function favs() { return read(LS_FAV, []).filter(function (id) { return window.TOOLS && !!window.TOOLS[id]; }); }
     function isFav(id) { return favs().indexOf(id) > -1; }
     function toggleFav(id) {
         var a = favs(), i = a.indexOf(id);
@@ -42,7 +42,7 @@
         write(LS_FAV, a);
         return i === -1;
     }
-    function recents() { return read(LS_RECENT, []); }
+    function recents() { return read(LS_RECENT, []).filter(function (id) { return window.TOOLS && !!window.TOOLS[id]; }); }
     function pushRecent(id) {
         if (!id) return;
         var a = recents().filter(function (x) { return x !== id; });

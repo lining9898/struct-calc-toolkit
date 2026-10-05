@@ -9,11 +9,9 @@ function renderHome() {
 
     // 动态统计工具数量
     var totalToolIds = Object.keys(window.TOOLS || {}).length;
-    var hasCalcAssistant = window.TOOLS && window.TOOLS['calc-assistant'];
     var hasLocalQA = window.TOOLS && window.TOOLS['local-qa'];
-    var nonCalcCount = (hasCalcAssistant ? 1 : 0) + (hasLocalQA ? 1 : 0);
+    var nonCalcCount = hasLocalQA ? 1 : 0;
     var calcToolCount = totalToolIds - nonCalcCount;
-    var aiCount = nonCalcCount;
 
     // 首页与侧栏共用一套分类，标题采用工具注册表中的正式名称。
     var groups = (window.NAV_GROUPS || []).map(function (g) {
@@ -53,12 +51,10 @@ function renderHome() {
         '<div class="home-stats">' +
             '<div class="stat"><span class="num">' + calcToolCount + '</span><span class="lbl">个专业计算工具</span></div>' +
             '<div class="stat"><span class="num">' + groups.length + '</span><span class="lbl">专业分组</span></div>' +
-            (aiCount > 0 ? '<div class="stat"><span class="num">' + aiCount + '</span><span class="lbl">个 AI 助手</span></div>' : '') +
             '<div class="stat"><span class="num">10+</span><span class="lbl">规范依据</span></div>' +
             '<div class="stat"><span class="num">Word</span><span class="lbl">计算书导出</span></div>' +
         '</div>' +
         '<div class="quick-entry">' +
-            '<a href="#/calc-assistant" class="assistant-entry">' + '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg> 智能计算助手</a>' +
             '<a href="#/beam-cont">' + iconFor('beam-rect', 16) + ' 连续梁计算</a>' +
             '<a href="#/footing-col" class="secondary">' + iconFor('footing-col', 16) + ' 柱下独立基础</a>' +
             '<a href="#/stage-check" class="secondary">' + iconFor('slab-rect', 16) + ' 叠合构件验算</a>' +
