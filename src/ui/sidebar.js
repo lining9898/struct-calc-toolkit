@@ -1,87 +1,40 @@
 /* ============================================================
- *  新侧边栏导航（9 大工程专业分类）
- *  运行时替换原有侧栏内容，保持工具 ID 与路由不变
- *  新分类：
- *    1 混凝土结构（梁/板/柱/墙/特殊构件）
- *    2 地基基础
- *    3 桩基础
- *    4 钢结构
- *    5 砌体结构
- *    6 装配式结构
- *    7 荷载与抗震
- *    8 规范库
- *    9 AI助手
+ *  统一专业目录：混凝土、地基、桩基、钢结构、砌体、装配式、
+ *  荷载抗震、水池挡土墙、配筋规范速查、计算助手。
+ *  首页和侧栏共用此数据；工具 ID、路由及计算模块保持不变。
  * ============================================================ */
 (function () {
     'use strict';
 
-    // 新的 9 大类导航数据
+    // 统一的 10 类工具目录
     // 每个分组: { id, title, icon, children: [{id, title}, ...] 或 子分组数组 }
     var NAV_GROUPS = [
         {
-            id: 'ai-assistant',
-            title: '智能计算助手',
-            isPrimary: true,
-            tools: [{ id: 'calc-assistant', title: '智能计算助手' }]
-        },
-        {
-            id: 'concrete',
-            title: '混凝土结构',
-            subgroups: [
-                {
-                    id: 'con-beam',
-                    title: '梁',
-                    tools: [
-                        { id: 'beam-rect', title: '矩形梁正截面承载力' },
-                        { id: 'beam-rect-design', title: '矩形梁正截面配筋设计' },
-                        { id: 'beam-t', title: 'T形梁正截面承载力' },
-                        { id: 'beam-shear', title: '梁斜截面受剪' },
-                        { id: 'beam-cont', title: '连续梁计算' },
-                        { id: 'addl-trans', title: '附加横向钢筋' },
-                        { id: 'deep-beam', title: '深受弯构件' }
-                    ]
-                },
-                {
-                    id: 'con-slab',
-                    title: '板',
-                    tools: [
-                        { id: 'slab-rect', title: '单块矩形板计算' },
-                        { id: 'stair-slab', title: '板式楼梯计算' }
-                    ]
-                },
-                {
-                    id: 'con-column',
-                    title: '柱',
-                    tools: [
-                        { id: 'column-axial', title: '轴心受压柱' },
-                        { id: 'col-tie', title: '柱箍筋加密区' }
-                    ]
-                },
-                {
-                    id: 'con-wall',
-                    title: '墙',
-                    tools: [
-                        { id: 'basement-wall', title: '地下室外墙' },
-                        { id: 'shear-wall', title: '剪力墙稳定' }
-                    ]
-                },
-                {
-                    id: 'con-special',
-                    title: '特殊构件',
-                    tools: [
-                        { id: 'crack-width', title: '裂缝宽度计算' },
-                        { id: 'deflection', title: '挠度验算' },
-                        { id: 'punching', title: '受冲切承载力' },
-                        { id: 'bearing-local', title: '混凝土局部受压' },
-                        { id: 'corbel', title: '牛腿设计' },
-                        { id: 'embed-plate', title: '预埋件计算' }
-                    ]
-                }
+            id: 'concrete', title: '混凝土结构', icon: 'beam-rect',
+            tools: [
+                { id: 'beam-rect', title: '矩形梁正截面承载力' },
+                { id: 'beam-rect-design', title: '矩形梁正截面配筋设计' },
+                { id: 'beam-t', title: 'T形梁正截面承载力' },
+                { id: 'beam-shear', title: '梁斜截面受剪' },
+                { id: 'beam-cont', title: '连续梁计算' },
+                { id: 'addl-trans', title: '附加横向钢筋' },
+                { id: 'deep-beam', title: '深受弯构件' },
+                { id: 'slab-rect', title: '单块矩形板计算' },
+                { id: 'stair-slab', title: '板式楼梯计算' },
+                { id: 'column-axial', title: '轴心受压柱' },
+                { id: 'col-tie', title: '柱箍筋加密区' },
+                { id: 'basement-wall', title: '地下室外墙' },
+                { id: 'shear-wall', title: '剪力墙稳定' },
+                { id: 'crack-width', title: '裂缝宽度计算' },
+                { id: 'deflection', title: '挠度验算' },
+                { id: 'punching', title: '受冲切承载力' },
+                { id: 'bearing-local', title: '混凝土局部受压' },
+                { id: 'corbel', title: '牛腿设计' },
+                { id: 'embed-plate', title: '预埋件计算' }
             ]
         },
         {
-            id: 'foundation',
-            title: '地基基础',
+            id: 'foundation', title: '地基基础', icon: 'footing-col',
             tools: [
                 { id: 'footing-col', title: '柱下独立基础' },
                 { id: 'footing-wall', title: '墙下条形基础' },
@@ -90,14 +43,11 @@
                 { id: 'bearing-theory', title: '承载力理论公式法' },
                 { id: 'soft-underlayer', title: '软弱下卧层验算' },
                 { id: 'anti-uplift', title: '抗浮稳定性验算' },
-                { id: 'rigid-found', title: '无筋扩展条形基础' },
-                { id: 'retain-cant', title: '悬臂式挡土墙' },
-                { id: 'retain-butt', title: '扶壁式挡土墙' }
+                { id: 'rigid-found', title: '无筋扩展条形基础' }
             ]
         },
         {
-            id: 'pile',
-            title: '桩基础',
+            id: 'pile', title: '桩基础', icon: 'pile-cap',
             tools: [
                 { id: 'pile-cap', title: '桩承台计算' },
                 { id: 'pile-single', title: '单桩竖向承载力' },
@@ -108,8 +58,7 @@
             ]
         },
         {
-            id: 'steel',
-            title: '钢结构',
+            id: 'steel', title: '钢结构', icon: 'steel-beam',
             tools: [
                 { id: 'steel-column', title: '钢压弯构件' },
                 { id: 'steel-beam', title: '钢连续梁' },
@@ -119,8 +68,7 @@
             ]
         },
         {
-            id: 'masonry',
-            title: '砌体结构',
+            id: 'masonry', title: '砌体结构', icon: 'mas-comp',
             tools: [
                 { id: 'mas-comp', title: '砌体受压与高厚比' },
                 { id: 'mas-local', title: '砌体局部受压' },
@@ -131,8 +79,7 @@
             ]
         },
         {
-            id: 'prefab',
-            title: '装配式结构',
+            id: 'prefab', title: '装配式结构', icon: 'slab-rect',
             tools: [
                 { id: 'stage-check', title: '叠合构件两阶段验算' },
                 { id: 'td-slab', title: '钢筋桁架楼板' },
@@ -142,8 +89,7 @@
             ]
         },
         {
-            id: 'load-seismic',
-            title: '荷载与抗震',
+            id: 'load-seismic', title: '荷载与抗震', icon: 'load-combo',
             tools: [
                 { id: 'load-combo', title: '荷载组合计算' },
                 { id: 'floor-live', title: '楼面活荷载查表' },
@@ -159,19 +105,30 @@
             ]
         },
         {
-            id: 'code-library',
-            title: '规范库',
+            id: 'special-structures', title: '水池与挡土墙', icon: 'pool-rect',
+            tools: [
+                { id: 'pool-rect', title: '矩形水池' },
+                { id: 'pool-circ', title: '圆形水池' },
+                { id: 'retain-cant', title: '悬臂式挡土墙' },
+                { id: 'retain-butt', title: '扶壁式挡土墙' }
+            ]
+        },
+        {
+            id: 'quick-reference', title: '配筋与规范速查', icon: 'ref',
             tools: [
                 { id: 'rebar-area', title: '钢筋面积速查' },
                 { id: 'rebar-pick', title: '配筋选筋助手' },
                 { id: 'local-qa', title: '规范条文问答（本地）' },
-                { id: 'rho-min', title: '最小配筋率速查' },
-                { id: 'pool-rect', title: '矩形水池（给排水）' },
-                { id: 'pool-circ', title: '圆形水池（给排水）' }
+                { id: 'rho-min', title: '最小配筋率速查' }
+            ]
+        },
+        {
+            id: 'ai-assistant', title: '计算助手', icon: 'ref',
+            tools: [
+                { id: 'calc-assistant', title: '智能计算助手' }
             ]
         }
     ];
-
     /* ============================================================
      *  图标：优先复用工具页头部图标（router.js 的 iconFor），
      *  保证左侧导航与右侧工具页图标完全一致；缺失的补在 EXTRA_ICONS。
@@ -224,7 +181,7 @@
         return '<a href="#/' + tool.id + '" class="nav" data-nav="' + tool.id + '"' +
             (gid ? ' data-group="' + gid + '"' : '') +
             (sid ? ' data-subgroup="' + sid + '"' : '') +
-            '>' + navIcon(tool.id) + '<span class="nav-text">' + tool.title + '</span></a>';
+            '>' + navIcon(tool.id) + '<span class="nav-text">' + ((window.TOOLS && window.TOOLS[tool.id] && window.TOOLS[tool.id].title) || tool.title) + '</span></a>';
     }
 
     function buildNavHtml() {
@@ -251,7 +208,7 @@
             }
 
             html += '<div class="nav-group" data-group="' + group.id + '">';
-            html += '<div class="group-title" data-toggle="' + group.id + '">' + CHEV +
+            html += '<div class="group-title" role="button" tabindex="0" aria-expanded="false" data-toggle="' + group.id + '">' + CHEV +
                 '<span class="group-name">' + group.title + '</span>' +
                 '<span class="group-count">' + countTools(group) + '</span></div>';
             html += '<div class="group-body" data-body="' + group.id + '">';
@@ -298,7 +255,7 @@
         var sub = link.closest ? link.closest('.nav-subgroup') : null;
         var group = link.closest ? link.closest('.nav-group') : null;
         if (sub) sub.classList.add('open');
-        if (group) group.classList.add('open');
+        if (group) { group.classList.add('open'); var heading = group.querySelector('.group-title'); if (heading) heading.setAttribute('aria-expanded', 'true'); }
         try {
             if (link.scrollIntoView) link.scrollIntoView({ block: 'nearest' });
         } catch (e) { /* 非浏览器环境忽略 */ }
@@ -317,7 +274,13 @@
         for (var i = 0; i < groupTitles.length; i++) {
             groupTitles[i].addEventListener('click', function () {
                 var group = this.closest('.nav-group');
-                if (group) group.classList.toggle('open');
+                if (group) { group.classList.toggle('open'); this.setAttribute('aria-expanded', String(group.classList.contains('open'))); }
+            });
+        }
+
+        for (var k = 0; k < groupTitles.length; k++) {
+            groupTitles[k].addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.click(); }
             });
         }
 
@@ -337,12 +300,6 @@
             if (typeof baseNavActive === 'function') baseNavActive(id);
             expandFor(id);
         };
-
-        // 默认展开：混凝土结构 → 梁
-        var firstGroup = sidebar.querySelector('.nav-group[data-group="concrete"]');
-        if (firstGroup) firstGroup.classList.add('open');
-        var firstSub = sidebar.querySelector('.nav-subgroup[data-subgroup="con-beam"]');
-        if (firstSub) firstSub.classList.add('open');
 
         // 重建后恢复当前工具的高亮（侧栏 DOM 被替换，原高亮会丢失）
         var cur = window.CUR_TOOL || (typeof parseHash === 'function' ? parseHash() : '');
