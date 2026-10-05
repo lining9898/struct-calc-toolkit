@@ -1,0 +1,229 @@
+/* 结构计算工具箱：统一布局、排版与响应式；加载在原样式之后。 */
+:root {
+  --primary: #245bc1;
+  --primary-deep: #19489f;
+  --primary-press: #14397d;
+  --primary-bg-subdued: #edf3ff;
+  --primary-line: #cbdaf5;
+  --canvas-soft: #f3f5f9;
+  --canvas-muted: #eaf0f7;
+  --hairline: #e2e7ef;
+  --hairline-input: #cbd4e1;
+  --ink: #18263d;
+  --ink-secondary: #43536a;
+  --ink-mute: #637188;
+  --ink-faint: #78869a;
+  --r-sm: 6px;
+  --r-md: 8px;
+  --r-lg: 12px;
+}
+body { font-size: 1rem; line-height: 1.65; }
+button, input, select, textarea { font-family: inherit; }
+.app { display: flex; align-items: flex-start; }
+.sidebar { width: 252px; flex-basis: 252px; height: 100dvh; }
+.sidebar .sidebar-head, .sidebar .brand { padding: 24px 20px; gap: 12px; min-height: 92px; }
+.sidebar .brand-mark { width: 36px; height: 36px; border-radius: 10px; background: var(--primary); color: white; }
+.sidebar .brand-mark svg { width: 20px; height: 20px; }
+.sidebar .app-name { font-size: 1rem; font-weight: 650; line-height: 1.5; letter-spacing: 0; }
+.sidebar .app-sub { font-size: .75rem; font-weight: 400; margin-top: 3px; }
+.sidebar nav { padding: 16px 12px; }
+.nav-group { margin-bottom: 10px; }
+.group-title, .sidebar .group-label { font-size: .875rem; font-weight: 600; padding: 10px 10px; letter-spacing: 0; }
+.subgroup-title { font-size: .875rem; padding: 8px; }
+.group-count { font-size: .75rem; }
+.sidebar a.nav { min-height: 40px; padding: 9px 10px; font-size: .875rem; letter-spacing: 0; line-height: 1.5; }
+.sidebar a.nav .nav-text { white-space: normal; overflow-wrap: anywhere; }
+.sidebar a.nav.active { background: var(--primary-bg-subdued); color: var(--primary-deep); font-weight: 600; }
+.sidebar .sidebar-footer { padding: 16px; }
+.sidebar .foot-note { font-size: .75rem; font-weight: 400; }
+.sidebar .feedback-btn { min-height: 38px; font-size: .875rem; }
+.main { padding-bottom: 48px; }
+.main-inner { width: 100%; max-width: 1256px; padding: 32px clamp(24px, 3vw, 48px) 0; }
+.mesh-bg, .home-hero .hero-mesh { display: none; }
+.home-hero {
+  margin: 0 0 24px; padding: 28px 32px;
+  background: linear-gradient(110deg, #fff 40%, #edf3ff);
+  border-radius: 14px; box-shadow: none;
+  border-top: 3px solid var(--primary);
+}
+.home-hero .hero-content { padding-top: 0; }
+.home-hero .eyebrow { font-size: .75rem; font-weight: 500; margin-bottom: 10px; border-radius: 5px; }
+.home-hero h1 { font-size: clamp(1.75rem, 2.4vw, 2.25rem); font-weight: 650; line-height: 1.35; letter-spacing: 0; }
+.home-hero .subtitle { max-width: 700px; margin-top: 10px; font-size: 1rem; font-weight: 400; }
+.home-stats { gap: 0; margin-top: 22px; }
+.home-stats .stat { padding: 0 24px; border-left: 1px solid var(--primary-line); }
+.home-stats .stat:first-child { border-left: 0; padding-left: 0; }
+.home-stats .stat .num { font-size: 1.5rem; font-weight: 600; letter-spacing: 0; line-height: 1.4; }
+.home-stats .stat .lbl { font-size: .875rem; }
+.quick-entry { margin-top: 20px; gap: 12px; }
+.quick-entry a { min-height: 42px; padding: 9px 16px; border: 1px solid transparent; border-radius: 7px; font-weight: 500; }
+.quick-entry a.secondary { background: white; border-color: var(--primary-line); }
+.tyai-home-tools { margin: 0 0 28px; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 16px; align-items: stretch; }
+.tyai-search-panel, .tyai-fav-panel { min-width: 0; padding: 20px; box-shadow: none; }
+.tyai-search-title, .tyai-fav-title { font-size: .875rem; font-weight: 600; color: var(--ink); }
+.tyai-search-box input { min-height: 44px; border-radius: 7px; font-size: 1rem; padding: 10px 42px 10px 14px; }
+.tyai-search-hint { font-size: .75rem; }
+.tyai-fav-list a { min-height: 36px; border-radius: 6px; font-size: .875rem; }
+.tool-section { margin-bottom: 28px; }
+.tool-section-head { align-items: center; flex-direction: row; flex-wrap: wrap; gap: 12px; margin-bottom: 14px; padding-bottom: 12px; }
+/* 不让结果区 .sec-title 的边线和内边距污染首页分组标题。 */
+.tool-section-head .sec-title { margin: 0; padding: 0; border: 0; font-size: 1.125rem; font-weight: 600; letter-spacing: 0; line-height: 1.5; }
+.tool-section-head .sec-title .sec-icon { width: 32px; height: 32px; }
+.tool-section-head .sec-desc { font-size: .875rem; font-weight: 400; margin-left: auto; padding: 0; }
+.tool-section-head .sec-count { font-size: .75rem; padding: 0; }
+.section-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: stretch; }
+.section-card { min-width: 0; padding: 20px; gap: 12px; box-shadow: none; }
+.section-card .card-top { align-items: center; gap: 12px; }
+.section-card .card-icon { width: 40px; height: 40px; border-radius: 10px; }
+.section-card h3 { font-size: 1rem; font-weight: 600; line-height: 1.5; letter-spacing: 0; }
+.section-card p { font-size: .875rem; font-weight: 400; line-height: 1.7; overflow-wrap: anywhere; }
+.section-card .card-foot { margin-top: auto; padding-top: 12px; gap: 12px; flex-wrap: wrap; }
+.section-card .code-tag { font-size: .75rem; overflow-wrap: anywhere; }
+.section-card .go-arrow { font-size: .875rem; }
+.section-card:hover { transform: translateY(-2px); border-color: var(--primary-line); box-shadow: 0 6px 18px rgba(24, 38, 61, .07); }
+.tool-head { padding: 0 0 24px; gap: 14px; flex-wrap: wrap; }
+.tool-head > div { min-width: 0; }
+.tool-head .back { width: 40px; height: 40px; flex-shrink: 0; }
+.tool-head h2 { font-size: 1.5rem; line-height: 1.4; letter-spacing: 0; }
+.tool-head .sub { font-size: .875rem; line-height: 1.6; }
+.tool-head .btn-export { min-height: 40px; font-size: .875rem; padding: 8px 14px; margin-left: auto; }
+.tool-grid { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(280px, 1fr); gap: 20px; align-items: start; }
+.tool-grid > *, .grid2 > * { min-width: 0; }
+.side-col { order: 0; gap: 20px; }
+.panel { padding: 24px; border-radius: 12px; box-shadow: none; }
+.panel + .panel { margin-top: 20px; }
+.side-col > .panel + .panel { margin-top: 0; }
+.panel-title { font-size: 1rem; margin-bottom: 20px; padding-bottom: 12px; }
+.grid2 { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 20px; }
+.form-single { max-width: none; }
+.field { gap: 7px; }
+.field label { font-size: .875rem; line-height: 1.6; }
+.field label span { font-size: .75rem; }
+.field input, .field select, .text-input { min-height: 44px; padding: 10px 12px; font-size: 1rem; border-radius: 6px; }
+.field .hint { font-size: .75rem; line-height: 1.6; }
+.btn-group { gap: 12px; margin-top: 24px; }
+.btn { min-height: 44px; flex: 0 1 auto; padding: 10px 22px; font-size: .875rem; border-radius: 7px; }
+.btn-primary { flex: 1 1 160px; }
+.btn-secondary { flex: 0 1 120px; }
+.result-item { align-items: baseline; padding: 12px 0; font-size: .875rem; }
+.result-item .label { font-weight: 400; }
+.result-item .value { min-width: 0; white-space: normal; overflow-wrap: anywhere; font-weight: 600; letter-spacing: 0; }
+.result-item .value.highlight { font-size: 1.375rem; font-weight: 650; }
+.proc-head, .process summary { font-size: .875rem; font-weight: 500; }
+.proc-body .step { font-size: .875rem; font-weight: 400; overflow-wrap: anywhere; }
+.proc-body .step b { font-weight: 600; }
+.calc-book { padding: 24px; border-radius: 12px; overflow-wrap: anywhere; }
+.calc-step { border-radius: 8px; }
+.home-footer { padding: 24px; border-radius: 12px; }
+.cream-band { background: #eef3fa !important; border-color: var(--hairline) !important; }
+.cream-band .norms span { border-color: var(--hairline) !important; }
+.home-footer .norms span { font-weight: 400; }
+.tool-mesh { display: none; }
+/* 真实工具模板使用 .grid2；仅调整顶层面板，不改变内部字段分组。 */
+#view > .grid2 { gap: 20px; align-items: stretch; }
+#view > .grid2 > .panel + .panel { margin-top: 0; }
+#view > .grid2 + .panel { margin-top: 20px; }
+.sidebar .sidebar-foot { padding: 16px; border-top: 1px solid var(--hairline); }
+.sidebar .sidebar-foot .foot-note { margin-bottom: 12px; }
+.quick-entry .assistant-entry { background: var(--primary-deep); }
+.home-stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.home-stats .stat { min-width: 0; padding: 0 16px; }
+.tool-head > div { flex: 1 1 240px; }
+#view .ux-home { gap: 16px; margin: 0 0 28px; }
+#view .ux-home-card { padding: 16px 20px; border-radius: 12px; }
+#view .ux-home-title { font-size: .875rem; letter-spacing: 0; }
+#view .ux-home-empty { font-size: .875rem; color: var(--ink-mute); }
+#view .ux-chip { font-size: .875rem; border-radius: 6px; }
+#view .ux-bar { padding: 12px 16px; gap: 10px; margin-bottom: 20px; border-radius: 10px; }
+#view .ux-bar-btn, #view .ux-bar select { min-height: 38px; font-size: .875rem; }
+#view .ux-bar select { max-width: 100%; }
+:where(button, a, input, select, summary):focus-visible { outline: 3px solid #245bc166; outline-offset: 3px; }
+@media (min-width: 1500px) {
+  .section-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 1100px) {
+  .tool-grid { grid-template-columns: minmax(0, 1fr); }
+  #view > .grid2 { grid-template-columns: minmax(0, 1fr); }
+  .tyai-home-tools { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 900px) {
+  .app { display: block; }
+  .main-inner { padding: 24px; }
+  .sidebar { width: min(288px, 88vw); height: 100dvh; transform: translateX(-105%); }
+  .sidebar.open, body.sidebar-open .sidebar { transform: translateX(0); }
+  .topbar { height: 60px; justify-content: flex-start; gap: 12px; background: var(--canvas); font-weight: 600; }
+  .topbar .burger, .topbar .menu-btn { width: 40px; height: 40px; }
+  .mask { display: block; opacity: 0; pointer-events: none; }
+  .mask.show, body.sidebar-open .mask { display: block; opacity: 1; pointer-events: auto; }
+  .home-hero { margin-top: 0; padding: 24px; }
+  .home-hero h1 { font-size: 1.875rem; }
+  .tool-section-head { flex-direction: row; align-items: center; }
+  .tool-section-head .sec-desc { display: block; margin-left: auto; }
+  .grid2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 600px) {
+  .main-inner { padding: 20px 16px 0; }
+  .home-hero { padding: 22px 20px; }
+  .home-hero h1 { font-size: 1.75rem; }
+  .home-hero .subtitle { font-size: 1rem; }
+  .home-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 16px; }
+  .home-stats .stat { min-width: 0; padding: 0 10px; }
+  .home-stats .stat .num { font-size: 1.25rem; }
+  .home-stats .stat .lbl { font-size: .75rem; }
+  .home-stats .stat:nth-child(4) { border-left: 0; padding-left: 0; }
+  #view .ux-home { grid-template-columns: minmax(0, 1fr); }
+  .tool-head > div { flex-basis: calc(100% - 50px); }
+  .quick-entry { gap: 8px; }
+  .quick-entry a { width: auto; flex: 1 1 130px; justify-content: center; }
+  .section-grid, .grid2 { grid-template-columns: minmax(0, 1fr); }
+  .tool-section-head .sec-desc { display: none; }
+  .tool-section-head .sec-count { margin-left: auto; }
+  .section-card, .panel, .tyai-search-panel, .tyai-fav-panel, .calc-book { padding: 20px; }
+  .tool-head { gap: 10px; padding-bottom: 20px; }
+  .tool-head h2 { font-size: 1.25rem; }
+  .tool-head .btn-export { margin-left: 0; }
+  .btn { width: auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
+@media print {
+  .sidebar, .topbar, .mask { display: none !important; }
+  .app { display: block; }
+  .main-inner { max-width: none; padding: 0; }
+  .tool-grid { display: block; }
+  .panel { box-shadow: none; break-inside: avoid; }
+}
+
+/* 标题统一使用同一字族、600 字重和正常字距，按内容层级定字号。 */
+:root {
+  --font-sans: 'PingFang SC', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Segoe UI', system-ui, sans-serif;
+  --heading-page: 1.5rem;
+  --heading-section: 1.125rem;
+  --heading-card: 1rem;
+  --heading-weight: 600;
+  --heading-leading: 1.5;
+}
+#view :is(h1, h2, h3, h4, h5, h6),
+#view :is(.panel-title, .sec-title, .tyai-search-title, .tyai-fav-title, .ux-home-title, .ai-chat-title, .ai-param-title),
+.sidebar :is(.app-name, .group-title, .group-label) {
+  font-family: var(--font-sans);
+  font-weight: var(--heading-weight);
+  font-style: normal;
+  line-height: var(--heading-leading);
+  letter-spacing: normal;
+  color: var(--ink);
+}
+#view .home-hero h1, #view .tool-head h2 { font-size: var(--heading-page); }
+#view .tool-section-head .sec-title,
+#view .calc-book h3 { font-size: var(--heading-section); }
+#view .section-card h3,
+#view :is(.panel-title, .tyai-search-title, .tyai-fav-title, .ux-home-title, .ai-chat-title, .ai-param-title),
+#view .home-footer h4,
+#view .calc-book h4,
+.sidebar .app-name { font-size: var(--heading-card); }
+#view .calc-book h3 { margin: 0 0 16px; }
+#view .sec-title:not(.tool-section-head .sec-title) { font-size: .875rem; }
+@media (max-width: 600px) {
+  :root { --heading-page: 1.25rem; }
+}
