@@ -227,3 +227,31 @@ button, input, select, textarea { font-family: inherit; }
 @media (max-width: 600px) {
   :root { --heading-page: 1.25rem; }
 }
+
+/* 专业目录只保留两级：分类标题 / 工具名称。 */
+details.tool-section { background: var(--canvas); border: 1px solid var(--hairline); border-radius: 12px; margin-bottom: 12px; }
+details.tool-section > summary.tool-section-head {
+  display: flex; align-items: center; gap: 12px; cursor: pointer;
+  padding: 18px 20px; margin: 0; border: 0; list-style: none;
+}
+details.tool-section > summary::-webkit-details-marker { display: none; }
+details.tool-section > summary::after { content: '+'; font-size: 20px; line-height: 1; color: var(--ink-mute); margin-left: 4px; }
+details.tool-section[open] > summary::after { content: '−'; }
+details.tool-section > summary .sec-count { margin-left: auto; font-size: .875rem; }
+details.tool-section > summary .sec-title { font-size: 1rem !important; }
+details.tool-section > .section-grid { padding: 0 20px 20px; gap: 12px; }
+details.tool-section .section-card { padding: 16px; background: var(--canvas-soft); }
+details.tool-section .section-card .card-icon { width: 32px; height: 32px; }
+details.tool-section .section-card h3 { font-size: .875rem !important; line-height: 1.6; }
+details.tool-section .section-card p { font-size: .8125rem; }
+details.tool-section .card-foot { border: 0; padding-top: 0; }
+#view .panel-title { font-size: 1rem; font-weight: 600; line-height: 1.5; }
+#view .result-area .sec-title { font-size: .875rem; font-weight: 500; border-top: 0; padding: 6px 0; margin-top: 20px; }
+.sidebar .group-title { font-size: .875rem; font-weight: 600; }
+.sidebar .group-body { padding: 0 0 4px 10px; }
+.sidebar a.nav { font-size: .875rem; font-weight: 400; }
+.sidebar .nav-group { margin-bottom: 4px; }
+@media (max-width: 600px) {
+  details.tool-section > summary.tool-section-head { padding: 16px; gap: 8px; }
+  details.tool-section > .section-grid { padding: 0 12px 12px; }
+}
