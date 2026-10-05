@@ -240,9 +240,7 @@
         html += '<div class="foot-note">';
         html += '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>';
         html += '<span>计算结果需经专业复核后使用</span></div>';
-        html += '<a class="feedback-btn" href="https://my.feishu.cn/share/base/shrcnjuT074KRB7Rne5WrNbzgCf" target="_blank" rel="noopener">';
-        html += '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>';
-        html += '反馈建议</a></div>';
+        html += '</div>';
 
         return html;
     }
