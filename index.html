@@ -1,0 +1,1464 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>计算工具箱 · 结构工程计算与验算</title>
+<meta name="description" content="基于现行国家规范的结构工程常用计算工具：混凝土受弯受压、板与楼梯、构件验算、装配式、地基基础、桩基、砌体、钢结构、荷载与抗震，全部结果附可追溯的详细计算过程。">
+<meta name="theme-color" content="#1e5aa8">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231e5aa8'/%3E%3Cpath d='M8 24V8h5.2c4 0 6.4 2.2 6.4 5.8S17.2 19.6 13.2 19.6H11V24z' fill='%23fff'/%3E%3Cpath d='M18 24l4-16h3l4 16h-3l-.9-4h-4.2l-.9 4z' fill='%23b8d0ec'/%3E%3C/svg%3E">
+<style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+        /* === 工程蓝灰设计系统 === */
+        /* 品牌与强调 — 深钢蓝，专业克制 */
+        --primary: #1e5aa8;
+        --primary-deep: #154a8c;
+        --primary-press: #0e3a6e;
+        --primary-bg-subdued: #e0ecfa;
+        --primary-line: #b8d0ec;
+        /* 表面 — 冷灰基调 */
+        --canvas: #ffffff;
+        --canvas-soft: #f4f6f9;
+        --canvas-muted: #eef1f5;
+        --canvas-cream: #f5f0e6;
+        --hairline: #dfe3e9;
+        --hairline-input: #c5ccd6;
+        --hairline-strong: #b4bbc6;
+        /* 文字 — 低饱和冷灰 */
+        --ink: #1a2230;
+        --ink-secondary: #3a4556;
+        --ink-mute: #6b7686;
+        --ink-faint: #98a2b3;
+        --on-primary: #ffffff;
+        /* 语义色 */
+        --ok: #166534; --ok-bg: #dcfce7;
+        --warn: #92400e; --warn-bg: #fef3c7;
+        --err: #991b1b; --err-bg: #fee2e2;
+        /* 圆角 — 收敛 */
+        --r-xs: 3px;
+        --r-sm: 4px;
+        --r-md: 6px;
+        --r-lg: 8px;
+        --r-xl: 10px;
+        --r-pill: 9999px;
+        /* 间距 */
+        --s-xs: 4px;
+        --s-sm: 8px;
+        --s-md: 12px;
+        --s-lg: 16px;
+        --s-xl: 24px;
+        --s-xxl: 32px;
+        --s-huge: 64px;
+        /* 字体 */
+        --font-sans: -apple-system, 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', system-ui, sans-serif;
+        --font-feature: "tnum";
+        --font-tabular: "tnum";
+        /* 兼容别名：历史命名统一收敛到上面的设计系统，避免陈旧变量名导致样式失效 */
+        --border: var(--hairline);
+        --border-soft: var(--hairline);
+        --line: var(--hairline);
+        --muted: var(--ink-mute);
+        --ink-soft: var(--ink-secondary);
+        --text-muted: var(--ink-mute);
+        --primary-soft: var(--primary-bg-subdued);
+        --danger: var(--err);
+        --lemon: var(--warn-bg);
+        --brand-dark-900: #141c33;
+    }
+    body {
+        font-family: var(--font-sans);
+        font-weight: 400;
+        background: var(--canvas-soft);
+        color: var(--ink);
+        font-feature-settings: var(--font-feature);
+        -webkit-font-smoothing: antialiased;
+        font-size: 14px;
+        line-height: 1.5;
+    }
+    a { color: inherit; text-decoration: none; }
+
+    /* ===== 渐变 mesh 背景（品牌氛围） ===== */
+    .mesh-bg {
+        position: absolute; inset: 0 0 auto 0; height: 320px;
+        overflow: hidden; pointer-events: none; z-index: 0;
+    }
+    .mesh-bg svg { width: 100%; height: 100%; display: block; }
+    .mesh-bg::after {
+        content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 120px;
+        background: linear-gradient(to bottom, transparent, var(--canvas-soft));
+    }
+
+    /* ===== 整体布局：侧栏 + 主区 ===== */
+    .app { display: flex; min-height: 100vh; position: relative; }
+    /* ===== 侧栏导航：与右侧内容区使用同一套排版语言（字族/字重/字距/色阶） ===== */
+    .sidebar {
+        width: 236px; flex: 0 0 236px; background: var(--canvas);
+        border-right: 1px solid var(--hairline);
+        position: sticky; top: 0; height: 100vh;
+        display: flex; flex-direction: column;
+        z-index: 10;
+    }
+    /* 品牌头 —— 与右侧 .tool-head / .section-card .card-top 同一图标规格 */
+    .sidebar .sidebar-head,
+    .sidebar .brand {
+        display: flex; align-items: center; gap: 10px;
+        padding: 14px 14px 12px;
+        border-bottom: 1px solid var(--hairline);
+    }
+    .sidebar .brand-mark {
+        width: 28px; height: 28px; flex: 0 0 auto;
+        border-radius: var(--r-md);
+        display: flex; align-items: center; justify-content: center;
+        background: var(--primary-bg-subdued); color: var(--primary-deep);
+    }
+    .sidebar .brand-mark svg { width: 16px; height: 16px; }
+    .sidebar .brand svg { flex: 0 0 auto; width: 16px; height: 16px; }
+    .sidebar .app-name {
+        display: block;
+        font-size: 14.5px; font-weight: 600; color: var(--ink);
+        letter-spacing: -0.2px; line-height: 1.3;
+    }
+    .sidebar .app-sub {
+        display: block;
+        font-size: 11px; color: var(--ink-mute); font-weight: 300;
+        letter-spacing: 0; line-height: 1.4;
+    }
+    .sidebar .group-label {
+        font-size: 12.5px; font-weight: 500; color: var(--ink-secondary);
+        padding: 6px 8px; letter-spacing: -0.1px;
+    }
+    /* 导航滚动区 */
+    .sidebar nav {
+        flex: 1; min-height: 0; overflow-y: auto; padding: 8px 8px 14px;
+        scrollbar-width: thin; scrollbar-color: var(--hairline) transparent;
+    }
+    .sidebar nav::-webkit-scrollbar { width: 6px; }
+    .sidebar nav::-webkit-scrollbar-track { background: transparent; }
+    .sidebar nav::-webkit-scrollbar-thumb { background: var(--hairline); border-radius: 3px; }
+    .sidebar nav::-webkit-scrollbar-thumb:hover { background: var(--hairline-strong); }
+    /* 专业分组 */
+    .nav-group { margin-bottom: 2px; }
+    .group-title {
+        display: flex; align-items: center; gap: 6px;
+        padding: 6px 8px; border-radius: var(--r-sm);
+        cursor: pointer; user-select: none; -webkit-user-select: none;
+        font-size: 12.5px; font-weight: 500; color: var(--ink-secondary);
+        letter-spacing: -0.1px;
+        transition: background .12s ease, color .12s ease;
+    }
+    .group-title:hover { background: var(--canvas-soft); color: var(--ink); }
+    .group-title .group-arrow {
+        width: 12px; height: 12px; flex: 0 0 auto; color: var(--ink-faint);
+        transition: transform .18s ease;
+    }
+    .nav-group.open > .group-title .group-arrow { transform: rotate(90deg); }
+    .group-count {
+        margin-left: auto; font-size: 11px; font-weight: 400;
+        color: var(--ink-faint); font-feature-settings: "tnum";
+    }
+    .group-body { display: none; padding: 2px 0 4px; }
+    .nav-group.open > .group-body { display: block; }
+    /* 二级子组（混凝土结构下的梁/板/柱/墙/特殊构件） */
+    .nav-subgroup { margin: 1px 0; }
+    .subgroup-title {
+        display: flex; align-items: center; gap: 5px;
+        margin-left: 6px; padding: 4px 8px; border-radius: var(--r-sm);
+        cursor: pointer; user-select: none; -webkit-user-select: none;
+        font-size: 12px; font-weight: 400; color: var(--ink-mute);
+        transition: background .12s ease, color .12s ease;
+    }
+    .subgroup-title:hover { background: var(--canvas-soft); color: var(--ink-secondary); }
+    .subgroup-title .sub-arrow {
+        width: 10px; height: 10px; flex: 0 0 auto; color: var(--ink-faint);
+        transition: transform .18s ease;
+    }
+    .nav-subgroup.open > .subgroup-title .sub-arrow { transform: rotate(90deg); }
+    .subgroup-body {
+        display: none; margin: 2px 0 4px 14px;
+        padding-left: 10px; border-left: 1px solid var(--hairline);
+    }
+    .nav-subgroup.open > .subgroup-body { display: block; }
+    /* 工具条目 —— 13px / 400，与右侧正文同一字号字重 */
+    .sidebar a.nav {
+        display: flex; align-items: center; gap: 8px;
+        padding: 6px 8px; margin: 1px 0; min-width: 0;
+        border-radius: var(--r-sm);
+        font-size: 13px; font-weight: 400; color: var(--ink-secondary);
+        line-height: 1.4; letter-spacing: -0.1px;
+        transition: background .12s ease, color .12s ease;
+    }
+    .sidebar a.nav .nav-text {
+        min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .sidebar a.nav > svg {
+        flex: 0 0 auto; width: 15px; height: 15px; opacity: .55;
+        transition: opacity .12s ease;
+    }
+    .sidebar a.nav:hover { background: var(--canvas-soft); color: var(--ink); }
+    .sidebar a.nav:hover > svg { opacity: .8; }
+    .sidebar a.nav.active {
+        background: var(--primary-bg-subdued);
+        color: var(--primary-deep);
+        font-weight: 500;
+    }
+    .sidebar a.nav.active > svg { opacity: 1; }
+    /* AI 主入口 —— 主色描边卡，激活时为主色实底（与右侧 .btn-primary 一致） */
+    .sidebar a.nav-primary {
+        margin: 0 0 6px; padding: 7px 10px;
+        background: var(--primary-bg-subdued); color: var(--primary-deep);
+        border: 1px solid var(--primary-line); font-weight: 500;
+    }
+    .sidebar a.nav-primary:hover { background: var(--primary-line); color: var(--primary-press); }
+    .sidebar a.nav-primary.active {
+        background: var(--primary); color: var(--on-primary); border-color: var(--primary);
+    }
+    .sidebar a.nav-primary > svg { opacity: .9; }
+    .sidebar a.nav-primary.active > svg { opacity: 1; }
+    /* 侧栏页脚 */
+    .sidebar .sidebar-foot,
+    .sidebar .sidebar-footer {
+        margin-top: auto; flex: 0 0 auto;
+        padding: 10px 12px 12px;
+        border-top: 1px solid var(--hairline);
+        display: flex; flex-direction: column; gap: 8px;
+    }
+    .sidebar .foot-note {
+        font-size: 11px; color: var(--ink-mute); line-height: 1.5;
+        font-weight: 300; display: flex; align-items: flex-start; gap: 5px;
+    }
+    .sidebar .foot-note svg { flex: 0 0 auto; width: 12px; height: 12px; margin-top: 2px; }
+    .sidebar .feedback-btn {
+        display: flex; align-items: center; justify-content: center; gap: 6px;
+        padding: 5px 10px; border-radius: var(--r-sm);
+        background: var(--canvas-soft); color: var(--ink-secondary);
+        border: 1px solid var(--hairline);
+        font-size: 12px; font-weight: 400;
+        cursor: pointer; transition: .15s ease; text-align: center;
+        text-decoration: none;
+    }
+    .sidebar .feedback-btn:hover {
+        background: var(--canvas-muted);
+        color: var(--ink);
+    }
+    .sidebar .feedback-btn svg { flex: 0 0 auto; width: 13px; height: 13px; }
+    .main { flex: 1; min-width: 0; padding: 0 0 60px; position: relative; z-index: 1; }
+    .main-inner { max-width: 820px; margin: 0 auto; padding: 0 28px; }
+
+    /* 顶栏（移动端） */
+    .topbar { display: none; }
+    .mask { display: none; }
+
+    /* ===== 首页 Hero（渐变 mesh 英雄区） ===== */
+    .home-hero {
+        position: relative; padding: 56px 40px 48px;
+        margin-bottom: 36px; color: var(--ink);
+        border-radius: var(--r-lg);
+        overflow: hidden;
+        background: var(--canvas);
+        border: 1px solid var(--hairline);
+        box-shadow: rgba(0,55,112,0.08) 0 1px 3px;
+    }
+    .home-hero .hero-mesh {
+        position: absolute; inset: 0 0 auto 0; height: 220px;
+        overflow: hidden; pointer-events: none;
+    }
+    .home-hero .hero-mesh svg { width: 100%; height: 100%; display: block; }
+    .home-hero .hero-content {
+        position: relative; z-index: 1;
+        padding-top: 12px;
+    }
+    .home-hero h1 {
+        font-size: 48px; font-weight: 300; line-height: 1.15;
+        letter-spacing: -0.96px; color: var(--ink);
+    }
+    .home-hero .eyebrow {
+        display: inline-block; padding: 4px 10px;
+        background: var(--primary-bg-subdued);
+        color: var(--primary-deep);
+        border-radius: var(--r-pill);
+        font-size: 10px; font-weight: 400;
+        letter-spacing: 0.1px; text-transform: uppercase;
+        margin-bottom: 14px;
+    }
+    .home-hero .subtitle {
+        margin-top: 12px; font-size: 16px;
+        color: var(--ink-secondary); line-height: 1.6;
+        max-width: 540px; font-weight: 300;
+    }
+    .home-stats { display: flex; gap: 36px; margin-top: 28px; flex-wrap: wrap; }
+    .home-stats .stat { display: flex; flex-direction: column; gap: 2px; }
+    .home-stats .stat .num {
+        font-size: 26px; font-weight: 300; color: var(--ink);
+        letter-spacing: -0.52px;
+        font-feature-settings: "tnum";
+    }
+    .home-stats .stat .lbl {
+        font-size: 13px; color: var(--ink-mute); letter-spacing: 0;
+        font-weight: 400;
+    }
+    .quick-entry { margin-top: 28px; display: flex; gap: 10px; flex-wrap: wrap; }
+    .quick-entry a {
+        display: inline-flex; align-items: center; gap: 8px;
+        padding: 8px 16px; border-radius: var(--r-pill);
+        background: var(--primary); color: var(--on-primary);
+        font-size: 14px; font-weight: 400;
+        transition: .18s ease;
+    }
+    .quick-entry a.secondary {
+        background: transparent; color: var(--primary);
+        border: 1px solid var(--primary);
+    }
+    .quick-entry a:hover { transform: translateY(-1px); opacity: 0.92; }
+    .quick-entry a svg { opacity: .9; }
+
+    /* ===== 工具卡片网格 ===== */
+    .tool-section { margin-bottom: 40px; }
+    .tool-section-head {
+        display: flex; align-items: flex-end; gap: 12px;
+        margin-bottom: 16px; padding-bottom: 12px;
+        border-bottom: 1px solid var(--hairline);
+    }
+    .tool-section-head .sec-title {
+        display: flex; align-items: center; gap: 10px;
+        font-size: 20px; font-weight: 300; color: var(--ink);
+        letter-spacing: -0.4px;
+    }
+    .tool-section-head .sec-title .sec-icon {
+        width: 28px; height: 28px; border-radius: var(--r-md);
+        display: flex; align-items: center; justify-content: center;
+        background: var(--primary-bg-subdued); color: var(--primary-deep);
+    }
+    .tool-section-head .sec-desc {
+        font-size: 13px; color: var(--ink-mute); margin-left: auto;
+        padding-bottom: 2px; font-weight: 300;
+    }
+    .tool-section-head .sec-count {
+        font-size: 11px; color: var(--ink-mute); padding-bottom: 2px;
+        font-weight: 400; letter-spacing: .04em;
+    }
+    .section-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 14px;
+    }
+    .section-card {
+        background: var(--canvas); border: 1px solid var(--hairline);
+        border-radius: var(--r-lg);
+        padding: 24px; display: flex; flex-direction: column; gap: 8px;
+        transition: .18s ease; cursor: pointer; position: relative;
+        box-shadow: rgba(0,55,112,0.04) 0 1px 2px;
+    }
+    .section-card:hover {
+        transform: translateY(-2px);
+        box-shadow: rgba(0,55,112,0.10) 0 8px 24px, rgba(0,55,112,0.04) 0 2px 6px;
+        border-color: #c5d0dc;
+    }
+    .section-card .card-top { display: flex; align-items: center; gap: 12px; }
+    .section-card .card-icon {
+        width: 36px; height: 36px; border-radius: var(--r-md);
+        display: flex; align-items: center; justify-content: center;
+        flex: 0 0 auto;
+        background: var(--primary-bg-subdued); color: var(--primary-deep);
+    }
+    .section-card h3 {
+        font-size: 15px; font-weight: 400; color: var(--ink);
+        line-height: 1.4; letter-spacing: -0.15px;
+    }
+    .section-card p {
+        font-size: 13px; color: var(--ink-mute); line-height: 1.55;
+        flex: 1; font-weight: 300;
+    }
+    .section-card .card-foot {
+        display: flex; align-items: center; justify-content: space-between;
+        margin-top: 4px; padding-top: 10px; border-top: 1px solid var(--hairline);
+    }
+    .section-card .code-tag {
+        font-size: 11px; color: var(--ink-mute); background: var(--canvas-soft);
+        padding: 3px 8px; border-radius: var(--r-xs); font-weight: 400;
+        letter-spacing: .02em; font-feature-settings: "tnum";
+    }
+    .section-card .go-arrow {
+        font-size: 13px; color: var(--primary); font-weight: 400;
+        display: flex; align-items: center; gap: 4px;
+    }
+
+    /* 分组图标 — 统一蓝灰基调，仅用深浅区分 */
+    .sec-bending .sec-icon, .sec-bending .card-icon { background: var(--primary-bg-subdued); color: var(--primary-deep); }
+    .sec-slab .sec-icon, .sec-slab .card-icon { background: #e5eef7; color: #2c5a8a; }
+    .sec-column .sec-icon, .sec-column .card-icon { background: #e8edf3; color: #435468; }
+    .sec-check .sec-icon, .sec-check .card-icon { background: #dde7f3; color: #30547d; }
+    .sec-masonry .sec-icon, .sec-masonry .card-icon { background: #eaeef3; color: #4a5768; }
+    .sec-foundation .sec-icon, .sec-foundation .card-icon { background: #e0ebf7; color: #26507f; }
+    .sec-pile .sec-icon, .sec-pile .card-icon { background: #dce9f5; color: #2a5a8a; }
+    .sec-steel .sec-icon, .sec-steel .card-icon { background: #e6ebf1; color: #435266; }
+    .sec-precast .sec-icon, .sec-precast .card-icon { background: #e9edf2; color: #4b5969; }
+    .sec-special .sec-icon, .sec-special .card-icon { background: #e8eef5; color: #3a4f6a; }
+    .sec-ref .sec-icon, .sec-ref .card-icon { background: #e3ecf6; color: #2c5687; }
+
+    /* ===== 工具页头部 ===== */
+    .tool-head {
+        display: flex; align-items: center; gap: 12px;
+        padding: 24px 0 18px;
+        position: relative;
+    }
+    .tool-head .back {
+        width: 30px; height: 30px; border-radius: var(--r-sm);
+        border: 1px solid var(--hairline); background: var(--canvas);
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer; color: var(--ink-mute); transition: .12s;
+    }
+    .tool-head .back:hover { color: var(--ink); border-color: var(--hairline-strong); }
+    .tool-head h2 {
+        font-size: 20px; font-weight: 600; color: var(--ink);
+        letter-spacing: -0.3px;
+    }
+    .tool-head .sub { font-size: 12.5px; color: var(--ink-mute); margin-top: 3px; font-weight: 400; }
+    .tool-head .btn-export {
+        margin-left: auto; display: inline-flex; align-items: center; gap: 6px;
+        flex: 0 0 auto;
+        padding: 6px 14px; border: 1px solid var(--primary-line);
+        color: var(--primary-deep); background: var(--primary-bg-subdued);
+        border-radius: var(--r-sm); font-size: 13px; font-weight: 500;
+        cursor: pointer; white-space: nowrap; transition: .12s;
+    }
+    .tool-head .btn-export:hover { background: var(--primary-line); color: var(--primary-press); }
+    @media (max-width: 720px) {
+        .tool-head { flex-wrap: wrap; padding-top: 20px; }
+        .tool-head .btn-export { margin-left: 0; }
+    }
+
+    /* ===== 面板 ===== */
+    .panel {
+        background: var(--canvas); border: 1px solid var(--hairline);
+        border-radius: var(--r-lg); padding: 16px 20px;
+        box-shadow: 0 1px 2px rgba(26, 34, 48, 0.04);
+    }
+    .panel + .panel { margin-top: 12px; }
+    .panel-title {
+        font-size: 13.5px; font-weight: 600; margin-bottom: 12px;
+        display: flex; align-items: center; gap: 8px;
+        color: var(--ink); letter-spacing: -0.1px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid var(--hairline);
+    }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; }
+    /* 单列表单 — 当字段较少或左右不均衡时使用，宽度居中更协调 */
+    .form-single { max-width: 420px; }
+    .field { display: flex; flex-direction: column; gap: 4px; }
+    .field label {
+        font-size: 13px; font-weight: 500; color: var(--ink-secondary);
+        display: block; overflow: hidden;
+    }
+    .field label span { color: var(--ink-mute); font-weight: 400; font-size: 12px; float: right; margin-left: 6px; }
+    .field label sub { font-size: 0.75em; }
+    .field input, .field select {
+        padding: 7px 10px; border: 1px solid var(--hairline-input);
+        border-radius: var(--r-sm); font-size: 13.5px; background: var(--canvas);
+        width: 100%; transition: .12s ease; color: var(--ink);
+        font-family: inherit; font-weight: 400;
+        font-feature-settings: "tnum";
+    }
+    .field input:focus, .field select:focus {
+        border-color: var(--primary); outline: none;
+        box-shadow: 0 0 0 2px rgba(30, 90, 168, 0.15);
+        background: var(--canvas);
+    }
+    .field .hint {
+        font-size: 11.5px; color: var(--ink-mute); line-height: 1.5;
+        font-weight: 400;
+    }
+
+    /* ===== 按钮 ===== */
+    .btn-group { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+    .btn {
+        padding: 7px 18px; border: none; border-radius: var(--r-sm);
+        font-size: 14px; font-weight: 500; cursor: pointer;
+        flex: 1; min-width: 100px; transition: .12s ease;
+        display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+        font-family: inherit; letter-spacing: 0;
+    }
+    .btn-primary { background: var(--primary); color: var(--on-primary); }
+    .btn-primary:hover { background: var(--primary-deep); }
+    .btn-primary:active { background: var(--primary-press); }
+    .btn-secondary {
+        background: var(--canvas); color: var(--primary-deep);
+        border: 1px solid var(--primary-line);
+    }
+    .btn-secondary:hover { background: var(--primary-bg-subdued); }
+
+    /* ===== 结果区 ===== */
+    .result-area { display: none; }
+    .result-area.show { display: block; }
+    .result-item {
+        display: flex; justify-content: space-between; gap: 14px;
+        padding: 8px 0; border-bottom: 1px solid var(--hairline);
+        font-size: 14px;
+    }
+    .result-item:last-child { border-bottom: none; }
+    .result-item .label { color: var(--ink-secondary); font-weight: 300; }
+    .result-item .value {
+        font-weight: 400; text-align: right; white-space: nowrap;
+        font-feature-settings: "tnum";
+        letter-spacing: -0.28px;
+    }
+    .sec-title {
+        margin: 14px 0 6px; font-size: 13px; font-weight: 400;
+        color: var(--ink); padding: 8px 0 6px;
+        border-top: 1px solid var(--hairline);
+        letter-spacing: -0.13px;
+    }
+    .result-item .value.highlight {
+        color: var(--primary); font-size: 18px; font-weight: 400;
+        letter-spacing: -0.36px;
+    }
+    .badge {
+        display: inline-block; padding: 3px 10px;
+        border-radius: var(--r-pill); font-size: 12px; font-weight: 400;
+    }
+    .badge-ok { background: var(--ok-bg); color: var(--ok); }
+    .badge-warn { background: var(--warn-bg); color: var(--warn); }
+    .badge-err { background: var(--err-bg); color: var(--err); }
+    .error-box {
+        background: var(--err-bg); color: var(--err);
+        padding: 12px 16px; border-radius: var(--r-md);
+        font-size: 13.5px;
+    }
+
+    /* ===== 过程折叠面板 ===== */
+    .proc-wrap {
+        border: 1px solid var(--hairline); border-radius: var(--r-md);
+        padding: 12px 14px; background: var(--canvas-soft);
+    }
+    .proc-head {
+        cursor: pointer; font-size: 13.5px; font-weight: 400;
+        color: var(--ink-secondary);
+        display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+        user-select: none; -webkit-user-select: none;
+        -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+    }
+    .proc-head::before {
+        content: '▸'; font-size: 11px; color: var(--ink-mute);
+        transition: transform 0.2s ease; display: inline-block;
+    }
+    .proc-wrap.open .proc-head::before { transform: rotate(90deg); }
+    .proc-body { display: none; margin-top: 12px; }
+    .proc-wrap.open .proc-body { display: block; }
+    .proc-body .step {
+        margin-top: 10px; font-size: 13px;
+        color: var(--ink-secondary); line-height: 1.75; font-weight: 300;
+    }
+    .proc-body .step b { color: var(--ink); font-weight: 400; }
+    .process {
+        border: 1px solid var(--hairline); border-radius: var(--r-md);
+        padding: 12px 14px; background: var(--canvas-soft);
+    }
+    .process summary {
+        cursor: pointer; font-size: 13.5px; font-weight: 400;
+        color: var(--ink-secondary);
+        display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+        user-select: none; -webkit-user-select: none;
+        -webkit-tap-highlight-color: transparent;
+        list-style: none;
+    }
+    .process summary::-webkit-details-marker { display: none; }
+    .process summary::before {
+        content: '▸'; font-size: 11px; color: var(--ink-mute);
+        transition: transform 0.2s ease; display: inline-block;
+    }
+    .process[open] summary::before { transform: rotate(90deg); }
+    .proc-copy-btn {
+        font-size: 12px; padding: 4px 10px;
+        border: 1px solid var(--hairline-input); border-radius: var(--r-xs);
+        background: var(--canvas); color: var(--ink-secondary); cursor: pointer;
+        min-height: 28px; -webkit-appearance: none; appearance: none;
+        touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+        margin-left: auto; font-family: inherit; font-weight: 400;
+    }
+    .proc-copy-btn:active { background: var(--canvas-soft); }
+    .proc-copy-btn.copied { background: var(--ok-bg); border-color: #86efac; color: var(--ok); }
+    .proc-copy-msg {
+        font-size: 12px; color: var(--ok); margin-right: 4px;
+        opacity: 0; transition: opacity 0.2s; display: none;
+    }
+    .proc-copy-msg.show { opacity: 1; }
+    .proc-copy-msg.err { color: var(--err); }
+    details.process .step { margin-top: 10px; font-size: 13px; color: var(--ink-secondary); line-height: 1.75; font-weight: 300; }
+    details.process .step b { color: var(--ink); font-weight: 400; }
+    .tag {
+        display: inline-block; margin-left: 6px; padding: 2px 8px;
+        border-radius: var(--r-pill); font-size: 11px; font-weight: 400;
+        vertical-align: 1px;
+    }
+    .tag-ok { background: var(--ok-bg); color: var(--ok); }
+    .tag-warn { background: var(--warn-bg); color: var(--warn); }
+    .tag-err { background: var(--err-bg); color: var(--err); }
+
+    /* ===== 表格 ===== */
+    .table-wrap { overflow-x: auto; margin-top: 12px; }
+    table.mini { border-collapse: collapse; width: 100%; font-size: 13px; }
+    #rs_table tr.hl { background: #eef2ff; }
+    table.mini th, table.mini td {
+        border: 1px solid var(--hairline); padding: 6px 10px; text-align: center;
+        font-weight: 300; font-feature-settings: "tnum";
+    }
+    table.mini th {
+        background: var(--canvas-soft); font-weight: 400;
+        color: var(--ink-secondary);
+    }
+    table.mini td.hl {
+        background: var(--primary-bg-subdued); color: var(--primary-deep);
+        font-weight: 400;
+    }
+
+    /* ===== 预览图 / 侧边列 ===== */
+    .preview {
+        background: var(--canvas-soft); border: 1px solid var(--hairline);
+        border-radius: var(--r-lg); padding: 14px 10px 12px;
+        display: flex; flex-direction: column; align-items: center; gap: 4px;
+    }
+    .preview .cap { font-size: 12px; color: var(--ink-mute); font-weight: 300; }
+    .preview .note { font-size: 10.5px; color: var(--ink-mute); }
+    .side-col { display: flex; flex-direction: column; gap: 16px; }
+    .footnote {
+        margin-top: 24px; font-size: 12px; color: var(--ink-mute);
+        line-height: 1.8; border-top: 1px solid var(--hairline);
+        padding-top: 14px; font-weight: 300;
+    }
+
+    /* ===== 首页底部 ===== */
+    .home-footer {
+        margin-top: 40px; padding: 28px 32px;
+        background: var(--canvas); border: 1px solid var(--hairline);
+        border-radius: var(--r-lg); font-size: 13px;
+        color: var(--ink-mute); line-height: 1.8; font-weight: 300;
+    }
+    .home-footer h4 {
+        font-size: 15px; color: var(--ink); margin-bottom: 8px;
+        font-weight: 400; letter-spacing: -0.15px;
+    }
+    .home-footer .norms { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .home-footer .norms span {
+        font-size: 12px; padding: 4px 10px; border-radius: var(--r-xs);
+        background: var(--canvas-soft); border: 1px solid var(--hairline);
+        color: var(--ink-secondary); font-weight: 300;
+    }
+
+    /* ===== 响应式 ===== */
+    @media (max-width: 720px) {
+        .home-hero { padding: 32px 24px 28px; }
+        .home-hero h1 { font-size: 32px; letter-spacing: -0.64px; }
+        .home-hero .subtitle { font-size: 14px; }
+        .home-stats { gap: 24px; }
+        .home-stats .stat .num { font-size: 22px; }
+        .section-grid { grid-template-columns: 1fr; }
+        .tool-section-head .sec-desc { display: none; }
+    }
+
+    /* ===== 移动端 ===== */
+    @media (max-width: 860px) {
+        .topbar {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 16px; background: var(--canvas);
+            border-bottom: 1px solid var(--hairline);
+            position: sticky; top: 0; z-index: 20;
+            font-weight: 400; font-size: 16px;
+            color: var(--ink); letter-spacing: -0.32px;
+        }
+        .topbar .burger {
+            width: 36px; height: 36px;
+            border: 1px solid var(--hairline); border-radius: var(--r-sm);
+            background: var(--canvas); display: flex; align-items: center;
+            justify-content: center; cursor: pointer;
+        }
+        .sidebar {
+            position: fixed; left: 0; top: 0; z-index: 40;
+            transform: translateX(-105%);
+            transition: transform .22s ease;
+            box-shadow: 12px 0 32px rgba(13, 37, 61, .12);
+        }
+        .sidebar.open { transform: translateX(0); }
+        .mask {
+            position: fixed; inset: 0; background: rgba(13, 37, 61, .35);
+            z-index: 30; display: block; opacity: 0;
+            pointer-events: none; transition: opacity .22s;
+        }
+        .mask.show { opacity: 1; pointer-events: auto; }
+        .main { padding: 0 0 40px; }
+        .main-inner { padding: 0 16px; }
+        .tool-grid { grid-template-columns: 1fr; }
+        .grid2 { grid-template-columns: 1fr; gap: 8px 0; }
+        .panel { padding: 14px 12px; }
+        .side-col { order: -1; }
+    }
+/* ===== 工具页顶部素色条 ===== */
+    .tool-mesh {
+        position: absolute; left: 0; right: 0; top: 0; height: 6px;
+        overflow: hidden; pointer-events: none; z-index: 0;
+        background: var(--primary);
+        opacity: 0.85;
+    }
+    .tool-head { position: relative; z-index: 1; }
+
+    /* ===== 暖奶油色带 ===== */
+    .cream-band {
+        background: var(--canvas-cream) !important;
+        border-color: rgba(155, 104, 41, 0.15) !important;
+    }
+    .cream-band h4 { color: var(--ink) !important; }
+    .cream-band .norms span {
+        background: rgba(255, 255, 255, 0.6) !important;
+        border-color: rgba(155, 104, 41, 0.2) !important;
+        color: var(--ink-secondary) !important;
+    }
+
+    /* ===== 软标签药丸 ===== */
+    .pill-tag {
+        display: inline-block; padding: 4px 10px;
+        background: var(--primary-bg-subdued);
+        color: var(--primary-deep);
+        border-radius: var(--r-pill);
+        font-size: 10px; font-weight: 400;
+        letter-spacing: 0.1px; text-transform: uppercase;
+    }
+
+    /* ===== 设计系统组件对齐 ===== */
+    /* text-input：与 .field input/select 等价，别名供模板使用 */
+    .text-input {
+        padding: var(--s-sm) var(--s-md);
+        border: 1px solid var(--hairline-input);
+        border-radius: var(--r-sm);
+        font-size: 13.5px; background: var(--canvas);
+        color: var(--ink); width: 100%;
+        transition: .15s ease;
+        font-family: inherit; font-weight: 400;
+        font-feature-settings: "tnum";
+        letter-spacing: -0.1px;
+    }
+    .text-input:focus {
+        border-color: var(--primary); outline: none;
+        box-shadow: 0 0 0 2px rgba(30, 90, 168, 0.15);
+    }
+    /* card-feature-light：白底特性卡，与 section-card 等价 */
+    .card-feature-light {
+        background: var(--canvas);
+        border: 1px solid var(--hairline);
+        border-radius: var(--r-lg);
+        padding: var(--s-xxl);
+        box-shadow: rgba(0,55,112,0.08) 0 1px 3px;
+        color: var(--ink);
+        font-size: 15px; font-weight: 300;
+    }
+    /* card-pricing-featured：深藏青暗壳卡片，极性反转 */
+    .card-pricing-featured {
+        background: var(--brand-dark-900);
+        color: var(--on-primary);
+        border-radius: var(--r-lg);
+        padding: var(--s-xxl);
+        border: 1px solid rgba(255,255,255,0.08);
+        box-shadow: rgba(28, 30, 84, 0.25) 0 12px 32px;
+    }
+    .card-pricing-featured h3,
+    .card-pricing-featured h4 { color: var(--on-primary); }
+    .card-pricing-featured p { color: rgba(255,255,255,0.7); }
+
+    /* ===== 暗面按钮 button-on-dark ===== */
+    .button-on-dark {
+        background: var(--brand-dark-900);
+        color: var(--on-primary);
+        font-size: 16px; font-weight: 400;
+        line-height: 1.0;
+        padding: var(--s-sm) var(--s-lg);
+        border-radius: var(--r-pill);
+        border: none; cursor: pointer;
+        font-family: inherit;
+        font-feature-settings: "ss01";
+        transition: .15s ease;
+        display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .button-on-dark:hover { opacity: 0.92; transform: translateY(-1px); }
+
+    /* ===== 奶油带卡 card-cream-band ===== */
+    .card-cream-band {
+        background: var(--canvas-cream);
+        color: var(--ink);
+        font-size: 15px; font-weight: 300; line-height: 1.4;
+        border-radius: var(--r-lg);
+        padding: var(--s-xxl);
+        border: 1px solid rgba(155, 104, 41, 0.15);
+    }
+    .card-cream-band h3,
+    .card-cream-band h4 { color: var(--ink); font-weight: 300; }
+    .card-cream-band p { color: var(--ink-secondary); }
+
+    /* ===== 仪表盘 mock 卡 card-dashboard-mockup ===== */
+    .card-dashboard-mockup {
+        background: var(--canvas);
+        color: var(--ink);
+        font-size: 14px; font-weight: 300; line-height: 1.4;
+        letter-spacing: -0.42px;
+        font-feature-settings: "tnum";
+        border-radius: var(--r-lg);
+        padding: var(--s-xl);
+        border: 1px solid var(--hairline);
+        box-shadow: rgba(0,55,112,0.08) 0 8px 24px, rgba(0,55,112,0.04) 0 2px 6px;
+    }
+
+    /* ===== 软标签药丸 pill-tag-soft ===== */
+    .pill-tag-soft {
+        display: inline-block;
+        background: var(--primary-bg-subdued);
+        color: var(--primary-deep);
+        font-size: 10px; font-weight: 400;
+        line-height: 1.15;
+        letter-spacing: 0.1px;
+        font-feature-settings: "ss01";
+        text-transform: uppercase;
+        border-radius: var(--r-pill);
+        padding: var(--s-xs) var(--s-sm);
+    }
+
+    /* ===== 渐变上导航 nav-bar-on-mesh ===== */
+    .nav-bar-on-mesh {
+        background: var(--canvas);
+        color: var(--ink);
+        font-size: 15px; font-weight: 300; line-height: 1.4;
+        border-radius: var(--r-xs);
+        padding: var(--s-lg) var(--s-xl);
+        box-shadow: rgba(0,55,112,0.08) 0 2px 8px;
+        display: flex; align-items: center;
+    }
+    .nav-bar-on-mesh .nav-logo { font-weight: 400; letter-spacing: -0.32px; }
+    .nav-bar-on-mesh .nav-links { display: flex; gap: 24px; margin: 0 auto; }
+    .nav-bar-on-mesh .nav-links a { color: var(--ink-secondary); font-size: 14px; }
+    .nav-bar-on-mesh .nav-cta { margin-left: auto; }
+
+    /* ===== 浅色页脚 footer-light ===== */
+    .footer-light {
+        background: var(--canvas);
+        color: var(--ink-mute);
+        font-size: 13px; font-weight: 400; line-height: 1.4;
+        letter-spacing: -0.39px;
+        font-feature-settings: "tnum";
+        border-radius: var(--r-xs);
+        padding: var(--s-huge) var(--s-xl);
+        border-top: 1px solid var(--hairline);
+    }
+    .footer-light .footer-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: var(--s-xl);
+    }
+    .footer-light .footer-col h5 {
+        font-size: 12px; font-weight: 400;
+        color: var(--ink-secondary);
+        margin-bottom: 12px;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+    }
+    .footer-light .footer-col a {
+        display: block; font-size: 13px;
+        color: var(--ink-mute); padding: 4px 0;
+        font-weight: 300;
+    }
+    .footer-light .footer-col a:hover { color: var(--primary); }
+    .footer-light .footer-bottom {
+        margin-top: var(--s-xxl);
+        padding-top: var(--s-lg);
+        border-top: 1px solid var(--hairline);
+        font-size: 12px;
+        display: flex; justify-content: space-between;
+        flex-wrap: wrap; gap: 8px;
+    }
+
+    /* ===== 设计系统 Typography Tokens ===== */
+    .typo-display-xxl {
+        font-size: 56px; font-weight: 300; line-height: 1.03;
+        letter-spacing: -1.4px; font-feature-settings: "ss01";
+    }
+    .typo-display-xl {
+        font-size: 48px; font-weight: 300; line-height: 1.15;
+        letter-spacing: -0.96px; font-feature-settings: "ss01";
+    }
+    .typo-display-lg {
+        font-size: 32px; font-weight: 300; line-height: 1.1;
+        letter-spacing: -0.64px; font-feature-settings: "ss01";
+    }
+    .typo-display-md {
+        font-size: 26px; font-weight: 300; line-height: 1.12;
+        letter-spacing: -0.26px; font-feature-settings: "ss01";
+    }
+    .typo-heading-lg {
+        font-size: 22px; font-weight: 300; line-height: 1.1;
+        letter-spacing: -0.22px; font-feature-settings: "ss01";
+    }
+    .typo-body-lg { font-size: 16px; font-weight: 300; line-height: 1.4; }
+    .typo-body-md { font-size: 15px; font-weight: 300; line-height: 1.4; }
+    .typo-body-tabular {
+        font-size: 14px; font-weight: 300; line-height: 1.4;
+        letter-spacing: -0.42px; font-feature-settings: "tnum";
+    }
+    .typo-button-md {
+        font-size: 16px; font-weight: 400; line-height: 1.0;
+        font-feature-settings: "ss01";
+    }
+    .typo-caption {
+        font-size: 13px; font-weight: 400; line-height: 1.4;
+        letter-spacing: -0.39px; font-feature-settings: "tnum";
+    }
+    .typo-micro-cap {
+        font-size: 10px; font-weight: 400; line-height: 1.15;
+        letter-spacing: 0.1px; text-transform: uppercase;
+        font-feature-settings: "ss01";
+    }
+
+    /* ===== 设计系统按钮原名（与 .btn-primary/.btn-secondary 等价） ===== */
+    .button-primary-pill {
+        background: var(--primary);
+        color: var(--on-primary);
+        font-size: 16px; font-weight: 400; line-height: 1.0;
+        padding: var(--s-sm) var(--s-lg);
+        border-radius: var(--r-pill);
+        border: none; cursor: pointer;
+        font-family: inherit;
+        font-feature-settings: "ss01";
+        transition: .15s ease;
+        display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .button-primary-pill:hover { background: var(--primary-deep); transform: translateY(-1px); }
+    .button-primary-pill:active { background: var(--primary-press); }
+
+    .button-secondary {
+        background: var(--canvas);
+        color: var(--primary);
+        border: 1px solid var(--primary);
+        font-size: 16px; font-weight: 400; line-height: 1.0;
+        padding: var(--s-sm) var(--s-lg);
+        border-radius: var(--r-pill);
+        cursor: pointer;
+        font-family: inherit;
+        font-feature-settings: "ss01";
+        transition: .15s ease;
+        display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .button-secondary:hover { background: var(--primary-bg-subdued); }
+
+/* ===== TYAI 增强：搜索、快捷入口、移动端优化 ===== */
+.tyai-home-tools {
+    margin: -12px 0 36px;
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 16px;
+}
+.tyai-search-panel,
+.tyai-fav-panel {
+    background: var(--canvas);
+    border: 1px solid var(--hairline);
+    border-radius: var(--r-lg);
+    padding: 18px;
+    box-shadow: rgba(0,55,112,0.04) 0 1px 2px;
+}
+.tyai-search-title,
+.tyai-fav-title {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--ink-secondary);
+    margin-bottom: 12px;
+}
+.tyai-search-box {
+    position: relative;
+}
+.tyai-search-box input {
+    width: 100%;
+    padding: 12px 42px 12px 16px;
+    border-radius: var(--r-pill);
+    border: 1px solid var(--hairline-input);
+    background: var(--canvas-soft);
+    color: var(--ink);
+    font-size: 14px;
+    font-family: inherit;
+    transition: .18s ease;
+}
+.tyai-search-box input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(30, 90, 168, 0.12);
+    background: var(--canvas);
+}
+.tyai-search-icon {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--ink-mute);
+    font-size: 14px;
+}
+.tyai-search-hint {
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--ink-mute);
+    line-height: 1.5;
+}
+.tyai-fav-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.tyai-fav-list a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 12px;
+    border-radius: var(--r-pill);
+    background: var(--canvas-soft);
+    border: 1px solid var(--hairline);
+    color: var(--ink-secondary);
+    font-size: 13px;
+    transition: .16s ease;
+}
+.tyai-fav-list a:hover {
+    background: var(--primary-bg-subdued);
+    color: var(--primary-deep);
+    border-color: rgba(30, 90, 168, 0.35);
+    transform: translateY(-1px);
+}
+.tyai-no-result {
+    display: none;
+    background: var(--canvas);
+    border: 1px dashed var(--hairline-input);
+    border-radius: var(--r-lg);
+    padding: 30px;
+    text-align: center;
+    color: var(--ink-mute);
+    font-size: 14px;
+    margin: 20px 0 36px;
+}
+.tyai-no-result.show {
+    display: block;
+}
+.section-card mark {
+    background: #fef3c7;
+    color: var(--ink);
+    border-radius: 3px;
+    padding: 0 2px;
+}
+.section-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: linear-gradient(135deg, rgba(30,90,168,.06), transparent 45%);
+    opacity: 0;
+    transition: .18s ease;
+}
+.section-card:hover::after {
+    opacity: 1;
+}
+.section-card:focus-visible,
+.sidebar a.nav:focus-visible,
+.quick-entry a:focus-visible,
+.btn:focus-visible {
+    outline: 3px solid rgba(30, 90, 168, 0.22);
+    outline-offset: 2px;
+}
+@media (max-width: 900px) {
+    .app {
+        display: block;
+    }
+    .topbar {
+        display: flex;
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        height: 56px;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 16px;
+        background: rgba(255,255,255,.86);
+        backdrop-filter: blur(14px);
+        border-bottom: 1px solid var(--hairline);
+    }
+    .topbar .mobile-brand {
+        font-size: 16px;
+        font-weight: 400;
+        color: var(--ink);
+    }
+    .topbar .menu-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: var(--r-sm);
+        border: 1px solid var(--hairline);
+        background: var(--canvas);
+        color: var(--ink);
+        cursor: pointer;
+        font-size: 18px;
+    }
+    .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        height: 100vh;
+        transform: translateX(-104%);
+        transition: transform .22s ease;
+        box-shadow: rgba(0,0,0,.16) 0 16px 40px;
+        z-index: 40;
+    }
+    body.sidebar-open .sidebar {
+        transform: translateX(0);
+    }
+    .mask {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(13, 37, 61, .35);
+        z-index: 35;
+    }
+    body.sidebar-open .mask {
+        display: block;
+    }
+    .main-inner {
+        padding: 0 16px;
+    }
+    .home-hero {
+        margin-top: 16px;
+        padding: 36px 24px 32px;
+    }
+    .home-hero h1 {
+        font-size: 36px;
+    }
+    .tyai-home-tools {
+        grid-template-columns: 1fr;
+    }
+    .section-grid {
+        grid-template-columns: 1fr;
+    }
+    .tool-section-head {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 6px;
+    }
+    .tool-section-head .sec-desc {
+        margin-left: 0;
+    }
+}
+@media (max-width: 560px) {
+    .home-hero h1 {
+        font-size: 30px;
+    }
+    .home-stats {
+        gap: 18px;
+    }
+    .grid2 {
+        grid-template-columns: 1fr;
+    }
+    .panel {
+        padding: 20px 18px;
+    }
+    .quick-entry a,
+    .btn {
+        width: 100%;
+    }
+}
+
+
+
+/* ===== TYAI 统一计算书样式 ===== */
+.calc-book {
+    background: var(--canvas, #fff);
+    border: 1px solid var(--hairline, #e5e7eb);
+    border-radius: 16px;
+    padding: 22px;
+    line-height: 1.75;
+}
+.calc-book h3 {
+    margin: 0 0 16px;
+    font-size: 20px;
+}
+.calc-book h4 {
+    margin: 22px 0 10px;
+    font-size: 16px;
+    color: var(--ink, #111827);
+}
+.calc-meta {
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: #f8fafc;
+    color: #475569;
+    font-size: 14px;
+}
+.calc-step {
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 16px;
+    margin: 14px 0;
+    background: #ffffff;
+}
+.calc-step h4 {
+    margin-top: 0;
+    color: #1e293b;
+}
+.calc-step code {
+    background: #f1f5f9;
+    padding: 2px 6px;
+    border-radius: 6px;
+    font-family: Consolas, Monaco, monospace;
+}
+.calc-ref {
+    margin-top: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: #f8fafc;
+    border-left: 4px solid #3b82f6;
+    font-size: 13px;
+    color: #334155;
+}
+.calc-ref ul {
+    margin: 6px 0 0 18px;
+}
+.calc-ref.warn {
+    border-left-color: #f59e0b;
+    background: #fffbeb;
+}
+
+</style>
+</head>
+<body>
+<div class="app">
+    <div class="mask" id="mask"></div>
+    <aside class="sidebar" id="sidebar">
+        <div class="brand">
+            <span class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V9l8-6 8 6v12"/><path d="M9 21v-6h6v6"/></svg></span>
+            <span>
+                <span class="app-name">结构计算工具箱</span>
+                <span class="app-sub">结构工程计算与验算</span>
+            </span>
+        </div>
+        <a class="nav nav-primary" data-nav="calc-assistant" href="#/calc-assistant"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>智能计算助手</a>
+        <a class="nav" data-nav="home" href="#/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-7h-6v7H4a1 1 0 0 1-1-1z"/></svg>首页</a>
+        <div class="group-label">受弯构件</div>
+        <a class="nav" data-nav="beam-rect" href="#/beam-rect"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="12" rx="1"/><path d="M6 12h2M11 12h2M16 12h2"/></svg>矩形梁正截面</a>
+        <a class="nav" data-nav="beam-t" href="#/beam-t"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16v4H4z"/><path d="M8 10v9h8v-9"/></svg>T形梁正截面</a>
+        <a class="nav" data-nav="beam-shear" href="#/beam-shear"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 18h16M7 3l-3 3 3 3M17 15l3 3-3 3"/></svg>梁斜截面受剪</a>
+        <a class="nav" data-nav="beam-cont" href="#/beam-cont"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 16h18M3 12h18M5 16v-4M9 16v-4M13 16v-4M17 16v-4M21 16v-4"/></svg>连续梁计算</a>
+        <div class="group-label">板与楼梯</div>
+        <a class="nav" data-nav="slab-rect" href="#/slab-rect"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="1"/><path d="M3 9h18M3 15h18M9 5v14M15 5v14"/></svg>单块矩形板</a>
+        <a class="nav" data-nav="stair-slab" href="#/stair-slab"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V6l8-3v14"/><path d="M12 17h8v3"/><path d="M12 11h5v3"/><path d="M12 5h2v3"/></svg>板式楼梯</a>
+        <div class="group-label">受压构件</div>
+        <a class="nav" data-nav="column-axial" href="#/column-axial"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 3h4M9 3v18M6 21h12M15 3v18"/></svg>轴心受压柱</a>
+        <div class="group-label">构件验算</div>
+        <a class="nav" data-nav="crack-width" href="#/crack-width"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 10v3M12 17v5"/><path d="M8 6l8 2M8 14l8-2" stroke-dasharray="2 3"/></svg>裂缝宽度</a>
+        <a class="nav" data-nav="deflection" href="#/deflection"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h18M12 8v10"/><path d="M6 18c2 0 3-4 6-4s4 4 6 4"/></svg>挠度验算</a>
+        <a class="nav" data-nav="punching" href="#/punching"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="10" rx="1"/><path d="M9 7V4h6v3"/><path d="M9 17v3h6v-3"/></svg>受冲切承载力</a>
+        <a class="nav" data-nav="bearing-local" href="#/bearing-local"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="6" width="16" height="12" rx="1"/><rect x="8" y="9" width="8" height="6" rx="1"/><path d="M12 3v3M12 18v3"/></svg>局部受压</a>
+        <a class="nav" data-nav="corbel" href="#/corbel"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3v18"/><path d="M6 8h8l4 5v5H6z"/><path d="M14 8v3" stroke-dasharray="2 2"/></svg>牛腿设计</a>
+        <a class="nav" data-nav="deep-beam" href="#/deep-beam"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="1"/><path d="M8 4v16M16 4v16"/><path d="M3 12h18" stroke-dasharray="2 3"/></svg>深梁计算</a>
+        <a class="nav" data-nav="addl-trans" href="#/addl-trans"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 18h16M8 18V9M16 18V9"/><path d="M5 9h14"/><path d="M8 5v4M16 5v4"/><circle cx="12" cy="12" r="2"/></svg>附加横向钢筋</a>
+        <div class="group-label">砌体结构</div>
+        <a class="nav" data-nav="mas-comp" href="#/mas-comp"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M4 9h16M4 15h16M8 3v6M16 3v6M8 15v6M16 15v6"/></svg>砌体受压与高厚比</a>
+        <a class="nav" data-nav="mas-local" href="#/mas-local"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="6" width="16" height="14" rx="1"/><rect x="9" y="3" width="6" height="6" rx="1"/><path d="M4 11h16M4 16h16M8 6v5M16 6v5"/></svg>砌体局部受压</a>
+        <a class="nav" data-nav="lintel" href="#/lintel"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="6" width="16" height="14" rx="1"/><path d="M7 12h10v4H7z"/><path d="M4 9h16M4 16h16M8 6v3M16 6v3"/></svg>过梁与圈梁</a>
+        <a class="nav" data-nav="cantilever" href="#/cantilever"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10h18l-5 8H8z"/><path d="M3 10v11M21 10v11"/><path d="M8 18v3M16 18v3"/></svg>挑梁计算</a>
+        <a class="nav" data-nav="balcony" href="#/balcony"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 14h12v6H2z"/><path d="M14 17h6l2-3-2-3h-6"/><path d="M2 18h12"/></svg>阳台雨篷挑檐</a>
+        <a class="nav" data-nav="wall-beam" href="#/wall-beam"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="14" rx="1"/><path d="M3 8h18M3 13h18M7 3v5M17 3v5"/><rect x="2" y="17" width="20" height="4" rx="1"/></svg>墙梁计算</a>
+        <div class="group-label">特殊构件</div>
+        <a class="nav" data-nav="basement-wall" href="#/basement-wall"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V6h16v14"/><path d="M4 20h16"/><path d="M7 8v8M11 8v8M15 8v8M19 8v8"/><path d="M2 14h2v3H2z" fill="currentColor" opacity="0.3"/></svg>地下室外墙</a>
+        <a class="nav" data-nav="shear-wall" href="#/shear-wall"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="5" height="18" rx="1"/><rect x="16" y="3" width="5" height="18" rx="1"/><path d="M8 7h8M8 12h8M8 17h8"/></svg>剪力墙稳定</a>
+        <a class="nav" data-nav="pool-rect" href="#/pool-rect"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="8" width="16" height="12" rx="1"/><path d="M4 12h16" stroke-dasharray="2 2"/><path d="M7 10v4M12 10v4M17 10v4"/><path d="M2 6h20"/></svg>矩形水池</a>
+        <a class="nav" data-nav="pool-circ" href="#/pool-circ"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="17" rx="8" ry="4"/><path d="M4 17V9a8 4 0 0 1 16 0v8"/><path d="M4 13a8 4 0 0 1 16 0" stroke-dasharray="2 2"/></svg>圆形水池</a>
+        <a class="nav" data-nav="retain-cant" href="#/retain-cant"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 18V6l5 2v10z"/><path d="M3 18h18v3H3z"/><path d="M8 10 5 8" stroke-dasharray="2 2"/><path d="M8 14 5 12" stroke-dasharray="2 2"/></svg>悬臂式挡土墙</a>
+        <a class="nav" data-nav="retain-butt" href="#/retain-butt"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20v-8h5l-2 8z"/><path d="M15 20V4h6v16z"/><path d="M2 20h20v3H2z"/><path d="M7 12v8"/></svg>扶壁式挡土墙</a>
+        <a class="nav" data-nav="embed-plate" href="#/embed-plate"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="6" width="16" height="12" rx="1"/><line x1="8" y1="9" x2="8" y2="15"/><line x1="12" y1="9" x2="12" y2="15"/><line x1="16" y1="9" x2="16" y2="15"/><path d="M6 18v2M12 18v2M18 18v2"/></svg>预埋件计算</a>
+        <div class="group-label">地基基础</div>
+        <a class="nav" data-nav="footing-col" href="#/footing-col"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="3" width="8" height="8" rx="1"/><path d="M4 20h16v-3H4z"/><path d="M8 11v6M16 11v6"/></svg>柱下独立基础</a>
+        <a class="nav" data-nav="footing-wall" href="#/footing-wall"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="10"/><path d="M4 20h16v-3H4z"/><path d="M9 13v4M15 13v4"/></svg>墙下条形基础</a>
+        <a class="nav" data-nav="bearing-cap" href="#/bearing-cap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="14" width="14" height="6" rx="1"/><path d="M3 14h18M8 8h8v6H8z"/><path d="M12 2v6"/></svg>地基承载力验算</a>
+        <a class="nav" data-nav="settlement" href="#/settlement"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="1"/><path d="M4 10h16M4 16h16M8 4v6M16 4v6"/><path d="M12 16v4" stroke-dasharray="2 2"/><path d="M10 20h4"/></svg>地基沉降计算</a>
+        <a class="nav" data-nav="bearing-theory" href="#/bearing-theory"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg>承载力理论公式法</a>
+        <a class="nav" data-nav="soft-underlayer" href="#/soft-underlayer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h18M3 14h18"/><path d="M3 8v8M21 8v8"/><path d="M8 11h8" stroke-dasharray="2 2"/><path d="M10 4l-2 2M14 4l2 2"/></svg>软弱下卧层验算</a>
+        <a class="nav" data-nav="anti-uplift" href="#/anti-uplift"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v10"/><path d="M8 6l4-4 4 4"/><path d="M5 14h14l-2 6H7z"/><path d="M9 17h6" stroke-dasharray="2 2"/><circle cx="6" cy="8" r="2"/><path d="M8 8h4"/></svg>抗浮稳定性验算</a>
+        <a class="nav" data-nav="rigid-found" href="#/rigid-found"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 20h18l-4-6H7z"/><rect x="9" y="8" width="6" height="6"/><path d="M12 3v5"/></svg>无筋扩展条形基础</a>
+        <div class="group-label">桩基</div>
+        <a class="nav" data-nav="pile-cap" href="#/pile-cap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="5" width="16" height="5" rx="1"/><path d="M7 10v8M12 10v8M17 10v8"/><path d="M5 18h14" stroke-dasharray="2 2"/></svg>独立桩承台</a>
+        <a class="nav" data-nav="pile-single" href="#/pile-single"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="2"/><path d="M10 7v12l-2-2"/><path d="M14 7v12l2-2"/><path d="M12 19v3"/></svg>单桩竖向承载力</a>
+        <a class="nav" data-nav="pile-bearing" href="#/pile-bearing"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="5" rx="1"/><path d="M6 9v9M12 9v9M18 9v9"/><path d="M4 18h16" stroke-dasharray="2 2"/><path d="M12 2l0 2"/></svg>桩基竖向承载力验算</a>
+        <a class="nav" data-nav="pile-horizontal" href="#/pile-horizontal"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="4" r="2"/><path d="M12 6v14"/><path d="M6 9h6" stroke-dasharray="2 2"/><path d="M4 13h8" stroke-dasharray="2 2"/><path d="M3 17h9" stroke-dasharray="2 2"/><path d="M12 9l-2 0"/><path d="M12 13l-3 0"/><path d="M12 17l-4 0"/></svg>桩基水平承载力</a>
+        <a class="nav" data-nav="pile-settle" href="#/pile-settle"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="4" rx="1"/><path d="M7 8v6M17 8v6"/><path d="M5 14h14"/><path d="M12 14v6" stroke-dasharray="2 2"/><path d="M10 20h4"/></svg>桩基沉降计算</a>
+        <a class="nav" data-nav="pile-bearing-55003" href="#/pile-bearing-55003"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="5" rx="1"/><path d="M6 9v9M12 9v9M18 9v9"/><path d="M4 18h16" stroke-dasharray="2 2"/><path d="M9 2l0 2M15 2l0 2"/><circle cx="12" cy="6" r="1"/></svg>桩基验算(GB55003)</a>
+        <div class="group-label">钢结构</div>
+        <a class="nav" data-nav="steel-column" href="#/steel-column"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v2H4z"/><path d="M4 18h16v2H4z"/><path d="M10 6v12M14 6v12"/></svg>钢压弯构件（柱）</a>
+        <a class="nav" data-nav="weld" href="#/weld"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8l8-4 8 4v8l-8 4-8-4z"/><path d="M12 4v16"/><path d="M4 8l8 4 8-4"/></svg>焊缝连接计算</a>
+        <a class="nav" data-nav="bolt" href="#/bolt"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="6" r="3"/><path d="M10 9v8l-2 1"/><path d="M14 9v8l2 1"/><path d="M8 18h8"/></svg>螺栓连接计算</a>
+        <a class="nav" data-nav="anchor-bolt" href="#/anchor-bolt"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="4" rx="1"/><path d="M7 9v9M12 9v9M17 9v9"/><path d="M5 18h14" stroke-dasharray="2 2"/><path d="M9 3v2M15 3v2"/></svg>柱脚锚栓计算</a>
+        <a class="nav" data-nav="steel-beam" href="#/steel-beam"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h18v2H3z"/><path d="M3 15h18v2H3z"/><path d="M11 7v8M13 7v8"/><path d="M5 11h14" stroke-dasharray="2 2"/></svg>钢连续梁（钢梁）</a>
+        <div class="group-label">装配式</div>
+        <a class="nav" data-nav="stage-check" href="#/stage-check"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v8H3z"/><path d="M3 15h18v6H3z"/><path d="M7 6h4M7 18h10"/></svg>叠合构件两阶段验算</a>
+        <a class="nav" data-nav="aac-wall" href="#/aac-wall"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M3 9h18M3 15h18M9 3v6M15 3v6M9 15v6M15 15v6"/></svg>蒸压加气混凝土外墙板</a>
+        <a class="nav" data-nav="anchor" href="#/anchor"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="2"/><path d="M12 7v12M5 12H3a9 9 0 0 0 18 0h-2"/></svg>保温外墙锚固件设计</a>
+        <a class="nav" data-nav="td-slab" href="#/td-slab"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 8h18M3 16h18"/><path d="M6 4v4M10 4v4M14 4v4M18 4v4"/></svg>钢筋桁架楼板</a>
+        <a class="nav" data-nav="l22zg401" href="#/l22zg401"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h18M3 12h18M3 16h18"/><path d="M5 4v4M9 4v4M13 4v4M17 4v4"/><circle cx="12" cy="20" r="1.5"/></svg>预应力钢管桁架叠合板</a>
+        <div class="group-label">速查工具</div>
+        <a class="nav" data-nav="rebar-area" href="#/rebar-area"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="8" r="3"/><circle cx="16" cy="8" r="3"/><circle cx="8" cy="16" r="3"/><circle cx="16" cy="16" r="3"/></svg>钢筋面积速查</a>
+        <a class="nav" data-nav="rho-min" href="#/rho-min"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3v8a4 4 0 0 0 8 0V3M10 13v8M6 21h8"/></svg>最小配筋率</a>
+        <a class="nav" data-nav="col-tie" href="#/col-tie"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="3" width="14" height="18" rx="1"/><path d="M5 8h14M5 14h14M5 20h14"/><path d="M9 3v18M15 3v18" stroke-dasharray="2 2"/></svg>柱箍筋加密区</a>
+        <a class="nav" data-nav="seismic" href="#/seismic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 10v3M12 17v5"/><path d="M5 7l14 3M5 14l14-3" stroke-dasharray="2 3"/><circle cx="12" cy="12" r="9" stroke-dasharray="2 4"/></svg>抗震设防参数</a>
+        <a class="nav" data-nav="seismic-perf" href="#/seismic-perf"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3-9 4 18 3-9h4"/></svg>抗震性能化设计</a>
+        <a class="nav" data-nav="masonry-seismic" href="#/masonry-seismic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M3 9h18M3 15h18M9 3v6M15 9v6M9 15v6M15 3v6"/></svg>砌体房屋抗震验算</a>
+        <a class="nav" data-nav="joint-core" href="#/joint-core"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="1"/><path d="M4 12h16M12 4v16"/><circle cx="12" cy="12" r="4" stroke-dasharray="2 2"/></svg>框架节点核芯区验算</a>
+        <a class="nav" data-nav="steel-seismic" href="#/steel-seismic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v2H4z"/><path d="M4 18h16v2H4z"/><path d="M10 6v12M14 6v12"/><path d="M7 10l5-3 5 3M7 14l5 3 5-3" stroke-dasharray="1 2"/></svg>钢结构抗震参数</a>
+        <a class="nav" data-nav="isolation" href="#/isolation"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="6" rx="1"/><path d="M6 9v3M12 9v3M18 9v3"/><rect x="3" y="15" width="18" height="6" rx="1"/><path d="M6 12v3M12 12v3M18 12v3" stroke-dasharray="2 2"/></svg>隔震设计简化计算</a>
+        <a class="nav" data-nav="load-combo" href="#/load-combo"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 4h7v7H3zM14 4h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z"/><path d="M10 7.5h4M7.5 10v4M16.5 14v0"/></svg>荷载组合计算</a>
+        <a class="nav" data-nav="crane-load" href="#/crane-load"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M6 6v12M18 6v12M9 18h6M12 6v6"/><circle cx="12" cy="9" r="1.5"/></svg>吊车荷载计算</a>
+        <a class="nav" data-nav="temp-action" href="#/temp-action"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13.5V5a2 2 0 0 1 4 0v8.5a4 4 0 1 1-4 0z"/><path d="M14 13.5a4 4 0 1 0-4 0"/></svg>温度作用计算</a>
+        <a class="nav" data-nav="floor-live" href="#/floor-live"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="14" rx="1"/><path d="M3 9h18M3 14h18M9 4v14M15 4v14"/></svg>楼面活荷载查表</a>
+        <a class="nav" data-nav="wind-snow" href="#/wind-snow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9h10a3 3 0 1 0-3-3"/><path d="M3 14h14a3 3 0 1 1-3 3"/><path d="M7 5l2 2M15 17l-2 2"/><path d="M5 19l3-3"/></svg>风荷载与雪荷载</a>
+        <div class="sidebar-foot">
+            <div class="foot-note">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>
+                计算结果需经专业复核后使用
+            </div>
+            <a class="feedback-btn" href="https://my.feishu.cn/share/base/shrcnjuT074KRB7Rne5WrNbzgCf" target="_blank" rel="noopener">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                反馈建议
+            </a>
+        </div>
+    </aside>
+
+    <div class="topbar">
+        <button class="burger" id="burgerBtn" aria-label="菜单">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0d253d" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <span>计算工具箱</span>
+    </div>
+
+    <main class="main">
+        <div class="main-inner" id="view"></div>
+    </main>
+</div>
+
+    <!-- ========== 核心模块 ========== -->
+    <script src="src/core/materials.js"></script>
+    <script src="src/core/calculator.js"></script>
+    <script src="src/core/report.js"></script>
+    <script src="src/core/router.js"></script>
+    <script src="src/core/tool-registry.js"></script>
+    <!-- 结果解读与整改建议（纯本地，挂到所有工具的 .result-item / .proc-body 上） -->
+    <script src="src/core/advisor.js"></script>
+    <!-- ========== 应用引导壳（工具注册表声明） ========== -->
+    <script src="src/core/app-base.js"></script>
+
+    <!-- ========== 混凝土结构工具 (14) ========== -->
+    <script src="src/tools/concrete/beam-rect.js"></script>
+    <script src="src/tools/concrete/beam-rect-design.js"></script>
+    <script src="src/tools/concrete/beam-t.js"></script>
+    <script src="src/tools/concrete/beam-shear.js"></script>
+    <script src="src/tools/concrete/beam-cont.js"></script>
+    <script src="src/tools/concrete/slab-rect.js"></script>
+    <script src="src/tools/concrete/stair-slab.js"></script>
+    <script src="src/tools/concrete/column-axial.js"></script>
+    <script src="src/tools/concrete/crack-width.js"></script>
+    <script src="src/tools/concrete/deflection.js"></script>
+    <script src="src/tools/concrete/punching.js"></script>
+    <script src="src/tools/concrete/bearing-local.js"></script>
+    <script src="src/tools/concrete/corbel.js"></script>
+    <script src="src/tools/concrete/deep-beam.js"></script>
+    <script src="src/tools/concrete/addl-trans.js"></script>
+
+    <!-- ========== 地基基础工具 (8) ========== -->
+    <script src="src/tools/foundation/footing-col.js"></script>
+    <script src="src/tools/foundation/footing-wall.js"></script>
+    <script src="src/tools/foundation/bearing-cap.js"></script>
+    <script src="src/tools/foundation/settlement.js"></script>
+    <script src="src/tools/foundation/bearing-theory.js"></script>
+    <script src="src/tools/foundation/soft-underlayer.js"></script>
+    <script src="src/tools/foundation/anti-uplift.js"></script>
+    <script src="src/tools/foundation/rigid-found.js"></script>
+
+    <!-- ========== 桩基础工具 (6) ========== -->
+    <script src="src/tools/pile/pile-cap.js"></script>
+    <script src="src/tools/pile/pile-single.js"></script>
+    <script src="src/tools/pile/pile-bearing.js"></script>
+    <script src="src/tools/pile/pile-horizontal.js"></script>
+    <script src="src/tools/pile/pile-settle.js"></script>
+    <script src="src/tools/pile/pile-bearing-55003.js"></script>
+
+    <!-- ========== 钢结构工具 (5) ========== -->
+    <script src="src/tools/steel/steel-column.js"></script>
+    <script src="src/tools/steel/steel-beam.js"></script>
+    <script src="src/tools/steel/weld.js"></script>
+    <script src="src/tools/steel/bolt.js"></script>
+    <script src="src/tools/steel/anchor-bolt.js"></script>
+
+    <!-- ========== 砌体结构工具 (6) ========== -->
+    <script src="src/tools/masonry/mas-comp.js"></script>
+    <script src="src/tools/masonry/mas-local.js"></script>
+    <script src="src/tools/masonry/lintel.js"></script>
+    <script src="src/tools/masonry/cantilever.js"></script>
+    <script src="src/tools/masonry/balcony.js"></script>
+    <script src="src/tools/masonry/wall-beam.js"></script>
+
+    <!-- ========== 装配式结构工具 (4+1) ========== -->
+    <script src="src/tools/prefab/stage-check.js"></script>
+    <script src="src/tools/prefab/td-slab.js"></script>
+    <script src="src/tools/prefab/aac-wall.js"></script>
+    <script src="src/tools/prefab/anchor.js"></script>
+    <script src="src/l22zg401-data.js"></script>
+    <script src="src/l22zg401.js"></script>
+
+    <!-- ========== 特殊构件 (7) ========== -->
+    <script src="src/tools/misc/basement-wall.js"></script>
+    <script src="src/tools/misc/shear-wall.js"></script>
+    <script src="src/tools/misc/pool-rect.js"></script>
+    <script src="src/tools/misc/pool-circ.js"></script>
+    <script src="src/tools/misc/retain-cant.js"></script>
+    <script src="src/tools/misc/retain-butt.js"></script>
+    <script src="src/tools/misc/embed-plate.js"></script>
+
+    <!-- ========== 速查工具 (14) ========== -->
+    <script src="src/tools/misc/rebar-area.js"></script>
+    <script src="src/tools/misc/rebar-pick.js"></script>
+    <script src="src/tools/misc/rho-min.js"></script>
+    <script src="src/tools/misc/col-tie.js"></script>
+    <script src="src/tools/misc/seismic.js"></script>
+    <script src="src/tools/misc/seismic-perf.js"></script>
+    <script src="src/tools/misc/masonry-seismic.js"></script>
+    <script src="src/tools/misc/joint-core.js"></script>
+    <script src="src/tools/misc/steel-seismic.js"></script>
+    <script src="src/tools/misc/isolation.js"></script>
+    <script src="src/tools/misc/load-combo.js"></script>
+    <script src="src/tools/misc/crane-load.js"></script>
+    <script src="src/tools/misc/temp-action.js"></script>
+    <script src="src/tools/misc/floor-live.js"></script>
+    <script src="src/tools/misc/wind-snow.js"></script>
+
+    <!-- ========== 智能计算助手 ========== -->
+    <script src="src/tools/misc/calc-assistant.js"></script>
+    <!-- 本地规范问答 / 结果解读 / 批量配筋（无需 API Key） -->
+    <script src="src/tools/misc/local-qa.js"></script>
+
+    <!-- ========== AI 模块 ========== -->
+    <script src="src/ai/ai-tool-registry.js"></script>
+    <script src="src/ai/ai-task.js"></script>
+    <script src="src/ai/ai-local-parser.js"></script>
+    <script src="src/ai/ai-chat.js"></script>
+    <script src="src/ai/ai-chat-ui.js"></script>
+    <script src="src/ai/ai-ab-test.js"></script>
+
+    <!-- ========== 知识库 ========== -->
+    <script src="src/knowledge/retrieval.js"></script>
+
+    <!-- ========== UI 模块（首页+新导航） ========== -->
+    <script src="src/ui/home.js"></script>
+    <script src="src/ui/sidebar.js"></script>
+    <script src="src/ui/ux.js"></script>
+
+    <!-- ========== 初始化（所有脚本加载完成后执行） ========== -->
+    <script>
+        // 所有工具脚本已加载完毕，启动路由
+        if (typeof route === 'function') route();
+        // 初始化新侧栏导航
+        if (window.initNewSidebar) window.initNewSidebar();
+    </script>
+
+</body>
+</html>

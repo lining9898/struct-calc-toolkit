@@ -1,0 +1,8 @@
+# 编辑器 / 系统
+.DS_Store
+Thumbs.db
+*.swp
+*~
+# 日志
+*.log
+# 本仓库为纯静态前端，src/ 与 index.html 全部纳入版本控制
