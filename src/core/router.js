@@ -125,6 +125,7 @@ function toggleProc(wrap) {
 }
 // 全局事件委托：点击 .proc-head 切换面板
 document.addEventListener('click', function (e) {
+    if (e.target.closest('button, a, input, select, textarea')) return;
     var head = e.target.closest('.proc-head');
     if (head) {
         var wrap = head.closest('.proc-wrap');
@@ -134,6 +135,7 @@ document.addEventListener('click', function (e) {
 });
 // 同样支持 touchend，避免移动端 click 延迟
 document.addEventListener('touchend', function (e) {
+    if (e.target.closest('button, a, input, select, textarea')) return;
     var head = e.target.closest('.proc-head');
     if (head) {
         var wrap = head.closest('.proc-wrap');

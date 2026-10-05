@@ -43,67 +43,67 @@ function fmt(v, d) { var n = Number(v); if (!isFinite(n)) return '—'; return n
 function opts(arr, sel) { return arr.map(function (o) { return '<option value="' + o.v + '"' + (String(o.v) === String(sel) ? ' selected' : '') + '>' + o.t + '</option>'; }).join(''); }
 // 详细过程面板一键复制
 function copyProc(btn, e) {
-    if (e) e.preventDefault();
-    var details = btn.closest('.proc-wrap');
-    if (!details) return;
-    // 确保面板展开
-    details.classList.add('open');
-    var contentDiv = details.querySelector('.proc-body');
-    if (!contentDiv) return;
-    // 用浏览器原生 textContent 获取纯文本
-    var txt = contentDiv.textContent || contentDiv.innerText || '';
-    txt = txt.replace(/\n[ \t]+\n/g, '\n\n').replace(/\n\s*\n\s*\n/g, '\n\n').replace(/[ \t]+\n/g, '\n');
-    txt = txt.replace(/^\s+|\s+$/g, '');
-
-    var originalText = btn.textContent;
-
-    function showSuccess() {
-        btn.textContent = '已复制';
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    var wrap = btn.closest('.proc-wrap, details.process');
+    if (!wrap) return;
+    if (wrap.tagName === 'DETAILS') wrap.open = true;
+    else wrap.classList.add('open');
+    var body = wrap.querySelector('.proc-body');
+    if (!body) return;
+    var txt = (body.innerText || body.textContent || '').replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+    var label = btn._copyLabel || (btn._copyLabel = btn.textContent);
+    function status(message) {
         clearTimeout(btn._copyTimer);
-        btn._copyTimer = setTimeout(function() {
-            btn.textContent = originalText;
-        }, 2000);
+        btn.textContent = message;
+        btn._copyTimer = setTimeout(function () { btn.textContent = label; }, 2000);
     }
-
-    function showError() {
-        btn.textContent = '复制失败';
-        clearTimeout(btn._copyTimer);
-        btn._copyTimer = setTimeout(function() {
-            btn.textContent = originalText;
-        }, 2000);
-    }
-
-    // 最简单可靠的复制方式
-    function doCopy(text) {
-        var ta = document.createElement('textarea');
-        ta.value = text;
-        ta.style.position = 'fixed';
-        ta.style.left = '-9999px';
-        ta.style.top = '0';
-        ta.style.opacity = '0';
-        document.body.appendChild(ta);
-        ta.focus();
+    if (!txt) { status('暂无计算过程'); return; }
+    var old = wrap.querySelector('.proc-copy-fallback');
+    if (old) old.remove();
+    // 同步复制保留本次点击的用户激活，兼容剪贴板权限受限的内嵌页面。
+    var active = document.activeElement;
+    var selection = window.getSelection();
+    var ranges = [];
+    if (selection) for (var i = 0; i < selection.rangeCount; i++) ranges.push(selection.getRangeAt(i).cloneRange());
+    var ta = document.createElement('textarea');
+    ta.value = txt;
+    ta.readOnly = true;
+    ta.style.cssText = 'position:fixed;left:0;top:0;width:1px;height:1px;opacity:0;font-size:16px;';
+    document.body.appendChild(ta);
+    var copied = false;
+    try {
+        ta.focus({ preventScroll: true });
         ta.select();
-        ta.setSelectionRange(0, text.length);
-        var ok = false;
-        try {
-            ok = document.execCommand('copy');
-        } catch (ex) {
-            ok = false;
-        }
-        document.body.removeChild(ta);
-        if (ok) showSuccess();
-        else showError();
+        ta.setSelectionRange(0, txt.length);
+        copied = document.execCommand('copy');
+    } catch (err) { copied = false; }
+    finally {
+        ta.remove();
+        if (active && active.focus) active.focus({ preventScroll: true });
+        if (selection) { selection.removeAllRanges(); ranges.forEach(function (r) { selection.addRange(r); }); }
     }
-
-    // 优先用 Clipboard API
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(txt).then(showSuccess).catch(function() {
-            doCopy(txt);
-        });
-    } else {
-        doCopy(txt);
+    function manualCopy() {
+        status('请手动复制');
+        var box = document.createElement('div');
+        box.className = 'proc-copy-fallback';
+        box.setAttribute('role', 'status');
+        var note = document.createElement('p');
+        note.textContent = '浏览器限制了自动复制。下面已选中完整计算过程，请按 Ctrl/⌘+C，或长按文字选择复制。';
+        var input = document.createElement('textarea');
+        input.readOnly = true;
+        input.value = txt;
+        input.setAttribute('aria-label', '完整计算过程，可手动复制');
+        input.style.cssText = 'width:100%;min-height:180px;margin-top:8px;padding:12px;font:inherit;line-height:1.6;';
+        box.appendChild(note); box.appendChild(input);
+        wrap.appendChild(box);
+        input.focus(); input.select(); input.setSelectionRange(0, txt.length);
     }
+    if (copied) { status('已复制'); return; }
+    try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(txt).then(function () { status('已复制'); }, manualCopy);
+        } else manualCopy();
+    } catch (err) { manualCopy(); }
 }
 /* ===================== 500MPa 级钢筋判定（关键口径，勿用 fy 判断） =====================
  * 必须按「屈服强度标准值 f_yk」判定是否为 500MPa 级钢筋。
