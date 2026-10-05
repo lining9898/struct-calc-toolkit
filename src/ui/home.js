@@ -19,7 +19,7 @@ function renderHome() {
     var groups = [
         {
             key: 'bending', name: '受弯构件', desc: '梁、板等受弯构件正截面与斜截面承载力计算',
-            icon: 'beam',
+            icon: 'beam-rect',
             tools: [
                 { id: 'beam-rect', t: '矩形梁正截面承载力', d: '单筋 / 双筋矩形截面受弯承载力复核，含界限受压区高度与最小配筋率验算。', code: 'GB 6.2.10' },
                 { id: 'beam-t', t: 'T形梁正截面承载力', d: '第一类 / 第二类 T 形截面判别与受弯承载力计算，适配装配式双T板等常见截面。', code: 'GB 6.2.11' },
@@ -30,7 +30,7 @@ function renderHome() {
         },
         {
             key: 'slab', name: '板与楼梯', desc: '单向板、双向板、板式楼梯等水平构件计算',
-            icon: 'slab',
+            icon: 'slab-rect',
             tools: [
                 { id: 'slab-rect', t: '单块矩形板计算', d: '四边支承矩形板，按长短边比判别单向/双向板，弹性理论查表法计算跨中与支座弯矩并配筋。', code: '弹性薄板理论 / GB 6.2.10' },
                 { id: 'stair-slab', t: '板式楼梯计算', d: '梯段斜板 + 平台板内力与配筋计算，含恒载、活载组合，梯梁简化验算提示。', code: 'GB 50009 / GB 6.2.10' }
@@ -38,14 +38,14 @@ function renderHome() {
         },
         {
             key: 'column', name: '受压构件', desc: '轴心、偏心受压柱承载力与稳定验算',
-            icon: 'column',
+            icon: 'column-axial',
             tools: [
                 { id: 'column-axial', t: '轴心受压柱承载力', d: '普通箍筋柱承载力复核与纵筋面积计算，自动按长细比取稳定系数 φ。', code: 'GB 6.2.15' }
             ]
         },
         {
             key: 'check', name: '构件验算', desc: '裂缝宽度、挠度、冲切、局部受压等专项验算',
-            icon: 'check',
+            icon: 'punching',
             tools: [
                 { id: 'crack-width', t: '裂缝宽度计算', d: '受弯构件最大裂缝宽度 w_max 计算，含有效受拉配筋率、钢筋应力、应变不均匀系数及与限值比较。', code: 'GB/T 50010-2010（2024年版） 第 7.1 章' },
                 { id: 'deflection', t: '挠度验算', d: '受弯构件短期刚度 B_s、长期刚度 B 及挠度 f 计算，与规范挠度限值比较判定。', code: 'GB/T 50010-2010（2024年版） 第 7.2 章' },
@@ -57,7 +57,7 @@ function renderHome() {
         },
         {
             key: 'precast', name: '装配式', desc: '叠合构件、外墙板与锚固件设计验算',
-            icon: 'precast',
+            icon: 'slab-rect',
             tools: [
                 { id: 'stage-check', t: '叠合构件两阶段验算', d: '叠合板 / 叠合梁施工阶段第一阶段承载力、受拉钢筋应力与叠合面受剪验算。', code: 'GB/T 50010-2010（2024年版） 附录 H' },
                 { id: 'l22zg401', t: '预应力钢管桁架叠合板', d: 'L22ZG401 预应力混凝土钢管桁架叠合板：底板选用查询、荷载等级计算、施工阶段验算。', code: 'L22ZG401 鲁2022' },
@@ -68,7 +68,7 @@ function renderHome() {
         },
         {
             key: 'foundation', name: '地基基础', desc: '独立基础、条形基础、地基承载力与沉降',
-            icon: 'footing',
+            icon: 'footing-col',
             tools: [
                 { id: 'footing-col', t: '柱下独立基础计算', d: '轴心/偏心受压独立基础：基底面积确定、地基承载力验算、冲切验算、底板双向配筋。', code: 'GB 50007-2011 / GB 6.2.10' },
                 { id: 'footing-wall', t: '墙下条形基础计算', d: '扩展式条形基础：基础宽度确定、高度验算、底板横向受力筋与纵向分布筋。', code: 'GB 50007-2011 / GB 6.2.10' },
@@ -82,7 +82,7 @@ function renderHome() {
         },
         {
             key: 'pile', name: '桩基', desc: '单桩承载力、桩承台、桩基沉降与水平力',
-            icon: 'pile',
+            icon: 'pile-cap',
             tools: [
                 { id: 'pile-cap', t: '独立桩承台计算', d: '柱下独立桩承台：各桩反力分配、柱下与角桩冲切、承台受弯配筋、斜截面受剪。', code: 'JGJ 94-2008 第 5.9 条' },
                 { id: 'pile-single', t: '单桩竖向承载力', d: '按土的物理指标经验参数法：侧阻 + 端阻计算 Ra = upΣqsikli + qpkAp。', code: 'JGJ 94-2008 第 5.3 条' },
@@ -94,7 +94,7 @@ function renderHome() {
         },
         {
             key: 'masonry', name: '砌体结构', desc: '砌体受压、局部受压、过梁、挑梁、墙梁',
-            icon: 'masonry',
+            icon: 'mas-comp',
             tools: [
                 { id: 'mas-comp', t: '砌体受压承载力与高厚比', d: '砌体墙 / 柱受压承载力 φfA 验算与高厚比 β ≤ μ1μ2[β] 验算。', code: 'GB 50003-2011 第 5.1、6.1 条' },
                 { id: 'mas-local', t: '砌体局部受压验算', d: '梁端支承处、垫块下砌体局部受压承载力验算，含局部抗压强度提高系数 γ。', code: 'GB 50003-2011 第 5.2 条' },
@@ -106,7 +106,7 @@ function renderHome() {
         },
         {
             key: 'steel', name: '钢结构', desc: '钢柱、钢梁、螺栓、焊缝、锚栓',
-            icon: 'steel',
+            icon: 'steel-beam',
             tools: [
                 { id: 'steel-column', t: '钢柱受压承载力', d: '实腹式钢柱轴心受压整体稳定验算，含长细比、稳定系数 φ、毛截面面积 A。', code: 'GB 50017-2017 第 7.2 节' },
                 { id: 'steel-beam', t: '钢梁受弯承载力', d: '工字形 / H 型钢梁抗弯强度、抗剪强度、整体稳定与局部受压验算。', code: 'GB 50017-2017 第 6 章' },
@@ -117,7 +117,7 @@ function renderHome() {
         },
         {
             key: 'misc', name: '综合计算', desc: '荷载组合、地震、水池、挡土墙、吊车等',
-            icon: 'misc',
+            icon: 'load-combo',
             tools: [
                 { id: 'load-combo', t: '荷载组合计算', d: '基本组合 / 标准组合 / 准永久组合 / 地震组合，含可变荷载组合值系数。', code: 'GB 50009-2012 / GB/T 50011-2010（2024年版）' },
                 { id: 'seismic', t: '地震作用计算', d: '底部剪力法计算水平地震作用，含等效总重力荷载、特征周期、水平影响系数 α。', code: 'GB/T 50011-2010（2024年版） 第 5 章' },
@@ -169,7 +169,7 @@ function renderHome() {
         '<div class="hero-content">' +
         '<span class="eyebrow">Structural Toolkit</span>' +
         '<h1>计算工具箱</h1>' +
-        '<p class="subtitle">基于现行国家规范的结构工程常用计算工具，涵盖混凝土受弯受压、砌体结构、地基基础、桩基、钢结构、装配式等 ' + calcToolCount + ' 个计算模块，所有结果均提供可追溯的详细计算过程。</p>' +
+        '<p class="subtitle">结构工程常用计算与验算，覆盖混凝土、地基基础、桩基、钢结构等 ' + calcToolCount + ' 个模块，附完整计算过程与规范依据。</p>' +
         '<div class="home-stats">' +
             '<div class="stat"><span class="num">' + calcToolCount + '</span><span class="lbl">个专业计算工具</span></div>' +
             '<div class="stat"><span class="num">' + groups.length + '</span><span class="lbl">专业分组</span></div>' +
@@ -178,10 +178,10 @@ function renderHome() {
             '<div class="stat"><span class="num">Word</span><span class="lbl">计算书导出</span></div>' +
         '</div>' +
         '<div class="quick-entry">' +
-            '<a href="#/calc-assistant" style="background:linear-gradient(135deg,#533afd,#ea2261);color:#fff;border:none">' + '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg> 智能计算助手</a>' +
-            '<a href="#/beam-cont">' + iconFor('beam', 16) + ' 连续梁计算</a>' +
-            '<a href="#/footing-col" class="secondary">' + iconFor('footing', 16) + ' 柱下独立基础</a>' +
-            '<a href="#/stage-check" class="secondary">' + iconFor('precast', 16) + ' 叠合构件验算</a>' +
+            '<a href="#/calc-assistant" class="assistant-entry">' + '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg> 智能计算助手</a>' +
+            '<a href="#/beam-cont">' + iconFor('beam-rect', 16) + ' 连续梁计算</a>' +
+            '<a href="#/footing-col" class="secondary">' + iconFor('footing-col', 16) + ' 柱下独立基础</a>' +
+            '<a href="#/stage-check" class="secondary">' + iconFor('slab-rect', 16) + ' 叠合构件验算</a>' +
         '</div>' +
         '</div>' +
     '</div>';
@@ -209,7 +209,7 @@ function renderHome() {
                 '<p>' + t.d + '</p>' +
                 '<div class="card-foot">' +
                     '<span class="code-tag">' + t.code + '</span>' +
-                    '<span class="go-arrow">打开 →</span>' +
+                    '<span class="go-arrow">打开工具</span>' +
                 '</div>' +
             '</a>';
         });
@@ -243,19 +243,23 @@ function renderHome() {
     closeSidebar();
     // 交互增强层：最近使用 / 我的收藏 快捷块（ui/ux.js）
     if (window.UX && window.UX.onHomeRendered) window.UX.onHomeRendered();
+    if (window.enhanceHomeUI) window.enhanceHomeUI();
 }
 
 
 /* ===== TYAI 增强：搜索、快捷入口、移动端优化 ===== */
 (function () {
+    window.enhanceHomeUI = function () {
+        enhanceHomeSearch();
+        enhanceCards();
+    };
     function ready(fn) {
         if (document.readyState !== 'loading') fn();
         else document.addEventListener('DOMContentLoaded', fn);
     }
     ready(function () {
         enhanceMobileNav();
-        enhanceHomeSearch();
-        enhanceCards();
+        window.enhanceHomeUI();
     });
     function enhanceMobileNav() {
         if (!document.querySelector('.topbar')) {
@@ -304,7 +308,7 @@ function renderHome() {
                     <input id="tyaiToolSearch" type="search" placeholder="输入关键词，例如：连续梁、裂缝、柱下独立基础、钢筋桁架楼板">
                     <span class="tyai-search-icon">⌕</span>
                 </div>
-                <div class="tyai-search-hint">支持按工具名称、说明文字、规范编号进行筛选。快捷键：按 / 聚焦搜索。</div>
+                <div class="tyai-search-hint">按名称或规范编号筛选。按 / 或 Ctrl/⌘+K 打开全局检索。</div>
             </div>
             <div class="tyai-fav-panel">
                 <div class="tyai-fav-title">常用入口</div>
@@ -340,7 +344,7 @@ function renderHome() {
             var title = card.querySelector('h3') ? card.querySelector('h3').textContent.trim() : card.textContent.trim().slice(0, 12);
             var a = document.createElement('a');
             a.href = 'javascript:void(0)';
-            a.innerHTML = '<span>↗</span>' + title;
+            a.textContent = title;
             a.addEventListener('click', function () {
                 card.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 setTimeout(function () { card.click(); }, 260);
