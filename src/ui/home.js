@@ -14,15 +14,19 @@ function renderHome() {
     var calcToolCount = totalToolIds - nonCalcCount;
 
     // 首页与侧栏共用一套分类，标题采用工具注册表中的正式名称。
+    function toolEntries(entries) {
+        return (entries || []).filter(function (entry) { return !!window.TOOLS[entry.id]; }).map(function (entry) {
+            var tool = window.TOOLS[entry.id];
+            return { id: entry.id, t: tool.title || entry.title, d: tool.sub || '',
+                code: tool.meta && tool.meta.formulaSource ? tool.meta.formulaSource : '' };
+        });
+    }
     var groups = (window.NAV_GROUPS || []).map(function (g) {
-        return {
-            key: g.id, name: g.title, icon: g.icon || 'ref',
-            tools: (g.tools || []).filter(function (entry) { return !!window.TOOLS[entry.id]; }).map(function (entry) {
-                var tool = window.TOOLS[entry.id];
-                return { id: entry.id, t: tool.title || entry.title, d: tool.sub || '',
-                    code: tool.meta && tool.meta.formulaSource ? tool.meta.formulaSource : '' };
-            })
-        };
+        var subgroups = (g.subgroups || []).map(function (sub) {
+            return { key: sub.id, name: sub.title, tools: toolEntries(sub.tools) };
+        }).filter(function (sub) { return sub.tools.length; });
+        var tools = subgroups.length ? [].concat.apply([], subgroups.map(function (sub) { return sub.tools; })) : toolEntries(g.tools);
+        return { key: g.id, name: g.title, icon: g.icon || 'ref', tools: tools, subgroups: subgroups };
     }).filter(function (g) { return g.tools.length; });
 
     // Tabler 工作区首页：简洁页头 + 独立统计卡片。
@@ -38,31 +42,31 @@ function renderHome() {
             '<div class="stat card"><span class="lbl">计算书</span><span class="num stat-text">Word 导出</span></div>' +
         '</div>';
 
-    // 渲染分组
-    groups.forEach(function (g, index) {
-        html += '<details class="tool-section card sec-' + g.key + '">' +
-            '<summary class="tool-section-head">' +
-                '<span class="sec-title">' +
-                    '<span class="sec-icon">' + iconFor(g.icon, 18) + '</span>' +
-                    g.name +
-                '</span>' +
-                '<span class="sec-count">' + g.tools.length + ' 个工具</span>' +
-                '</summary>' +
-            '<div class="section-grid">';
-        g.tools.forEach(function (t) {
-            html += '<a class="section-card card" href="#/' + t.id + '">' +
-                '<div class="card-top">' +
-                    '<div class="card-icon">' + iconFor(g.icon, 18) + '</div>' +
-                    '<h3>' + t.t + '</h3>' +
-                '</div>' +
+    function toolCards(tools, icon) {
+        return '<div class="section-grid">' + tools.map(function (t) {
+            return '<a class="section-card card" href="#/' + t.id + '">' +
+                '<div class="card-top"><div class="card-icon">' + iconFor(icon, 18) + '</div><h3>' + t.t + '</h3></div>' +
                 '<p class="card-description">' + t.d + '</p>' +
-                '<div class="card-foot">' +
-                    '<span class="code-tag">' + t.code + '</span>' +
-                    '<span class="go-arrow">打开工具</span>' +
-                '</div>' +
-            '</a>';
-        });
-        html += '</div></details>';
+                '<div class="card-foot"><span class="code-tag">' + t.code + '</span><span class="go-arrow">打开工具</span></div></a>';
+        }).join('') + '</div>';
+    }
+    // 混凝土采用二级目录；其他专业保持单层工具目录。
+    groups.forEach(function (g) {
+        html += '<details class="tool-section card sec-' + g.key + '"><summary class="tool-section-head">' +
+            '<span class="sec-title"><span class="sec-icon">' + iconFor(g.icon, 18) + '</span>' + g.name + '</span>' +
+            '<span class="sec-count">' + g.tools.length + ' 个工具</span></summary>';
+        if (g.subgroups.length) {
+            html += '<div class="tool-subsections">';
+            g.subgroups.forEach(function (sub) {
+                html += '<details class="tool-subsection" data-subgroup="' + sub.key + '"><summary class="tool-subsection-head">' +
+                    '<span>' + sub.name + '</span><span class="subsection-count">' + sub.tools.length + ' 个工具</span></summary>' +
+                    toolCards(sub.tools, g.icon) + '</details>';
+            });
+            html += '</div>';
+        } else {
+            html += toolCards(g.tools, g.icon);
+        }
+        html += '</details>';
     });
 
     // 底部说明 — 暖奶油色带
@@ -178,7 +182,7 @@ function renderHome() {
         var input = document.getElementById('tyaiToolSearch');
         if (!input) return;
         var cards = Array.from(document.querySelectorAll('.section-card'));
-        var sections = Array.from(document.querySelectorAll('.tool-section'));
+        var sections = Array.from(document.querySelectorAll('.tool-section, .tool-subsection'));
         input.addEventListener('input', function () {
             if (!input.value.trim()) {
                 sections.forEach(function (section) {
