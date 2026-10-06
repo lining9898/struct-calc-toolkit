@@ -9,16 +9,16 @@
 /* ===================== TYAI 规范依据库 ===================== */
 var TYAI_CODE_REFS = {
     gb50010: {
-        name: '《混凝土结构设计规范》GB/T 50010-2010（2024年版）',
-        note: '用户已上传，但当前解析为乱码，条文号和页码需用可检索版 PDF 或截图复核',
+        name: '《混凝土结构设计标准》GB/T 50010-2010（2024年版）',
+        note: '本次核对按条文号和来源链接定位；未核验的其他模块不在此记录范围内。',
         refs: {
-            materialStrength: { clause: '待核对', page: '待核对', desc: '混凝土、钢筋强度设计值' },
-            flexuralCapacity: { clause: '待核对', page: '待核对', desc: '正截面受弯承载力计算' },
-            shearCapacity: { clause: '待核对', page: '待核对', desc: '斜截面受剪承载力计算' },
-            crackWidth: { clause: '待核对', page: '待核对', desc: '裂缝宽度验算' },
-            deflection: { clause: '待核对', page: '待核对', desc: '挠度验算' },
-            minRebar: { clause: '待核对', page: '待核对', desc: '最小配筋率及构造要求' },
-            anchorage: { clause: '待核对', page: '待核对', desc: '钢筋锚固与搭接' }
+            materialStrength: { clause: '表 4.1.4-1、4.1.4-2；表 4.2.3-1、4.2.5', source: '混凝土：https://gf.cabr-fire.com/m/article-12593.htm；钢筋：https://gf.cabr-fire.com/m/article-12594.htm', desc: '混凝土和钢筋设计强度及钢筋弹性模量' },
+            flexuralCapacity: { clause: '第 6.2.1、6.2.6～6.2.10、6.2.14 条', source: 'https://gf.cabr-fire.com/m/article-12605.htm', desc: '正截面计算假定、等效应力图及受弯承载力' },
+            shearCapacity: { clause: '第 6.3 节', source: 'https://gf.cabr-fire.com/m/article-12606.htm', desc: '斜截面承载力；具体工况须核对相应公式' },
+            crackWidth: { clause: '第 7.1 节', source: 'https://gf.cabr-fire.com/m/article-12612.htm', desc: '裂缝控制；模块公式与适用范围尚需逐项复核' },
+            deflection: { clause: '第 7.2 节', source: 'https://gf.cabr-fire.com/m/article-12613.htm', desc: '受弯构件挠度；模块公式与适用范围尚需逐项复核' },
+            minRebar: { name: '《混凝土结构通用规范》GB 55008-2021', clause: '第 4.4.6 条及表 4.4.6', source: 'https://gf.cabr-fire.com/m/article-39674.htm', desc: '普通钢筋最小配筋率及适用条件' },
+            anchorage: { clause: '第 8.3、8.4 节', source: 'https://gf.cabr-fire.com/m/article-12617.htm', desc: '锚固及连接；具体工况须另验' }
         }
     },
     g101_22: {
@@ -76,7 +76,7 @@ var TYAI_CODE_REFS = {
     },
     gb50011: {
         name: '《建筑抗震设计规范》GB/T 50011-2010（2024年版）',
-        note: '用户已上传PDF，已提取第7/8/9/12章及附录A/D内容',
+        note: '以下引用来源及 2024 修订适用性尚未逐项核验，不作为已核实依据',
         refs: {
             seismicGrade: { clause: '§6.1.2+表6.1.2', page: '第49-52页', desc: '现浇钢筋混凝土房屋抗震等级' },
             masonryShear: { clause: '§7.2.6~7.2.8', page: '第85-88页', desc: '砌体抗震抗剪强度及受剪承载力' },
@@ -100,6 +100,7 @@ function tyaiRefText(ref) {
     if (ref.name) parts.push(ref.name);
     if (ref.clause) parts.push(ref.clause);
     if (ref.page) parts.push(ref.page);
+    if (ref.source) parts.push('来源：' + ref.source);
     if (ref.desc) parts.push('——' + ref.desc);
     return parts.join('，');
 }
@@ -113,7 +114,7 @@ function tyaiStepHtml(step, index) {
         }
         refsHtml = '<div class="calc-ref"><b>规范依据：</b><ul>' + items + '</ul></div>';
     } else {
-        refsHtml = '<div class="calc-ref warn"><b>规范依据：</b>待补充</div>';
+        refsHtml = '<div class="calc-ref warn"><b>规范依据：</b>尚未核验，缺少条文来源</div>';
     }
     return '<div class="calc-step">' +
         '<h4>' + (index + 1) + '. ' + (step.title || '计算步骤') + '</h4>' +
@@ -219,6 +220,7 @@ function tyaiCalcBookText(book) {
 function buildBeamRectBook(r) {
     var gb = TYAI_CODE_REFS.gb50010;
     var isD = r.isD;
+    var xActual = r.xActual == null ? r.x : r.xActual;
     var inputs = [
         { name: '截面宽度 b', value: fmt(r.b, 0), unit: ' mm' },
         { name: '截面高度 h', value: fmt(r.h, 0), unit: ' mm' },
@@ -237,8 +239,8 @@ function buildBeamRectBook(r) {
         substitution: 'h₀ = ' + fmt(r.h, 0) + ' − ' + fmt(r.asV, 0) + ' = ' + fmt(r.h0, 0) + ' mm',
         result: 'f<sub>c</sub> = ' + fmt(r.fc, 2) + ' N/mm²，f<sub>t</sub> = ' + fmt(r.ft, 2) + ' N/mm²，f<sub>y</sub> = ' + fmt(r.fy, 0) + ' N/mm²，α<sub>1</sub> = ' + fmt(r.alpha1, 2) + '，β<sub>1</sub> = ' + fmt(r.beta1, 2),
         refs: [
-            { name: gb.name, clause: gb.refs.materialStrength.clause, page: gb.refs.materialStrength.page, desc: gb.refs.materialStrength.desc },
-            { name: gb.name, clause: '第 6.2.10 条', page: '待核对', desc: '矩形截面受弯构件正截面承载力计算基本假定' }
+            { name: gb.name, clause: gb.refs.materialStrength.clause, source: gb.refs.materialStrength.source, desc: gb.refs.materialStrength.desc },
+            { name: gb.name, clause: '第 6.2.1、6.2.6 条；GB 55008-2021 第 4.4.2 条', source: 'https://gf.cabr-fire.com/m/article-12605.htm', desc: '正截面基本假定及等效矩形应力图' }
         ]
     });
     // 步骤 2：界限受压区高度
@@ -248,7 +250,7 @@ function buildBeamRectBook(r) {
         substitution: 'ξ<sub>b</sub> = ' + fmt(r.beta1, 2) + ' / (1 + ' + fmt(r.fy, 0) + ' / (' + fmt(r.es, 0) + ' × ' + r.ecu + ')) = ' + fmt(r.xi_b, 4),
         result: 'ξ<sub>b</sub> = ' + fmt(r.xi_b, 4),
         refs: [
-            { name: gb.name, clause: '第 6.2.6 条', page: '待核对', desc: '相对界限受压区高度计算' }
+            { name: gb.name, clause: '第 6.2.7 条，式（6.2.7-1）', source: 'https://gf.cabr-fire.com/m/article-12605.htm', desc: '相对界限受压区高度计算' }
         ]
     });
     // 步骤 3：受压区高度（分支）
@@ -256,34 +258,34 @@ function buildBeamRectBook(r) {
         steps.push({
             title: '受压区高度（单筋矩形截面）',
             formula: 'x = f<sub>y</sub>·A<sub>s</sub> / (α<sub>1</sub>·f<sub>c</sub>·b)',
-            substitution: 'x = ' + fmt(r.fy, 0) + ' × ' + fmt(r.As, 1) + ' / (' + fmt(r.alpha1, 1) + ' × ' + fmt(r.fc, 2) + ' × ' + fmt(r.b, 0) + ') = ' + fmt(r.x, 1) + ' mm',
-            result: 'x = ' + fmt(r.x, 1) + ' mm，ξ = ' + fmt(r.xi, 4) + (r.over ? ' ＞ ξ<sub>b</sub> = ' + fmt(r.xi_b, 4) + '，超筋' : ' ≤ ξ<sub>b</sub> = ' + fmt(r.xi_b, 4) + '，适筋'),
-            judge: r.over ? '超筋，按界限破坏取 x = x<sub>b</sub>' : '适筋截面，受拉钢筋屈服',
+            substitution: 'x = ' + fmt(r.fy, 0) + ' × ' + fmt(r.As, 1) + ' / (' + fmt(r.alpha1, 1) + ' × ' + fmt(r.fc, 2) + ' × ' + fmt(r.b, 0) + ') = ' + fmt(xActual, 1) + ' mm',
+            result: 'x = ' + fmt(xActual, 1) + ' mm，ξ = ' + fmt(r.xi, 4) + (r.over ? ' ＞ ξ<sub>b</sub> = ' + fmt(r.xi_b, 4) + '，超筋' : ' ≤ ξ<sub>b</sub> = ' + fmt(r.xi_b, 4) + '，适筋'),
+            judge: r.over ? '不满足受压区高度限制，以下仅为界限承载力估算' : '适筋截面，受拉钢筋屈服',
             refs: [
-                { name: gb.name, clause: '第 6.2.10 条', page: '待核对', desc: '矩形截面受弯承载力计算公式' }
+                { name: gb.name, clause: '第 6.2.8、6.2.10 条', source: 'https://gf.cabr-fire.com/m/article-12605.htm', desc: '矩形截面受弯承载力计算公式' }
             ]
         });
     } else {
         var branchText = r.branch === 'dy' ? '受压钢筋屈服（x ≥ 2a<sub>s</sub>′）' : '受压钢筋未屈服（x < 2a<sub>s</sub>′，按应变协调）';
         steps.push({
             title: '受压区高度（双筋矩形截面）',
-            formula: 'x = (f<sub>y</sub>·A<sub>s</sub> − f<sub>y</sub>′·A<sub>s</sub>′) / (α<sub>1</sub>·f<sub>c</sub>·b)',
-            substitution: 'x = (' + fmt(r.fy, 0) + ' × ' + fmt(r.As, 1) + ' − ' + fmt(r.fyp, 0) + ' × ' + fmt(r.AsP, 1) + ') / (' + fmt(r.alpha1, 1) + ' × ' + fmt(r.fc, 2) + ' × ' + fmt(r.b, 0) + ') = ' + fmt(r.x, 1) + ' mm',
-            result: 'x = ' + fmt(r.x, 1) + ' mm，2a<sub>s</sub>′ = ' + fmt(2 * r.as2V, 0) + ' mm，ξ = ' + fmt(r.xi, 4),
+            formula: r.branch === 'ds' ? 'α<sub>1</sub>f<sub>c</sub>bx + σ<sub>s</sub>′A<sub>s</sub>′ = f<sub>y</sub>A<sub>s</sub>；σ<sub>s</sub>′ = E<sub>s</sub>ε<sub>cu</sub>(1 − β<sub>1</sub>a<sub>s</sub>′/x)' : 'x = (f<sub>y</sub>·A<sub>s</sub> − f<sub>y</sub>′·A<sub>s</sub>′) / (α<sub>1</sub>·f<sub>c</sub>·b)',
+            substitution: r.branch === 'ds' ? '应变协调与静力平衡联立，x = ' + fmt(xActual, 1) + ' mm，σ<sub>s</sub>′ = ' + fmt(r.sigmaSp, 1) + ' N/mm²' : 'x = (' + fmt(r.fy, 0) + ' × ' + fmt(r.As, 1) + ' − ' + fmt(r.fyp, 0) + ' × ' + fmt(r.AsP, 1) + ') / (' + fmt(r.alpha1, 1) + ' × ' + fmt(r.fc, 2) + ' × ' + fmt(r.b, 0) + ') = ' + fmt(xActual, 1) + ' mm',
+            result: 'x = ' + fmt(xActual, 1) + ' mm，2a<sub>s</sub>′ = ' + fmt(2 * r.as2V, 0) + ' mm，ξ = ' + fmt(r.xi, 4),
             judge: branchText + (r.over ? '；ξ ＞ ξ<sub>b</sub>，超筋' : '；ξ ≤ ξ<sub>b</sub>，适筋'),
             refs: [
-                { name: gb.name, clause: '第 6.2.10 条', page: '待核对', desc: '双筋矩形截面受弯承载力计算' }
+                { name: gb.name, clause: '第 6.2.8、6.2.10 条', source: 'https://gf.cabr-fire.com/m/article-12605.htm', desc: '双筋矩形截面受弯承载力计算' }
             ]
         });
     }
     // 步骤 4：正截面受弯承载力
-    var muFormula = isD ? 'M<sub>u</sub> = α<sub>1</sub>·f<sub>c</sub>·b·x·(h<sub>0</sub> − x/2) + σ<sub>s</sub>′·A<sub>s</sub>′·(h<sub>0</sub> − a<sub>s</sub>′)' : 'M<sub>u</sub> = f<sub>y</sub>·A<sub>s</sub>·(h<sub>0</sub> − x/2)';
+    var muFormula = r.over ? 'M<sub>u,估算</sub> = α<sub>1</sub>f<sub>c</sub>bx<sub>b</sub>(h<sub>0</sub> − x<sub>b</sub>/2)' + (isD ? ' + f<sub>y</sub>′A<sub>s</sub>′(h<sub>0</sub> − a<sub>s</sub>′)' : '') : isD ? 'M<sub>u</sub> = α<sub>1</sub>·f<sub>c</sub>·b·x·(h<sub>0</sub> − x/2) + σ<sub>s</sub>′·A<sub>s</sub>′·(h<sub>0</sub> − a<sub>s</sub>′)' : 'M<sub>u</sub> = f<sub>y</sub>·A<sub>s</sub>·(h<sub>0</sub> − x/2)';
     steps.push({
         title: '正截面受弯承载力',
         formula: muFormula,
         result: 'M<sub>u</sub> = <b>' + fmt(r.Mu, 2) + ' kN·m</b>',
         refs: [
-            { name: gb.name, clause: '第 6.2.10 条', page: '待核对', desc: '矩形截面正截面受弯承载力' }
+            { name: gb.name, clause: '第 6.2.8、6.2.10 条', source: 'https://gf.cabr-fire.com/m/article-12605.htm', desc: '矩形截面正截面受弯承载力' }
         ]
     });
     // 步骤 5：最小配筋率
@@ -294,7 +296,7 @@ function buildBeamRectBook(r) {
         result: 'A<sub>s</sub> = ' + fmt(r.As, 1) + ' mm² ' + (r.isUnder ? '≥' : '<') + ' A<sub>s,min</sub> = ' + fmt(r.AsMin, 0) + ' mm²',
         judge: r.isUnder ? '满足最小配筋率要求' : '不满足最小配筋率要求（少筋）',
         refs: [
-            { name: gb.name, clause: '第 8.5.1 条', page: '待核对', desc: '钢筋混凝土结构构件中纵向受力钢筋的最小配筋率' }
+            { name: gb.refs.minRebar.name, clause: gb.refs.minRebar.clause, source: gb.refs.minRebar.source, desc: gb.refs.minRebar.desc }
         ]
     });
     // 结论
@@ -304,7 +306,7 @@ function buildBeamRectBook(r) {
     } else if (!r.isUnder) {
         conclusion = '该截面为少筋截面（A<sub>s</sub> ＜ ρ<sub>min</sub>·b·h），不满足最小配筋率要求。建议增加受拉钢筋面积。';
     } else {
-        conclusion = '该截面为适筋截面，正截面受弯承载力 M<sub>u</sub> = ' + fmt(r.Mu, 2) + ' kN·m，满足 GB/T 50010-2010（2024年版） 第 6.2.10 条和第 8.5.1 条要求。';
+        conclusion = '该截面为适筋截面，正截面受弯承载力 M<sub>u</sub> = ' + fmt(r.Mu, 2) + ' kN·m。本工具未输入设计弯矩，仅核对本项截面条件与 GB 55008-2021 第 4.4.6 条的最小配筋率；承载需求、抗震与构造应另验。';
     }
     return {
         title: '矩形截面受弯承载力计算书',
@@ -428,14 +430,14 @@ function buildWordCalcBookHtml(book) {
             }
             refHtml = '<div class="ref-box"><b>规范依据：</b><ul>' + items + '</ul></div>';
         } else {
-            refHtml = '<div class="ref-box"><b>规范依据：</b>待补充</div>';
+            refHtml = '<div class="ref-box"><b>规范依据：</b>尚未核验，缺少条文来源</div>';
         }
         stepsHtml += '<div class="step"><div class="step-title">5.' + (k + 1) + ' ' + (step.title || '计算步骤') + '</div>' + stepBody + refHtml + '</div>';
         resultRows += '<tr><td>' + (step.title || '-') + '</td><td>' + (step.judge || step.result || '-') + '</td></tr>';
     }
     var refTableRows = '';
     for (var n = 0; n < refs.length; n++) {
-        refTableRows += '<tr><td>' + (n + 1) + '</td><td>' + (refs[n].name || '') + '</td><td>' + (refs[n].clause || '待核对') + '</td><td>' + (refs[n].page || '页码待核对') + '</td><td>' + (refs[n].desc || '') + '</td></tr>';
+        refTableRows += '<tr><td>' + (n + 1) + '</td><td>' + (refs[n].name || '') + '</td><td>' + (refs[n].clause || '待核对') + '</td><td>' + (refs[n].page || (refs[n].source ? '按条文号及来源链接定位' : '页码未核验')) + '</td><td>' + (refs[n].desc || '') + '</td></tr>';
     }
     var html = '<!DOCTYPE html><html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>' + title + '</title>' +
         '<style>' + CALC_BOOK_CSS + '</style></head><body>' +
@@ -850,7 +852,7 @@ function exportBook() {
              sec2: '二、T形截面类型判别与承载力计算',
              sec3: '三、最小配筋率验算',
              sec4: '四、结论',
-             basis: ['《混凝土结构设计规范》GB/T 50010-2010（2024年版） 第 6.2.11 条、第 8.5.1 条']
+             basis: ['《混凝土结构设计标准》GB/T 50010-2010（2024年版） 第 6.2.11 条、第 8.5.1 条']
          });
          downloadDoc('T形梁正截面承载力计算书.doc', doc);
          return;
@@ -879,7 +881,7 @@ function exportBook() {
              calcBookCover(esc(t.title)+'计算书', esc(t.sub), dateStr) +
              '<h1>'+esc(t.title)+'计算书</h1><div class="sub">'+esc(t.sub)+'</div>'+
              '<div class="sub">计算日期：'+dateStr+'</div>'+
-             '<h2>一、设计依据</h2><p>《混凝土结构设计规范》GB/T 50010-2010（2024年版） 第 6.3.1 条、第 6.3.4 条。</p>'+
+             '<h2>一、设计依据</h2><p>《混凝土结构设计标准》GB/T 50010-2010（2024年版） 第 6.3.1 条、第 6.3.4 条。</p>'+
              '<h2>二、计算参数</h2>'+
              '<table><tr><th style="width:6%;">序号</th><th>参数</th><th style="width:14%;">单位</th><th style="width:18%;">取值</th></tr>'+pRows+'</table>'+
              (r.steps ? '<h2>三、详细计算过程</h2>' + r.steps : '<h2>三、斜截面受剪承载力计算</h2>'+
@@ -926,7 +928,7 @@ function exportBook() {
              calcBookCover(esc(t.title)+'计算书', esc(t.sub), dateStr) +
              '<h1>'+esc(t.title)+'计算书</h1><div class="sub">'+esc(t.sub)+'</div>'+
              '<div class="sub">计算日期：'+dateStr+'</div>'+
-             '<h2>一、设计依据</h2><p>《混凝土结构设计规范》GB/T 50010-2010（2024年版） 第 6.2.15 条、第 8.5.1 条。</p>'+
+             '<h2>一、设计依据</h2><p>《混凝土结构设计标准》GB/T 50010-2010（2024年版） 第 6.2.15 条、第 8.5.1 条。</p>'+
              '<h2>二、计算参数</h2>'+
              '<table><tr><th style="width:6%;">序号</th><th>参数</th><th style="width:14%;">单位</th><th style="width:18%;">取值</th></tr>'+pRows+'</table>'+
              (r.steps ? '<h2>三、详细计算过程</h2>' + r.steps : '<h2>三、轴心受压承载力计算</h2>'+
@@ -1018,7 +1020,7 @@ function exportBook() {
              resultHtml +
              '<h2>三、计算依据</h2>'+
              procHtml +
-             '<p class="note">依据《混凝土结构设计规范》GB/T 50010-2010（2024年版） 第 8.5.1 条。受拉钢筋最小配筋率按构件全截面面积计算。</p>'+
+             '<p class="note">依据《混凝土结构设计标准》GB/T 50010-2010（2024年版） 第 8.5.1 条。受拉钢筋最小配筋率按构件全截面面积计算。</p>'+
              calcBookSign() +
              calcBookFooter() +
              '</body></html>';
@@ -1096,7 +1098,7 @@ function exportBook() {
              calcBookCover('矩形板配筋计算书', esc2(t.title) + ' · ' + esc2(t.sub), dateStr) +
              '<h1>矩形板配筋计算书</h1><div class="sub">' + esc2(t.title) + ' · ' + esc2(t.sub) + '</div>'+
              '<div class="sub">计算日期：'+dateStr+'</div>'+
-             '<h2>一、设计依据</h2><p>《混凝土结构设计规范》GB/T 50010-2010（2024年版） 第 6.2.10 条、第 8.5.1 条；《建筑结构荷载规范》GB 50009-2012。</p>'+
+             '<h2>一、设计依据</h2><p>《混凝土结构设计标准》GB/T 50010-2010（2024年版） 第 6.2.10 条、第 8.5.1 条；《建筑结构荷载规范》GB 50009-2012。</p>'+
              '<h2>二、计算参数</h2>'+
              '<table><tr><th style="width:6%;">序号</th><th>参数</th><th style="width:14%;">单位</th><th style="width:18%;">取值</th></tr>'+pRows2+'</table>'+
              '<h2>三、板类判别与弯矩</h2>'+
@@ -1149,7 +1151,7 @@ function exportBook() {
     // ④ 设计依据（按模块补充规范全称）
     var isLift = CUR_TOOL === 'precast-lift';
     var basis = [
-        '《混凝土结构设计规范》GB/T 50010-2010（2024年版）',
+        '《混凝土结构设计标准》GB/T 50010-2010（2024年版）',
         '《建筑结构荷载规范》GB 50009-2012'
     ];
     if (isLift) basis.push('《装配式混凝土结构技术规程》JGJ 1-2014');
