@@ -57,25 +57,25 @@
                 var fy = (rebV === 'HRB400') ? 360 : 270;
                 var st = [];
 
-                // 基本组合：1.2恒 + 1.4活（简化，这里采用基本组合的包络设计值）
-                var q1 = 1.2 * gk + 1.4 * qk; // 均布组合 kN/m²
+                // 基本组合：1.3恒 + 1.5活（GB 55001 第3.1.13条）（简化，这里采用基本组合的包络设计值）
+                var q1 = 1.3 * gk + 1.5 * qk; // 均布组合 kN/m²
                 // 施工检修集中荷载情况：沿挑板跨度每米宽 1 kN（等效均布）
                 // 即 qCon 集中荷载作用在板端，弯矩 = P*L
                 // 两种组合取不利
                 var M1 = 0.5 * q1 * L * L * B; // 均布荷载下总弯矩 kN·m (整个板宽 B)
-                var M2 = 1.2 * gk * 0.5 * L * L * B + 1.4 * qCon * L; // 恒载均布 + 施工集中荷载
+                var M2 = 1.3 * gk * 0.5 * L * L * B + 1.5 * qCon * L; // 恒载均布 + 施工集中荷载
                 var M_design = Math.max(M1, M2);
                 var V1 = q1 * L * B; // 均布荷载剪力（支座） kN
-                var V2 = 1.2 * gk * L * B + 1.4 * qCon; // 恒载 + 集中荷载 支座剪力
+                var V2 = 1.3 * gk * L * B + 1.5 * qCon; // 恒载 + 集中荷载 支座剪力
                 var V_design = Math.max(V1, V2);
                 // 以 1m 宽板带为单位计算配筋
                 var qPerM = M_design / B; // kN·m/m
                 var VperM = V_design / B; // kN/m
 
                 st.push('<div class="step"><b>① 荷载基本组合与内力</b></div>');
-                st.push('<div class="step">　　组合一（均布恒+活）：q = 1.2g + 1.4q = 1.2×' + gk + ' + 1.4×' + qk + ' = ' + fmt(q1,3) + ' kN/m²</div>');
+                st.push('<div class="step">　　组合一（均布恒+活）：q = 1.3g + 1.5q = 1.3×' + gk + ' + 1.5×' + qk + ' = ' + fmt(q1,3) + ' kN/m²</div>');
                 st.push('<div class="step">　　M₁ = 0.5 qL²·B = 0.5×' + fmt(q1,3) + '×' + fmt(L,2) + '²×' + fmt(B,2) + ' = ' + fmt(M1,2) + ' kN·m</div>');
-                st.push('<div class="step">　　组合二（恒+施工检修）：M₂ = 1.2·g·0.5L²·B + 1.4·P·L = ' + fmt(M2,2) + ' kN·m</div>');
+                st.push('<div class="step">　　组合二（恒+施工检修）：M₂ = 1.3·g·0.5L²·B + 1.5·P·L = ' + fmt(M2,2) + ' kN·m</div>');
                 st.push('<div class="step">　　设计弯矩 M = max(M₁, M₂) = <b>' + fmt(M_design, 2) + ' kN·m</b>（沿板宽 B=' + fmt(B,2) + 'm 总弯矩）</div>');
                 st.push('<div class="step">　　单位宽度弯矩 m = M/B = <b>' + fmt(qPerM, 2) + ' kN·m/m</b></div>');
 
