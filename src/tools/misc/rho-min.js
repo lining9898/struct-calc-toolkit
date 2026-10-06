@@ -48,12 +48,14 @@
                 var b = parseFloat(document.getElementById('rh_b').value);
                 var h = parseFloat(document.getElementById('rh_h').value);
                 if (!con) return;
+                var materialError = concreteRebarError(con, REBAR_FLEX[reb]);
+                if (materialError) { out.innerHTML = '<div class="error-box">' + materialError + '</div>'; proc.innerHTML = ''; return; }
                 var ft = con.ft, fy = REBAR_FLEX[reb].fy;
                 var is500 = is500Steel(reb);
                 var rhoMin, note = '', st = [], warn = '';
 
                 st.push('<div class="step"><b>依据</b>　纵向受力普通钢筋最小配筋率按 <b>GB 55008-2021《混凝土结构通用规范》第 4.4.6 条及表 4.4.6</b> 确定（全文强制）。</div>');
-                st.push('<div class="step"><b>说明</b>　原 GB/T 50010-2010（2024年版）第 8.5.1 条已随通用规范实施而被替代废止，现行依据为 GB 55008-2021。</div>');
+                st.push('<div class="step"><b>说明</b>　原 GB 50010-2010（2015年版）第 8.5.1 强制性条文随通用规范实施废止；本工具按现行通用规范计算，现行依据为 GB 55008-2021。</div>');
 
                 if (type === 'flex' || type === 'slab') {
                     var rm = rhoMinFlex(ft, fy, {
