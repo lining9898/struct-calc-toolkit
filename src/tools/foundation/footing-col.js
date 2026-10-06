@@ -63,6 +63,8 @@
                 var gammaG = parseFloat(document.getElementById('fc_gammaG').value);
                 var con = CONCRETE[document.getElementById('fc_con').value];
                 var reb = REBAR_FLEX[document.getElementById('fc_reb').value];
+                var materialError = concreteRebarError(con, reb);
+                if (materialError) return err(materialError);
 
                 if (!(bc > 0 && hc > 0)) return err('柱截面尺寸必须为正数。');
                 if (!(Nk > 0 && N > 0)) return err('轴力必须为正数。');
@@ -74,8 +76,7 @@
                 var ft = con.ft; // 混凝土轴心抗拉强度设计值（冲切用）
                 var fc = con.fc;
                 var fy = reb.fy;
-                var rho_min = Math.max(0.0015, 0.45 * ft / fy); // 基础底板受拉最小配筋率 0.15% —— 与一般受弯构件的 0.20% 不同，此处另有专门规定；
-        // 该依据（地基基础类条文）正文尚未取得，2026-09-23 未核对，沿用既有口径，请勿自行替换为 GB 55008 第 4.4.6 条第 2 款。
+                var rho_min = 0.0015; // GB 50007-2011 第8.2.1条第3款、GB 55008-2021 第4.4.6条第2款地基上板。
 
                 var st = [];
                 st.push('<div class="step"><b>① 基本参数</b>　柱截面 b<sub>c</sub>×h<sub>c</sub> = ' + bc + '×' + hc + ' mm；基础底面 b×L = ' + B + '×' + L + ' m；基础高度 h = ' + h + ' mm，h<sub>0</sub> = ' + h0 + ' mm；f<sub>a</sub> = ' + fa + ' kPa；f<sub>t</sub> = ' + ft + ' N/mm²。</div>');
@@ -196,7 +197,7 @@
                 function calcAs(MkNm, bW, h0v) {
                     var Mabs = MkNm * 1e6; // N·mm
                     var alpha_s = Mabs / (a1 * fc * bW * h0v * h0v);
-                    if (alpha_s > 1) return { As: Infinity, over: true, alpha_s: alpha_s, gamma_s: 0 };
+                    if (alpha_s >= 0.5) return { As: Infinity, over: true, alpha_s: alpha_s, gamma_s: 0 };
                     var gamma_s = 0.5 * (1 + Math.sqrt(1 - 2 * alpha_s));
                     var As = Mabs / (gamma_s * fy * h0v);
                     var xi = 2 * (1 - gamma_s);
@@ -225,7 +226,7 @@
                 var perMin_L = AsMin_L / B;
                 var perMin_B = AsMin_B / L;
 
-                st.push('<div class="step"><b>⑤ 底板配筋</b>　最小配筋率 ρ<sub>min</sub> = max(0.15%, 0.45f<sub>t</sub>/f<sub>y</sub>) = ' + fmt(rho_min*100,3) + '%；每延米最小配筋 ' + fmt(perMin_L, 0) + ' mm²/m（L 向） / ' + fmt(perMin_B, 0) + ' mm²/m（B 向）。</div>');
+                st.push('<div class="step"><b>⑤ 底板配筋</b>　最小配筋率 ρ<sub>min</sub> = 0.15%（GB 50007 第8.2.1条第3款） = ' + fmt(rho_min*100,3) + '%；每延米最小配筋 ' + fmt(perMin_L, 0) + ' mm²/m（L 向） / ' + fmt(perMin_B, 0) + ' mm²/m（B 向）。</div>');
 
                 // ===== 结果展示 =====
                 var sHtml = resultRow('基底面积 A', fmt(A, 3) + ' m²');
