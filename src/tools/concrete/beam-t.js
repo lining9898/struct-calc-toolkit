@@ -57,6 +57,8 @@
                 var hf = parseFloat(document.getElementById('t_hf').value);
                 var con = CONCRETE[document.getElementById('t_con').value];
                 var reb = REBAR_FLEX[document.getElementById('t_reb').value];
+                var materialError = concreteRebarError(con, reb);
+                if (materialError) return err(materialError);
                 var As = parseFloat(document.getElementById('t_As').value);
                 var asV = parseFloat(document.getElementById('t_as').value);
                 if (!(b > 0 && h > 0 && bf > b && hf > 0)) return err('请输入有效截面：腹板 b &gt; 0，翼缘计算宽度 b<sub>f</sub>\u2032 &gt; b。');
