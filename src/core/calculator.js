@@ -139,7 +139,7 @@ function needsHighStrengthEcuCheck(g) { return conGradeIndex(g) > 50; }
  * 一般构件（受弯/偏心受压一侧）：ρ_min = max(0.20%, 45·f_t/f_y)
  * 板类受弯构件：采用 500MPa 级钢筋、且非悬臂板、非柱支承板时
  *                              ρ_min = max(0.15%, 45·f_t/f_y)
- * 注：原 GB/T 50010-2010（2024年版） 第 8.5.1 条已被替代废止，现行以 GB 55008-2021 为准；
+ * 注：原 GB 50010-2010（2015年版）第 8.5.1 强制性条文随通用规范实施废止，现行以 GB 55008-2021 为准；
  *     两处数值规定一致（取大值公式未变），但依据必须改用通用规范。
  * @param {number} ft 混凝土轴心抗拉强度设计值 MPa
  * @param {number} fy 钢筋抗拉强度设计值 MPa
@@ -166,6 +166,12 @@ function rhoMinColumnAll(reb) { return COLUMN_RHOMIN[reb] || 0.0055; }
 
 /* 混凝土强度等级下拉。不含 C20：第 4.1.2 条钢筋混凝土不低于 C25。
    不含 C55 及以上：第 6.2 节 α₁/β₁/ε_cu 折减规则尚未核对，不提供未经核对的取值。 */
+// GB/T 50010-2010（2024年版）4.1.2：500MPa 及以上钢筋配套混凝土不低于 C30。
+function concreteRebarError(con, reb) {
+    if (con === CONCRETE.C20) return '钢筋混凝土强度等级不得低于 C25（第 4.1.2 条）。';
+    if (con === CONCRETE.C25 && reb === REBAR_FLEX.HRB500) return '采用 HRB500 钢筋时，混凝土强度等级不得低于 C30（2024年版第 4.1.2 条）。';
+    return '';
+}
 function conOpts(sel) { return opts(['C25','C30','C35','C40','C45','C50'].map(function (c) { return { v: c, t: c }; }), sel); }
 function numField(id, label, unit, value, hint) {
     return '<div class="field"><label class="form-label" for="' + id + '">' + label + (unit ? ' <span>(' + unit + ')</span>' : '') + '</label>' +
@@ -257,6 +263,8 @@ function spacingForArea(d, AsPerM) {
 function designBeamRectSection(p) {
     var con = CONCRETE[p.con], reb = REBAR_FLEX[p.reb];
     if (!con || !reb) return { ok: false, error: '混凝土或钢筋强度等级取值缺失。' };
+    var materialError = concreteRebarError(con, reb);
+    if (materialError) return { ok: false, error: materialError };
     var b = +p.b, h = +p.h, asV = +p.as, as2V = (+p.as2 || +p.as), M = +p.M;
     if (!(b > 0 && h > 0)) return { ok: false, error: '截面宽度 b 与高度 h 必须为正数。' };
     if (!(asV > 0 && asV < h)) return { ok: false, error: 'a_s 应介于 0 与 h 之间。' };
