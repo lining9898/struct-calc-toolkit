@@ -11,26 +11,36 @@
     var NAV_GROUPS = [
         {
             id: 'concrete', title: '混凝土结构', icon: 'beam-rect',
-            tools: [
-                { id: 'beam-rect', title: '矩形梁正截面承载力' },
-                { id: 'beam-rect-design', title: '矩形梁正截面配筋设计' },
-                { id: 'beam-t', title: 'T形梁正截面承载力' },
-                { id: 'beam-shear', title: '梁斜截面受剪' },
-                { id: 'beam-cont', title: '连续梁计算' },
-                { id: 'addl-trans', title: '附加横向钢筋' },
-                { id: 'deep-beam', title: '深受弯构件' },
-                { id: 'slab-rect', title: '单块矩形板计算' },
-                { id: 'stair-slab', title: '板式楼梯计算' },
-                { id: 'column-axial', title: '轴心受压柱' },
-                { id: 'col-tie', title: '柱箍筋加密区' },
-                { id: 'basement-wall', title: '地下室外墙' },
-                { id: 'shear-wall', title: '剪力墙稳定' },
-                { id: 'crack-width', title: '裂缝宽度计算' },
-                { id: 'deflection', title: '挠度验算' },
-                { id: 'punching', title: '受冲切承载力' },
-                { id: 'bearing-local', title: '混凝土局部受压' },
-                { id: 'corbel', title: '牛腿设计' },
-                { id: 'embed-plate', title: '预埋件计算' }
+            subgroups: [
+                { id: 'concrete-beams', title: '梁', tools: [
+                    { id: 'beam-rect', title: '矩形梁正截面承载力' },
+                    { id: 'beam-rect-design', title: '矩形梁正截面配筋设计' },
+                    { id: 'beam-t', title: 'T形梁正截面承载力' },
+                    { id: 'beam-shear', title: '梁斜截面受剪' },
+                    { id: 'beam-cont', title: '连续梁计算' },
+                    { id: 'addl-trans', title: '附加横向钢筋' },
+                    { id: 'deep-beam', title: '深受弯构件' }
+                ] },
+                { id: 'concrete-slabs', title: '板与楼梯', tools: [
+                    { id: 'slab-rect', title: '单块矩形板计算' },
+                    { id: 'stair-slab', title: '板式楼梯计算' }
+                ] },
+                { id: 'concrete-columns-walls', title: '柱与墙', tools: [
+                    { id: 'column-axial', title: '轴心受压柱' },
+                    { id: 'basement-wall', title: '地下室外墙' },
+                    { id: 'shear-wall', title: '剪力墙稳定' }
+                ] },
+                { id: 'concrete-checks', title: '构件验算', tools: [
+                    { id: 'crack-width', title: '裂缝宽度计算' },
+                    { id: 'deflection', title: '挠度验算' },
+                    { id: 'punching', title: '受冲切承载力' },
+                    { id: 'bearing-local', title: '混凝土局部受压' }
+                ] },
+                { id: 'concrete-details', title: '构造与连接', tools: [
+                    { id: 'col-tie', title: '柱箍筋加密区' },
+                    { id: 'corbel', title: '牛腿设计' },
+                    { id: 'embed-plate', title: '预埋件计算' }
+                ] }
             ]
         },
         {
@@ -210,7 +220,7 @@
                 for (var s = 0; s < group.subgroups.length; s++) {
                     var sub = group.subgroups[s];
                     html += '<div class="nav-subgroup" data-subgroup="' + sub.id + '">';
-                    html += '<div class="subgroup-title" data-subtoggle="' + sub.id + '">' + CHEV_SUB +
+                    html += '<div class="subgroup-title" role="button" tabindex="0" aria-expanded="false" data-subtoggle="' + sub.id + '">' + CHEV_SUB +
                         '<span class="sub-name">' + sub.title + '</span>' +
                         '<span class="group-count">' + (sub.tools || []).length + '</span></div>';
                     html += '<div class="subgroup-body" data-subbody="' + sub.id + '">';
@@ -245,7 +255,7 @@
         if (!link) return;
         var sub = link.closest ? link.closest('.nav-subgroup') : null;
         var group = link.closest ? link.closest('.nav-group') : null;
-        if (sub) sub.classList.add('open');
+        if (sub) { sub.classList.add('open'); var subHeading = sub.querySelector('.subgroup-title'); if (subHeading) subHeading.setAttribute('aria-expanded', 'true'); }
         if (group) { group.classList.add('open'); var heading = group.querySelector('.group-title'); if (heading) heading.setAttribute('aria-expanded', 'true'); }
         try {
             if (link.scrollIntoView) link.scrollIntoView({ block: 'nearest' });
@@ -281,7 +291,13 @@
             subTitles[j].addEventListener('click', function (e) {
                 e.stopPropagation();
                 var sub = this.closest('.nav-subgroup');
-                if (sub) sub.classList.toggle('open');
+                if (sub) { sub.classList.toggle('open'); this.setAttribute('aria-expanded', String(sub.classList.contains('open'))); }
+            });
+        }
+
+        for (var n = 0; n < subTitles.length; n++) {
+            subTitles[n].addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.click(); }
             });
         }
 
