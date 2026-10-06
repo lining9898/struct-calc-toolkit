@@ -148,3 +148,52 @@ body { font-family: var(--font-sans); font-size: 14px; line-height: 1.6; backgro
 #view .workspace-quick span { color: var(--ink-mute); margin-right: 4px; }
 #view .workspace-quick a { border: 1px solid var(--hairline); border-radius: 5px; background: var(--canvas-soft); color: var(--ink-secondary); padding: 4px 10px; }
 #view .workspace-quick a:hover { color: var(--primary); border-color: var(--primary-line); }
+/* 混凝土二级目录：主分类 / 构件分组 / 工具，子组默认收起。 */
+#view .tool-subsections { padding: 0 20px 20px; }
+#view .tool-subsection { border: 1px solid var(--hairline); border-radius: 6px; background: var(--canvas-soft); margin-bottom: 8px; }
+#view .tool-subsection:last-child { margin-bottom: 0; }
+#view .tool-subsection-head { display: flex; align-items: center; gap: 12px; padding: 13px 16px; font-size: 13px; font-weight: 500; color: var(--ink-secondary); cursor: pointer; list-style: none; }
+#view .tool-subsection-head::-webkit-details-marker { display: none; }
+#view .subsection-count { margin-left: auto; font-size: 12px; font-weight: 400; color: var(--ink-mute); }
+#view .tool-subsection-head::after { content: ''; width: 7px; height: 7px; border-right: 1.5px solid var(--ink-mute); border-bottom: 1.5px solid var(--ink-mute); transform: rotate(45deg); margin: -4px 2px 0 4px; }
+#view .tool-subsection[open] > summary::after { transform: rotate(225deg); margin-top: 4px; }
+#view .tool-subsection > .section-grid { padding: 0 12px 12px; gap: 12px; grid-template-columns: repeat(2,minmax(0,1fr)); }
+.sidebar .subgroup-title { font-size: 13px; font-weight: 500; color: var(--ink-secondary); padding: 9px 12px; margin-left: 8px; }
+.sidebar .subgroup-body { margin: 0 0 6px 20px; padding-left: 4px; }
+.sidebar .subgroup-body a.nav { padding: 9px 12px; font-size: 12px; }
+@media (min-width: 1600px) { #view .tool-subsection > .section-grid { grid-template-columns: repeat(3,minmax(0,1fr)); } }
+@media (max-width: 600px) {
+  #view .tool-subsections { padding: 0 12px 12px; }
+  #view .tool-subsection-head { padding: 12px; }
+  #view .tool-subsection > .section-grid { grid-template-columns: minmax(0,1fr); padding: 0 8px 8px; }
+}
+/* 统一计算文档：旧式步骤行与结构化计算书使用相同的标题、正文、公式和依据层级。 */
+#view .process-document { font-family: var(--font-sans); font-size: 13px; line-height: 1.85; color: var(--ink-secondary); overflow-wrap: anywhere; }
+#view .proc-body .calc-book { padding: 0; border: 0; background: transparent; box-shadow: none; border-radius: 0; }
+#view .process-document > h3 { font-size: 16px; margin: 0 0 16px; text-align: left; }
+#view .process-document > h4 { font-size: 14px; font-weight: 600; color: var(--ink); margin: 24px 0 12px; border: 0; padding: 0; }
+#view .process-document .calc-meta { padding: 12px 16px; background: var(--canvas-soft); border: 1px solid var(--hairline); border-radius: 6px; font-size: 12px; margin-bottom: 20px; }
+#view .process-document .calc-meta p { margin: 0; }
+#view .process-document :is(.process-section, .calc-step) { margin: 0 0 16px; padding: 18px 20px; border: 1px solid var(--hairline); border-radius: 6px; background: #fff; box-shadow: none; }
+#view .process-document :is(.process-step-title, .calc-step > h4, .step-title) { display: block; margin: 0 0 12px; padding: 0; border: 0; font-family: var(--font-sans); font-size: 14px; font-weight: 600; color: var(--ink); line-height: 1.6; }
+#view .process-document .step { border: 0; border-radius: 0; padding: 0; margin: 0 0 8px; background: transparent; font-family: var(--font-sans); font-size: 13px; line-height: 1.85; }
+#view .process-document .step:last-child { margin-bottom: 0; }
+#view .process-document .process-step-content { margin-top: 8px; }
+#view .process-document .process-line { padding: 0; }
+#view .process-document .calc-step p { font-size: 13px; line-height: 1.85; margin: 0 0 10px; }
+#view .process-document .calc-step p:last-child { margin-bottom: 0; }
+#view .process-document :is(code, .formula-box) { font-family: var(--font-sans); font-size: 13px; line-height: 1.85; background: var(--canvas-soft); color: var(--ink); white-space: normal; overflow-wrap: anywhere; }
+#view .process-document .calc-step code { display: block; padding: 12px 14px; margin-top: 6px; border: 1px solid var(--hairline); border-radius: 5px; }
+#view .process-document :is(.calc-ref, .ref-box) { padding: 12px 14px; margin-top: 14px; border: 0; border-left: 3px solid var(--primary-line); border-radius: 0 5px 5px 0; background: var(--canvas-soft); color: var(--ink-mute); font-size: 12px; line-height: 1.8; }
+#view .process-document ul { padding-left: 20px; margin: 6px 0 0; }
+#view .process-document table { width: 100%; border-collapse: collapse; font-size: 12px; margin: 12px 0 20px; }
+#view .process-document :is(th, td) { padding: 10px 12px; border: 1px solid var(--hairline); line-height: 1.7; vertical-align: top; }
+#view .process-document th { background: var(--canvas-soft); color: var(--ink-secondary); font-weight: 500; text-align: left; }
+@media (max-width: 600px) {
+  #view .process-document :is(.process-section, .calc-step) { padding: 14px; }
+  #view .process-document :is(th, td) { padding: 8px; }
+  #view .process-document .calc-step code { padding: 10px; }
+}
+@media print { #view .process-document :is(.process-section, .calc-step) { break-inside: avoid; box-shadow: none; } }
+#view .process-document .process-equation { padding: 12px 14px; margin: 8px 0; border: 1px solid var(--hairline); border-radius: 5px; background: var(--canvas-soft); color: var(--ink); font-variant-numeric: tabular-nums; }
+@media (max-width: 600px) { #view .process-document .process-equation { padding: 10px; } }
