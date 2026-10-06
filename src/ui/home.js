@@ -25,48 +25,22 @@ function renderHome() {
         };
     }).filter(function (g) { return g.tools.length; });
 
-    // Hero 区
-    html += '<div class="home-hero">' +
-        '<div class="hero-mesh"><svg viewBox="0 0 1200 220" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">' +
-            '<defs>' +
-                '<radialGradient id="g1" cx="15%" cy="60%" r="45%"><stop offset="0%" stop-color="#f96bee" stop-opacity="0.55"/><stop offset="100%" stop-color="#f96bee" stop-opacity="0"/></radialGradient>' +
-                '<radialGradient id="g2" cx="50%" cy="40%" r="55%"><stop offset="0%" stop-color="#533afd" stop-opacity="0.50"/><stop offset="100%" stop-color="#533afd" stop-opacity="0"/></radialGradient>' +
-                '<radialGradient id="g3" cx="85%" cy="55%" r="40%"><stop offset="0%" stop-color="#ea2261" stop-opacity="0.45"/><stop offset="100%" stop-color="#ea2261" stop-opacity="0"/></radialGradient>' +
-                '<radialGradient id="g4" cx="30%" cy="20%" r="35%"><stop offset="0%" stop-color="#f5e9d4" stop-opacity="0.70"/><stop offset="100%" stop-color="#f5e9d4" stop-opacity="0"/></radialGradient>' +
-                '<radialGradient id="g5" cx="70%" cy="80%" r="45%"><stop offset="0%" stop-color="#b9b9f9" stop-opacity="0.50"/><stop offset="100%" stop-color="#b9b9f9" stop-opacity="0"/></radialGradient>' +
-                '<radialGradient id="g6" cx="95%" cy="25%" r="30%"><stop offset="0%" stop-color="#f5e9d4" stop-opacity="0.40"/><stop offset="100%" stop-color="#f5e9d4" stop-opacity="0"/></radialGradient>' +
-            '</defs>' +
-            '<rect width="1200" height="220" fill="#f6f9fc"/>' +
-            '<ellipse cx="180" cy="132" rx="280" ry="120" fill="url(#g1)"/>' +
-            '<ellipse cx="600" cy="88" rx="420" ry="110" fill="url(#g2)"/>' +
-            '<ellipse cx="1020" cy="121" rx="320" ry="130" fill="url(#g3)"/>' +
-            '<ellipse cx="360" cy="44" rx="240" ry="80" fill="url(#g4)"/>' +
-            '<ellipse cx="840" cy="176" rx="380" ry="90" fill="url(#g5)"/>' +
-            '<ellipse cx="1140" cy="55" rx="200" ry="70" fill="url(#g6)"/>' +
-        '</svg></div>' +
-        '<div class="hero-content">' +
-        '<span class="eyebrow">Structural Toolkit</span>' +
-        '<h1>计算工具箱</h1>' +
-        '<p class="subtitle">结构工程常用计算与验算，覆盖混凝土、地基基础、桩基、钢结构等 ' + calcToolCount + ' 个模块，附完整计算过程与规范依据。</p>' +
+    // Tabler 工作区首页：简洁页头 + 独立统计卡片。
+    html += '<div class="home-hero"><div class="hero-content">' +
+        '<span class="eyebrow">STRUCTURAL ENGINEERING</span>' +
+        '<h1>结构计算工作台</h1>' +
+        '<p class="subtitle">选择构件，填写参数，查看结果与完整计算过程。</p>' +
+        '</div></div>' +
         '<div class="home-stats">' +
-            '<div class="stat"><span class="num">' + calcToolCount + '</span><span class="lbl">个专业计算工具</span></div>' +
-            '<div class="stat"><span class="num">' + groups.length + '</span><span class="lbl">专业分组</span></div>' +
-            '<div class="stat"><span class="num">10+</span><span class="lbl">规范依据</span></div>' +
-            '<div class="stat"><span class="num">Word</span><span class="lbl">计算书导出</span></div>' +
-        '</div>' +
-        '<div class="quick-entry">' +
-            '<a href="#/beam-cont">' + iconFor('beam-rect', 16) + ' 连续梁计算</a>' +
-            '<a href="#/footing-col" class="secondary">' + iconFor('footing-col', 16) + ' 柱下独立基础</a>' +
-            '<a href="#/stage-check" class="secondary">' + iconFor('slab-rect', 16) + ' 叠合构件验算</a>' +
-        '</div>' +
-        '</div>' +
-    '</div>';
-
-
+            '<div class="stat card"><span class="lbl">计算工具</span><span class="num">' + calcToolCount + '<small> 项</small></span></div>' +
+            '<div class="stat card"><span class="lbl">专业分类</span><span class="num">' + groups.length + '<small> 类</small></span></div>' +
+            '<div class="stat card"><span class="lbl">计算过程</span><span class="num stat-text">完整可追溯</span></div>' +
+            '<div class="stat card"><span class="lbl">计算书</span><span class="num stat-text">Word 导出</span></div>' +
+        '</div>';
 
     // 渲染分组
     groups.forEach(function (g, index) {
-        html += '<details class="tool-section sec-' + g.key + '">' +
+        html += '<details class="tool-section card sec-' + g.key + '">' +
             '<summary class="tool-section-head">' +
                 '<span class="sec-title">' +
                     '<span class="sec-icon">' + iconFor(g.icon, 18) + '</span>' +
@@ -76,7 +50,7 @@ function renderHome() {
                 '</summary>' +
             '<div class="section-grid">';
         g.tools.forEach(function (t) {
-            html += '<a class="section-card" href="#/' + t.id + '">' +
+            html += '<a class="section-card card" href="#/' + t.id + '">' +
                 '<div class="card-top">' +
                     '<div class="card-icon">' + iconFor(g.icon, 18) + '</div>' +
                     '<h3>' + t.t + '</h3>' +
@@ -114,6 +88,7 @@ function renderHome() {
     '</div>';
 
     view.innerHTML = html;
+    window.scrollTo(0, 0);
     navActive('home');
     closeSidebar();
     // 交互增强层：最近使用 / 我的收藏 快捷块（ui/ux.js）
@@ -172,22 +147,20 @@ function renderHome() {
     }
     function enhanceHomeSearch() {
         var firstSection = document.querySelector('.tool-section');
-        var hero = document.querySelector('.home-hero');
+        var hero = document.querySelector('.home-stats');
         if (!firstSection || document.querySelector('.tyai-home-tools')) return;
         var toolsPanel = document.createElement('div');
         toolsPanel.className = 'tyai-home-tools';
         toolsPanel.innerHTML = `
-            <div class="tyai-search-panel">
+            <div class="tyai-search-panel card">
                 <div class="tyai-search-title">快速查找工具</div>
                 <div class="tyai-search-box">
-                    <input id="tyaiToolSearch" type="search" placeholder="输入关键词，例如：连续梁、裂缝、柱下独立基础、钢筋桁架楼板">
+                    <label class="visually-hidden" for="tyaiToolSearch">查找计算工具</label>
+                    <input class="form-control" id="tyaiToolSearch" type="search" placeholder="搜索工具名称、构件或规范编号…">
                     <span class="tyai-search-icon">⌕</span>
                 </div>
+                <div class="workspace-quick"><span>常用工具</span><a href="#/beam-cont">连续梁</a><a href="#/footing-col">独立基础</a><a href="#/steel-beam">钢梁</a></div>
                 <div class="tyai-search-hint">按名称或规范编号筛选。按 / 或 Ctrl/⌘+K 打开全局检索。</div>
-            </div>
-            <div class="tyai-fav-panel">
-                <div class="tyai-fav-title">常用入口</div>
-                <div class="tyai-fav-list" id="tyaiFavList"></div>
             </div>
         `;
         if (hero && hero.parentNode) {
@@ -199,31 +172,7 @@ function renderHome() {
         noResult.className = 'tyai-no-result';
         noResult.textContent = '未找到匹配工具，请尝试更换关键词。';
         firstSection.parentNode.insertBefore(noResult, firstSection);
-        buildFavList();
         bindSearch(noResult);
-    }
-    function buildFavList() {
-        var favList = document.getElementById('tyaiFavList');
-        if (!favList) return;
-        var preferred = ['beam-cont', 'footing-col', 'stage-check', 'beam-rect', 'crack-width'];
-        var cards = Array.from(document.querySelectorAll('.section-card'));
-        var picked = preferred.map(function (id) {
-            return cards.find(function (card) { return card.getAttribute('href') === '#/' + id; });
-        }).filter(Boolean);
-        if (!picked.length) picked = cards.slice(0, 5);
-        picked.slice(0, 5).forEach(function (card) {
-            var title = card.querySelector('h3') ? card.querySelector('h3').textContent.trim() : card.textContent.trim().slice(0, 12);
-            var a = document.createElement('a');
-            a.href = 'javascript:void(0)';
-            a.textContent = title;
-            a.addEventListener('click', function () {
-                var section = card.closest('details.tool-section');
-                if (section) section.open = true;
-                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                setTimeout(function () { card.click(); }, 260);
-            });
-            favList.appendChild(a);
-        });
     }
     function bindSearch(noResult) {
         var input = document.getElementById('tyaiToolSearch');

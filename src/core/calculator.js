@@ -168,12 +168,12 @@ function rhoMinColumnAll(reb) { return COLUMN_RHOMIN[reb] || 0.0055; }
    不含 C55 及以上：第 6.2 节 α₁/β₁/ε_cu 折减规则尚未核对，不提供未经核对的取值。 */
 function conOpts(sel) { return opts(['C25','C30','C35','C40','C45','C50'].map(function (c) { return { v: c, t: c }; }), sel); }
 function numField(id, label, unit, value, hint) {
-    return '<div class="field"><label>' + label + (unit ? ' <span>(' + unit + ')</span>' : '') + '</label>' +
-        '<input type="number" id="' + id + '" value="' + value + '" step="1">' +
+    return '<div class="field"><label class="form-label" for="' + id + '">' + label + (unit ? ' <span>(' + unit + ')</span>' : '') + '</label>' +
+        '<input class="form-control" type="number" id="' + id + '" value="' + value + '" step="1">' +
         (hint ? '<div class="hint">' + hint + '</div>' : '') + '</div>';
 }
 function selField(id, label, optionsHtml, hint) {
-    return '<div class="field"><label>' + label + '</label><select id="' + id + '">' + optionsHtml + '</select>' +
+    return '<div class="field"><label class="form-label" for="' + id + '">' + label + '</label><select class="form-select" id="' + id + '">' + optionsHtml + '</select>' +
         (hint ? '<div class="hint">' + hint + '</div>' : '') + '</div>';
 }
 function resultRow(label, valHtml) { return '<div class="result-item"><span class="label">' + label + '</span><span class="value">' + valHtml + '</span></div>'; }

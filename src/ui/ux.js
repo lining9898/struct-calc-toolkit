@@ -423,7 +423,7 @@
         var host = document.createElement('div');
         host.className = 'ux-home';
         host.id = 'uxHomeStrips';
-        var hero = view.querySelector('.home-hero');
+        var hero = view.querySelector('.home-stats');
         var section = view.querySelector('.tool-section');
         var anchor = hero ? hero.nextSibling : (section || null);
         if (anchor && anchor.parentNode === view) view.insertBefore(host, anchor);
