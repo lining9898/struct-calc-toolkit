@@ -4,14 +4,14 @@
  *  与已有的「矩形梁正截面承载力（复核）」互补：本模块由设计弯矩
  *  M 出发反算所需受拉钢筋面积，单筋优先、超筋自动转双筋，
  *  并按混凝土保护层与最小配筋率要求给出选筋组合（直径×根数）。
- *  规范依据：GB/T 50010-2010（2024年版）(2024年版) 第 6.2.10 条、第 8.5 节。
+ *  规范依据：GB/T 50010-2010（2024年版） 第 6.2.10 条、第 8.5 节。
  * ============================================================ */
 (function () {
     var tool = {
         title: '矩形梁正截面配筋设计',
         sub: '由设计弯矩 M 反算配筋 · 单筋优先 / 超筋自动双筋 · GB/T 50010-2010（2024年版） 第 6.2.10 条',
         meta: {
-            standard: 'GB/T 50010-2010（2024年版）(2024年版) 混凝土结构设计标准',
+            standard: 'GB/T 50010-2010（2024年版） 混凝土结构设计标准',
             formulaSource: '6.2.10 · GB 55008-2021 第 4.4.6 条',
             limitations: '矩形截面受弯构件，单筋优先；M 超过单筋界限时按双筋设计；不考虑抗震调整',
             unit: 'M:kN·m, b/h/as:mm, As:mm²',
@@ -126,6 +126,8 @@
                 if (!(asV > 0 && asV < h)) return err('a<sub>s</sub> 应介于 0 与 h 之间。');
                 if (!(M > 0)) return err('设计弯矩 M 必须大于 0。');
                 if (!CONCRETE[conId] || !REBAR_FLEX[rebId]) return err('请选择有效的混凝土与钢筋等级。');
+                var materialError = concreteRebarError(CONCRETE[conId], REBAR_FLEX[rebId]);
+                if (materialError) return err(materialError);
 
                 // 统一调用 core/calculator.js 的共享实现，避免同一公式两处维护
                 var R = designBeamRectSection({
