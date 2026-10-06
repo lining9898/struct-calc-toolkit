@@ -1,11 +1,11 @@
 (function () {
     var tool = {
         title: '受冲切承载力验算',
-        sub: '板/基础不配置箍筋受冲切 · GB/T 50010-2010（2024年版） 第 6.5.1 条',
+        sub: '板内柱不配置抗冲切钢筋验算 · GB/T 50010-2010（2024年版） 第 6.5.1 条',
         meta: {
             standard: 'GB/T 50010-2010（2024年版）混凝土结构设计标准',
             formulaSource: '6.5.1',
-            limitations: '不配置箍筋/弯起钢筋的板，局部荷载或集中反力作用',
+            limitations: '非预应力、无孔洞、无不平衡弯矩、柱居中且计算周长完整的板；不含边角柱及基础专用算法',
             unit: 'Fl:kN, η:—, h0:mm',
             version: '1.0.0'
         },
@@ -15,14 +15,14 @@
                 selField('pc_shape', '冲切体形状', opts([{v:'rect',t:'矩形柱冲切（柱下板）'},{v:'circ',t:'圆形柱/集中荷载冲切'}], 'rect')) +
                 numField('pc_bc', '柱截面短边 / 荷载宽 b<sub>c</sub>', 'mm', 400, '矩形柱：短边；圆形：直径') +
                 numField('pc_hc', '柱截面长边 / 荷载长 h<sub>c</sub>', 'mm', 400, '矩形柱：长边；圆形与 b_c 相同') +
-                numField('pc_h', '板/基础厚度 h', 'mm', 600) +
+                numField('pc_h', '板厚度 h', 'mm', 600) +
                 numField('pc_h0', '有效高度 h<sub>0</sub>', 'mm', 560, '受拉钢筋合力点至受压边缘距离') +
-                numField('pc_B', '板/基础短边 b', 'm', 3.0, '板或基础底面短边尺寸') +
-                numField('pc_L', '板/基础长边 L', 'm', 3.0, '板或基础底面长边尺寸') +
+                numField('pc_B', '板短边 b', 'm', 3.0, '板或基础底面短边尺寸') +
+                numField('pc_L', '板长边 L', 'm', 3.0, '板或基础底面长边尺寸') +
                 selField('pc_con', '混凝土强度等级', conOpts('C30')) +
                 numField('pc_Fl', '冲切力设计值 F<sub>l</sub>', 'kN', 800, '冲切破坏锥体以外的地基净反力（或荷载）设计值的合力') +
-                numField('pc_aspect', '柱的长边/短边比 β<sub>s</sub>', '—', 1.0, '矩形柱 h<sub>c</sub>/b<sub>c</sub>；圆形取 1；> 4 时影响系数 η_1 减小') +
-                numField('pc_alpha_s', '板柱中柱 α<sub>s</sub>', '—', 40, '中柱 40、边柱 30、角柱 20（η_2 = 0.5 + α_s/4）') +
+                numField('pc_aspect', '柱的长边/短边比 β<sub>s</sub>', '—', 1.0, '矩形柱 h<sub>c</sub>/b<sub>c</sub>；圆形计算取2；矩形小于2按2计算，大于4不在本模块范围') +
+                numField('pc_alpha_s', '板柱中柱 α<sub>s</sub>', '—', 40, '本模块仅计算中柱40；边角柱需按实际边界取周长') +
                 '</div><div class="btn-group">' +
                 '<button type="button" class="btn btn-primary" id="pc_calc">验算受冲切</button>' +
                 '<button type="button" class="btn btn-secondary" id="pc_reset">重置</button>' +
@@ -53,7 +53,13 @@
                 if (h0 >= h) return err('有效高度 h<sub>0</sub> 应小于板厚 h。');
                 if (!(B > 0 && L > 0)) return err('基础尺寸必须为正数。');
                 if (!(Fl > 0)) return err('冲切力必须为正数。');
-                if (!(beta_s >= 1)) return err('β<sub>s</sub> 应 ≥ 1。');
+                if (con.fc < CONCRETE.C25.fc) return err('钢筋混凝土板强度等级不得低于 C25。');
+                if (alpha_s !== 40) return err('本模块仅支持中柱完整计算周长；边柱、角柱须另按板边界确定周长。');
+                if (shape === 'rect' && hc < bc) return err('长边 hc 应不小于短边 bc。');
+                if (shape === 'rect' && Math.abs(beta_s - hc / bc) > 0.001) return err('输入的长短边比必须与柱截面尺寸一致。');
+                if (shape === 'rect' && hc / bc > 4) return err('长短边比超过规范建议范围，需专项分析。');
+                if (B * 1000 <= bc + h0 || L * 1000 <= (shape === 'rect' ? hc : bc) + h0) return err('计算周长超出板边界，不能采用完整中柱周长。');
+                beta_s = shape === 'rect' ? Math.max(2, hc / bc) : 2;
 
                 var ft = con.ft; // N/mm²
                 var beta_c = 1.0; // 混凝土强度影响系数，≤C50 取 1.0
@@ -85,22 +91,8 @@
                 }
                 st.push('<div class="step"><b>② 冲切破坏锥体周长 u<sub>m</sub></b>　距柱边 h<sub>0</sub>/2 处的临界周长：u<sub>m</sub> = ' + fmt(um, 0) + ' mm；β<sub>hp</sub> = ' + fmt(beta_hp, 3) + '（h = ' + h + ' mm）。</div>');
 
-                //  η_1：冲切应力不均匀系数（柱的长边短边比影响）
-                // η_1 = 0.4 + 1.2 / β_s  （矩形柱）
-                // 对圆形柱 β_s = 1，η_1 = 1.6？不对，规范是 η_1 = 0.4 + 1.2/β_s
-                // 当 β_s ≤ 2 时 η_1 较大；β_s 越大 η_1 越小
-                var eta_1;
-                if (shape === 'rect') {
-                    eta_1 = 0.4 + 1.2 / beta_s;
-                } else {
-                    eta_1 = 1.0; // 圆形近似
-                }
-                if (eta_1 > 1.0) eta_1 = 1.0; // η 系数一般不大于 1 ？规范没有这个限制，但 η1 在 β_s=1 时 = 1.6 太大
-                // 查规范：6.5.1 条：η_1 = 0.4 + 1.2/β_s，η_2 = 0.5 + α_s h_0 / (4 u_m)
-                // 然后取 η = min(η_1, η_2)
-                // β_s = h_c / b_c (长边/短边)
-                // 当 β_s = 1 时 η_1 = 1.6；当 β_s = 4 时 η_1 = 0.7
-                // η 是可以 >1 的
+                // 6.5.1：矩形长短边比小于2按2取值，圆形同样取2。
+                var eta_1 = 0.4 + 1.2 / beta_s;
 
                 // η_2：临界周长位置影响系数
                 // η_2 = 0.5 + α_s * h0 / (4 * u_m)
@@ -120,10 +112,10 @@
                 st.push('<div class="step"><b>⑤ 判定</b>　F<sub>l</sub> = ' + Fl + ' kN ' + (ok ? '≤' : '＞') + ' F<sub>l,u</sub> = ' + fmt(Flu,1) + ' kN ⇒ ' + (ok ? '受冲切承载力满足' : '不满足，需配置箍筋/弯起钢筋或加厚板') + tag(ok ? 'ok' : 'err', ok ? '满足' : '不满足') + '</div>');
 
                 if (!ok) {
-                    // 配箍筋/弯起钢筋时的提高（6.5.2-3 条）
-                    // F_lu = 1.2 * f_t * η * u_m * h_0  （配置箍筋或弯起钢筋时，不超过此值的 1.5 倍）
-                    var Flu_stir = 1.2 * ft * eta * um * h0 / 1000; // 配置箍筋/弯起钢筋后最大承载力近似
-                    st.push('<div class="step"><b>⑥ 配置箍筋/弯起钢筋后的承载力上限</b>　F<sub>l,u,max</sub> ≈ 1.2f<sub>t</sub>ηu<sub>m</sub>h<sub>0</sub> = ' + fmt(Flu_stir, 1) + ' kN（不配置预应力时的上限，详见 6.5.3 条）。当 F<sub>l</sub> ≤ ' + fmt(Flu_stir, 0) + ' kN 时，可通过配置箍筋或弯起钢筋提高。</div>');
+                    // 6.5.3-1仅为截面上限，不是配置钢筋后的实际承载力。
+                    // 6.5.3-1：Fl ≤ 1.2 ft um h0，仅为截面上限，不含η。
+                    var Flu_stir = 1.2 * ft * um * h0 / 1000; // 配置箍筋/弯起钢筋后最大承载力近似
+                    st.push('<div class="step"><b>⑥ 配置箍筋/弯起钢筋后的承载力上限</b>　F<sub>l,u,max</sub> ≈ 1.2f<sub>t</sub>u<sub>m</sub>h<sub>0</sub> = ' + fmt(Flu_stir, 1) + ' kN（不配置预应力时的上限，详见 6.5.3 条）。当 F<sub>l</sub> ≤ ' + fmt(Flu_stir, 0) + ' kN 时仍须按6.5.3-2计算实际钢筋项，并按6.5.4验算配筋区外周长；本模块未完成这些验算。</div>');
                 }
 
                 var html = resultRow('受冲切截面高度影响系数 β<sub>hp</sub>', fmt(beta_hp, 3));
@@ -133,7 +125,7 @@
                 html += resultRow('受冲切承载力 F<sub>l,u</sub>', '<span class="highlight">' + fmt(Flu, 1) + ' kN</span>');
                 html += resultRow('冲切力设计值 F<sub>l</sub>', Fl + ' kN');
                 html += resultRow('判定', badge(ok ? 'badge-ok' : 'badge-err', ok ? '受冲切承载力满足' : '不满足，建议加厚板或配抗冲切钢筋'));
-                if (!ok) html += resultRow('配箍筋/弯起钢筋上限', fmt(Flu_stir, 0) + ' kN（6.5.3 条限值）');
+                if (!ok) html += resultRow('截面上限（非配筋承载力）', fmt(Flu_stir, 0) + ' kN（6.5.3 条限值）');
                 out.innerHTML = html;
                 proc.innerHTML = st.join('');
                 var _p = proc ? proc.closest('.proc-wrap') : document.querySelector('#view .proc-wrap'); if (_p) _p.classList.add('open');
