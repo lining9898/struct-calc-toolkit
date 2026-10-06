@@ -56,6 +56,8 @@
                 var gammaG = parseFloat(document.getElementById('fw_gammaG').value);
                 var con = CONCRETE[document.getElementById('fw_con').value];
                 var reb = REBAR_FLEX[document.getElementById('fw_reb').value];
+                var materialError = concreteRebarError(con, reb);
+                if (materialError) return err(materialError);
                 var rho_d_pct = parseFloat(document.getElementById('fw_rho_d').value);
 
                 if (!(bw > 0)) return err('墙厚必须为正数。');
@@ -68,7 +70,7 @@
                 var fy = reb.fy, es = reb.es;
                 var a1 = con.alpha1, b1 = con.beta1, ecu = con.ecu;
                 var xi_b = b1 / (1 + fy / (es * ecu));
-                var rho_min = Math.max(0.0015, 0.45 * ft / fy); // 基础底板受拉 0.15% —— 另有专门规定，依据正文尚未取得，2026-09-23 未核对，沿用既有口径。
+                var rho_min = 0.0015; // GB 50007-2011 第8.2.1条第3款、GB 55008-2021 第4.4.6条第2款地基上板。
                 var b1m = bw / 1000; // 墙厚 m
                 var bw_mm = bw;
                 var b_mm = b * 1000; // 基础宽度 mm
@@ -126,8 +128,8 @@
                 var M_flex = 0.5 * pn * a_brick * a_brick; // kN·m/m（每延米）
                 var Mabs = M_flex * 1e6; // N·mm / m
                 var alpha_s = Mabs / (a1 * fc * 1000 * h0 * h0);
-                var overFlex = alpha_s > 1;
-                var gamma_s = 0.5 * (1 + Math.sqrt(1 - 2 * alpha_s));
+                var overFlex = alpha_s >= 0.5;
+                var gamma_s = 0.5 * (1 + Math.sqrt(Math.max(0, 1 - 2 * alpha_s)));
                 var As = Mabs / (gamma_s * fy * h0); // mm²/m
                 var xi = 2 * (1 - gamma_s);
                 if (xi > xi_b) { As = a1 * fc * 1000 * xi_b * h0 / fy; overFlex = true; }
@@ -136,10 +138,11 @@
 
                 // 纵向分布筋
                 var As_dist = rho_d_pct / 100 * 1000 * h; // 每延米 mm²/m
+                var AsDistMin = 0.15 * Math.max(As, AsMin); // GB 50007 第8.2.1条第3款：受力筋面积的15%。
 
                 st.push('<div class="step"><b>④ 底板弯矩（悬臂根部）</b>　M = p<sub>n</sub>·a²/2 = ' + fmt(pn,2) + '×' + fmt(a_brick,4) + '²/2 = <b>' + fmt(M_flex,3) + ' kN·m/m</b>。</div>');
                 st.push('<div class="step"><b>⑤ 横向受力筋</b>　A<sub>s</sub> = ' + (overFlex ? '超筋' : fmt(As, 0) + ' mm²/m') + '；ρ<sub>min</sub> = ' + fmt(rho_min*100, 3) + '%，A<sub>s,min</sub> = ' + fmt(AsMin, 0) + ' mm²/m；' + (flexOk ? '满足' : '不满足') + tag(flexOk ? 'ok' : 'err', flexOk ? '满足' : '不满足') + '</div>');
-                st.push('<div class="step"><b>⑥ 纵向分布筋</b>　按 ρ = ' + fmt(rho_d_pct,2) + '% 配置，A<sub>s,dist</sub> = ' + fmt(As_dist, 0) + ' mm²/m，直径不小于 8mm，间距不大于 300mm。</div>');
+                st.push('<div class="step"><b>⑥ 纵向分布筋</b>　按 ρ = ' + fmt(rho_d_pct,2) + '% 配置，A<sub>s,dist</sub> = ' + fmt(As_dist, 0) + ' mm²/m，直径不小于 8mm，间距不大于 300mm；分布筋面积下限为受力筋的15%，本次至少 ' + fmt(AsDistMin,0) + ' mm²/m。</div>');
 
                 // ===== 结果展示 =====
                 var sHtml = resultRow('基础宽度 b', b + ' m');
@@ -182,8 +185,8 @@
                     '<td>' + (overFlex ? '—' : recSpacing(As)) + '</td></tr>';
                 rHtml += '<tr><td>纵向分布筋（平行于墙）</td><td>—</td>' +
                     '<td>' + fmt(As_dist, 0) + '</td>' +
-                    '<td>≥ ' + fmt(rho_min*100*1000*h/100, 0) + '</td>' +
-                    '<td>' + badge(As_dist >= rho_min*1000*h ? 'badge-ok' : 'badge-warn', As_dist >= rho_min*1000*h ? '满足' : '偏小') + '</td>' +
+                    '<td>≥ ' + fmt(AsDistMin, 0) + '</td>' +
+                    '<td>' + badge(As_dist >= AsDistMin ? 'badge-ok' : 'badge-warn', As_dist >= AsDistMin ? '满足' : '偏小') + '</td>' +
                     '<td>' + recSpacing(As_dist) + '</td></tr>';
                 rHtml += '</table></div>';
                 rHtml += '<div style="margin-top:8px;font-size:12.5px;color:#64748b;">横向受力筋置于底板下部，纵向分布筋置于横向钢筋之上（内侧）。</div>';
