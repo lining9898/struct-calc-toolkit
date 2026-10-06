@@ -44,6 +44,8 @@
                 var sup = document.getElementById('db_sup').value;
                 var con = CONCRETE[document.getElementById('db_con').value];
                 var reb = REBAR_FLEX[document.getElementById('db_reb').value];
+                var materialError = concreteRebarError(con, reb);
+                if (materialError) return err(materialError);
                 var stir = REBAR_STIRRUP[document.getElementById('db_stir').value] || { fy: 360 };
                 var As = parseFloat(document.getElementById('db_As').value);
                 var M = parseFloat(document.getElementById('db_M').value);
