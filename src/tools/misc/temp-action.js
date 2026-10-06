@@ -74,12 +74,12 @@
                 st.push('<div class="step">　　准永久值系数 ψ<sub>q</sub> = 0.4</div>');
 
                 // ⑤ 设计值
-                var dTk_design = Math.max(dTk_rise, Math.abs(dTk_drop)) * 1.4 * 0.6;
-                st.push('<div class="step"><b>⑤ 温度作用设计值</b></div>');
+                var dTk_design = Math.max(Math.abs(dTk_rise), Math.abs(dTk_drop)) * 1.5 * 0.6;
+                st.push('<div class="step"><b>⑤ 温度作为伴随作用的折算幅值</b></div>');
                 st.push('<div class="step">　　取温升/温降中绝对值较大者</div>');
                 var dTk_control = Math.max(Math.abs(dTk_rise), Math.abs(dTk_drop));
                 st.push('<div class="step">　　控制温度变化 |ΔT<sub>k</sub>| = ' + dTk_control + ' °C</div>');
-                st.push('<div class="step">　　荷载组合中温度效应 = ΔT<sub>k</sub>×ψ<sub>c</sub>×γ<sub>Q</sub> = ' + dTk_control + '×0.6×1.4 = ' + (dTk_control * 0.6 * 1.4).toFixed(1) + ' °C</div>');
+                st.push('<div class="step">　　线性分析下伴随温度作用的折算幅值（GB 55001 第3.1.13条；温度为主导时不乘ψc）= ΔT<sub>k</sub>×ψ<sub>c</sub>×γ<sub>Q</sub> = ' + dTk_control + '×0.6×1.5 = ' + (dTk_control * 0.6 * 1.5).toFixed(1) + ' °C</div>');
 
                 var html = resultRow('线膨胀系数 α<sub>T</sub>', alphaT + '×10⁻⁶/°C');
                 html += resultRow('温升 ΔT<sub>k</sub>', dTk_rise + ' °C');
