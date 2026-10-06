@@ -59,6 +59,8 @@
                 var ssp = parseFloat(document.getElementById('bl_ssp').value) || 50;
                 var hRange = parseFloat(document.getElementById('bl_h').value) || 200;
                 var reb = REBAR_FLEX[document.getElementById('bl_reb').value];
+                var materialError = concreteRebarError(con, reb);
+                if (materialError) return err(materialError);
 
                 if (!(Al > 0 && Ab > 0)) return err('局部受压面积和底面积必须为正数。');
                 if (Ab < Al) return err('计算底面积 A<sub>b</sub> 应不小于局部受压面积 A<sub>l</sub>。');
