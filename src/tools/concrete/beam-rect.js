@@ -4,7 +4,7 @@
         sub: '单筋 / 双筋矩形截面受弯 · GB/T 50010-2010（2024年版） 第 6.2.10 条',
         meta: {
             standard: 'GB/T 50010-2010（2024年版）混凝土结构设计标准',
-            formulaSource: '6.2.10',
+            formulaSource: '6.2.1、6.2.6～6.2.10；未屈服受压筋按6.2.8应变协调',
             limitations: '矩形截面受弯构件，单筋/双筋，适筋梁',
             unit: 'M:kN·m, As:mm², b,h:mm',
             version: '1.0.0'
@@ -66,6 +66,8 @@
                 var h = parseFloat(document.getElementById('r_h').value);
                 var con = CONCRETE[document.getElementById('r_con').value];
                 var reb = REBAR_FLEX[document.getElementById('r_reb').value];
+                var materialError = concreteRebarError(con, reb);
+                if (materialError) return err(materialError);
                 var As = parseFloat(document.getElementById('r_As').value);
                 var AsP = parseFloat(document.getElementById('r_AsP').value) || 0;
                 var asV = parseFloat(document.getElementById('r_as').value);
@@ -91,15 +93,16 @@
                         x = xY; sigmaSp = fyp; branch = 'dy';
                         st.push('<div class="step"><b>③ 受压区高度（双筋）</b>　x = (f<sub>y</sub>A<sub>s</sub>−f<sub>y</sub>\u2032A<sub>s</sub>\u2032)/(α<sub>1</sub>f<sub>c</sub>b) = <b>' + fmt(x, 1) + ' mm</b> ≥ 2a<sub>s</sub>\u2032 = ' + fmt(2*as2V,0) + '，受压钢筋屈服' + tag('ok','受压筋屈服') + '</div>');
                     } else {
-                        var A = a1 * fc * b, B = es * ecu * AsP - fy * As, C = -es * ecu * AsP * as2V;
+                        var A = a1 * fc * b, B = es * ecu * AsP - fy * As, C = -es * ecu * AsP * b1 * as2V;
                         var disc = B * B - 4 * A * C;
                         if (disc < 0) return err('计算出现负判别式，请检查参数。');
                         x = (-B + Math.sqrt(disc)) / (2 * A);
-                        sigmaSp = es * ecu * (x - as2V) / x;
+                        sigmaSp = es * ecu * (x - b1 * as2V) / x;
                         if (sigmaSp >= fyp) { x = xY; sigmaSp = fyp; branch = 'dy'; }
                         else branch = 'ds';
+                        if (sigmaSp < 0) return err('输入条件下名义受压钢筋处于受拉区，超出本模块双筋受弯模型范围，请按一般截面分析。');
                         if (branch === 'ds') {
-                            st.push('<div class="step"><b>③ 受压区高度（双筋，受压钢筋未屈服）</b>　应变协调求解 A=' + fmt(A,1) + '，B=' + fmt(B,1) + '，C=' + fmt(C,1) + ' ⇒ <b>x = ' + fmt(x,1) + ' mm</b> &lt; 2a<sub>s</sub>\u2032=' + fmt(2*as2V,0) + '；σ<sub>s</sub>\u2032 = E<sub>s</sub>ε<sub>cu</sub>(x−a<sub>s</sub>\u2032)/x = <b>' + fmt(sigmaSp,1) + ' N/mm²</b> &lt; f<sub>y</sub>\u2032' + tag('warn','按应变协调') + '</div>');
+                            st.push('<div class="step"><b>③ 受压区高度（双筋，受压钢筋未屈服）</b>　应变协调求解 A=' + fmt(A,1) + '，B=' + fmt(B,1) + '，C=' + fmt(C,1) + ' ⇒ <b>x = ' + fmt(x,1) + ' mm</b>；2a<sub>s</sub>\u2032=' + fmt(2*as2V,0) + '；σ<sub>s</sub>\u2032 = E<sub>s</sub>ε<sub>cu</sub>(x−β<sub>1</sub>a<sub>s</sub>\u2032)/x = <b>' + fmt(sigmaSp,1) + ' N/mm²</b> &lt; f<sub>y</sub>\u2032' + tag('warn','按应变协调') + '</div>');
                         } else {
                             st.push('<div class="step"><b>③ 受压区高度（双筋）</b>　x = <b>' + fmt(x,1) + ' mm</b>，受压钢筋屈服。</div>');
                         }
@@ -124,7 +127,7 @@
                 var stMsg, stCls;
                 if (over) { stMsg = '超筋（ξ &gt; ξ<sub>b</sub>），按界限承载力估算'; stCls = 'badge-err'; }
                 else if (!isUnder) { stMsg = '少筋：A<sub>s</sub> &lt; ρ<sub>min</sub>·b·h，不满足 GB 55008-2021 第 4.4.6 条'; stCls = 'badge-warn'; }
-                else { stMsg = '适筋截面，满足要求'; stCls = 'badge-ok'; }
+                else { stMsg = '满足本项截面条件与最小配筋率；承载需求、抗震及构造另验'; stCls = 'badge-ok'; }
                 var html = resultRow('相对受压区高度 ξ', fmt(xi,4) + (over ? '（&gt;ξ<sub>b</sub>）' : ''));
                 html += resultRow('界限受压区高度 ξ<sub>b</sub>', fmt(xi_b,4));
                 html += resultRow('受压区高度 x', fmt(xDisp,1) + ' mm' + (over ? '（界限 x<sub>b</sub>）' : ''));
@@ -142,7 +145,7 @@
                      conGrade: document.getElementById('r_con').value,
                      rebGrade: document.getElementById('r_reb').value,
                      fc: fc, ft: ft, fy: fy, fyp: fyp, alpha1: a1, beta1: b1, ecu: ecu, es: es,
-                     xi_b: xi_b, xi: xi, x: xDisp, h0: h0,
+                     xi_b: xi_b, xi: xi, x: xDisp, xActual: x, h0: h0,
                      Mu: Mu, over: over, branch: branch, sigmaSp: sigmaSp,
                      rho_min: rho_min, AsMin: AsMin, rho: rho, rhoFull: rhoFull,
                      isUnder: isUnder, stMsg: stMsg, stCls: stCls, steps: st.join(''),
@@ -156,7 +159,7 @@
                      conGrade: document.getElementById('r_con').value,
                      rebGrade: document.getElementById('r_reb').value,
                      fc: fc, ft: ft, fy: fy, fyp: fyp, alpha1: a1, beta1: b1, ecu: ecu, es: es,
-                     xi_b: xi_b, xi: xi, x: xDisp, h0: h0,
+                     xi_b: xi_b, xi: xi, x: xDisp, xActual: x, h0: h0,
                      Mu: Mu, over: over, branch: branch, sigmaSp: sigmaSp,
                      rho_min: rho_min, AsMin: AsMin, rho: rho, rhoFull: rhoFull,
                      isUnder: isUnder, stMsg: stMsg, stCls: stCls
