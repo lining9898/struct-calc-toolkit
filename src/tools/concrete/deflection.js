@@ -57,6 +57,8 @@
                 var as2V = parseFloat(document.getElementById('df_as2').value) || asV;
                 var con = CONCRETE[document.getElementById('df_con').value];
                 var reb = REBAR_FLEX[document.getElementById('df_reb').value];
+                var materialError = concreteRebarError(con, reb);
+                if (materialError) return err(materialError);
                 var As = parseFloat(document.getElementById('df_As').value);
                 var AsP = parseFloat(document.getElementById('df_AsP').value) || 0;
                 var L = parseFloat(document.getElementById('df_L').value);

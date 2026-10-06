@@ -51,6 +51,8 @@
                 var cs = parseFloat(document.getElementById('cw_c').value);
                 var con = CONCRETE[document.getElementById('cw_con').value];
                 var reb = REBAR_FLEX[document.getElementById('cw_reb').value];
+                var materialError = concreteRebarError(con, reb);
+                if (materialError) return err(materialError);
                 var dbar = parseFloat(document.getElementById('cw_dbar').value);
                 var n = parseFloat(document.getElementById('cw_n').value);
                 var Mk = parseFloat(document.getElementById('cw_Mk').value);

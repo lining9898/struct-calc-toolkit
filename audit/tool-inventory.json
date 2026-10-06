@@ -1,0 +1,750 @@
+[
+  {
+    "id": "beam-rect",
+    "title": "矩形梁正截面承载力",
+    "meta": {
+      "standard": "GB/T 50010-2010（2024年版）混凝土结构设计标准",
+      "formulaSource": "6.2.1、6.2.6～6.2.10；未屈服受压筋按6.2.8应变协调",
+      "limitations": "矩形截面受弯构件，单筋/双筋，适筋梁",
+      "unit": "M:kN·m, As:mm², b,h:mm",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "beam-rect-design",
+    "title": "矩形梁正截面配筋设计",
+    "meta": {
+      "standard": "GB/T 50010-2010（2024年版） 混凝土结构设计标准",
+      "formulaSource": "6.2.10 · GB 55008-2021 第 4.4.6 条",
+      "limitations": "矩形截面受弯构件，单筋优先；M 超过单筋界限时按双筋设计；不考虑抗震调整",
+      "unit": "M:kN·m, b/h/as:mm, As:mm²",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "beam-t",
+    "title": "T形梁正截面承载力",
+    "meta": {
+      "standard": "GB/T 50010-2010（2024年版）混凝土结构设计标准",
+      "formulaSource": "6.2.11",
+      "limitations": "T形/I形截面受弯构件，第一类/第二类判别",
+      "unit": "M:kN·m, As:mm², b,h,bf:mm",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "beam-shear",
+    "title": "梁斜截面受剪承载力",
+    "meta": {
+      "standard": "GB/T 50010-2010（2024年版）混凝土结构设计标准",
+      "formulaSource": "6.3.1, 6.3.4",
+      "limitations": "矩形/T形/工形截面，仅配箍筋，hw/b≤6",
+      "unit": "V:kN, Asv:mm², s:mm",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "beam-cont",
+    "title": "连续梁计算",
+    "meta": {
+      "standard": "结构力学三弯矩方程 + GB/T 50010-2010（2024年版）",
+      "formulaSource": "6.2.10, 6.3.4",
+      "limitations": "2~10跨等截面连续梁，均布荷载",
+      "unit": "M:kN·m, V:kN, b,h:mm",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "slab-rect",
+    "title": "单块矩形板计算",
+    "meta": {
+      "standard": "弹性薄板理论 + GB/T 50010-2010（2024年版）",
+      "formulaSource": "6.2.10",
+      "limitations": "四边支承矩形板，单向板/双向板弹性理论查表法",
+      "unit": "M:kN·m/m, As:mm²/m, Lx,Ly:m",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "stair-slab",
+    "title": "板式楼梯计算",
+    "meta": {
+      "standard": "GB 50009-2012 + GB/T 50010-2010（2024年版）",
+      "formulaSource": "6.2.10",
+      "limitations": "板式楼梯，梯段斜板+平台板，简支假定",
+      "unit": "M:kN·m/m, As:mm²/m",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "column-axial",
+    "title": "轴心受压柱承载力",
+    "meta": {
+      "standard": "GB/T 50010-2010（2024年版）混凝土结构设计标准",
+      "formulaSource": "6.2.15",
+      "limitations": "普通箍筋柱，轴心受压，矩形截面；非抗震构件的轴压及全部纵筋下限；一侧纵筋和抗震构造需另验",
+      "unit": "N:kN, As:mm², b,h:mm",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "crack-width",
+    "title": "裂缝宽度计算",
+    "meta": {
+      "standard": "GB/T 50010-2010（2024年版）混凝土结构设计标准",
+      "formulaSource": "7.1.2, 7.1.4",
+      "limitations": "矩形/T形/工形截面受弯构件，最大裂缝宽度",
+      "unit": "wmax:mm, M:kN·m, As:mm²",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "deflection",
+    "title": "挠度验算",
+    "meta": {
+      "standard": "GB/T 50010-2010（2024年版）混凝土结构设计标准",
+      "formulaSource": "7.2.1, 7.2.2, 7.2.3",
+      "limitations": "矩形/T形/工形截面受弯构件，短期刚度/长期刚度",
+      "unit": "f:mm, M:kN·m, B:N·mm²",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "punching",
+    "title": "受冲切承载力验算",
+    "meta": {
+      "standard": "GB/T 50010-2010（2024年版）混凝土结构设计标准",
+      "formulaSource": "6.5.1",
+      "limitations": "非预应力、无孔洞、无不平衡弯矩、柱居中且计算周长完整的板；不含边角柱及基础专用算法",
+      "unit": "Fl:kN, η:—, h0:mm",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "bearing-local",
+    "title": "混凝土局部受压",
+    "meta": {
+      "standard": "GB/T 50010-2010（2024年版）混凝土结构设计标准",
+      "formulaSource": "6.6.1",
+      "limitations": "局部均匀受压，可配置间接钢筋提高",
+      "unit": "Fl:kN, βc:—, Al,Ab:mm²",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "corbel",
+    "title": "牛腿设计",
+    "meta": {
+      "standard": "GB/T 50010-2010（2024年版）混凝土结构设计标准",
+      "formulaSource": "9.3",
+      "limitations": "a/h0≤1的短牛腿，钢筋混凝土",
+      "unit": "Fv:kN, As:mm², a,h0:mm",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "deep-beam",
+    "title": "深受弯构件（深梁）",
+    "meta": {
+      "standard": "GB/T 50010-2010（2024年版）混凝土结构设计标准",
+      "formulaSource": "附录G",
+      "limitations": "l0/h≤5的简支/连续深受弯构件，正截面+斜截面",
+      "unit": "M:kN·m, V:kN, h:mm",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "addl-trans",
+    "title": "附加横向钢筋",
+    "meta": {
+      "standard": "GB/T 50010-2010（2024年版）混凝土结构设计标准",
+      "formulaSource": "9.2.11",
+      "limitations": "梁中集中荷载作用处，附加箍筋/吊筋/组合",
+      "unit": "Asv:mm², F:kN",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "footing-col",
+    "title": "柱下独立基础计算",
+    "meta": {
+      "standard": "GB 50007-2011 建筑地基基础设计规范 + GB/T 50010-2010（2024年版）",
+      "formulaSource": "5.2, 8.2, 6.2.10",
+      "limitations": "轴心/偏心受压，柱下独立扩展基础",
+      "unit": "N:kN, M:kN·m, b,h:mm, fak:kPa",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "footing-wall",
+    "title": "墙下条形基础计算",
+    "meta": {
+      "standard": "GB 50007-2011 建筑地基基础设计规范 + GB/T 50010-2010（2024年版）",
+      "formulaSource": "5.2, 8.2",
+      "limitations": "墙下条形扩展基础",
+      "unit": "F:kN/m, b:mm, As:mm²/m",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "bearing-cap",
+    "title": "地基承载力验算",
+    "meta": {
+      "standard": "GB 50007-2011 建筑地基基础设计规范",
+      "formulaSource": "5.2.4, 5.2.5",
+      "limitations": "地基承载力特征值修正，基底压力验算",
+      "unit": "fa:kPa, pk:kPa, b,d:m",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "settlement",
+    "title": "地基沉降计算",
+    "meta": {
+      "standard": "GB 50007-2011 建筑地基基础设计规范",
+      "formulaSource": "5.3.5",
+      "limitations": "分层总和法，最终沉降量计算",
+      "unit": "s:mm, p:kPa, Es:MPa",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "bearing-theory",
+    "title": "地基承载力理论公式法",
+    "meta": {
+      "standard": "GB 50007-2011 建筑地基基础设计规范",
+      "formulaSource": "5.2.5",
+      "limitations": "按土的抗剪强度指标确定地基承载力特征值",
+      "unit": "fa:kPa, c:kPa, φ:°",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "soft-underlayer",
+    "title": "软弱下卧层验算",
+    "meta": {
+      "standard": "GB 50007-2011 建筑地基基础设计规范",
+      "formulaSource": "5.2.7",
+      "limitations": "压力扩散角法，持力层下有软弱土层",
+      "unit": "pz:pcz:kPa, z:m, Es1/Es2:—",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "anti-uplift",
+    "title": "抗浮稳定性验算",
+    "meta": {
+      "standard": "GB 50007-2011 / JGJ 476-2019 / GB 50069-2002 / GB 55003-2021",
+      "formulaSource": "5.4.3, 5.2.4",
+      "limitations": "建筑/水池抗浮，整体/局部抗浮稳定",
+      "unit": "Gk:kN, Nw:kN, Kw:—",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "rigid-found",
+    "title": "无筋扩展条形基础",
+    "meta": {
+      "standard": "GB 50007-2011 建筑地基基础设计规范",
+      "formulaSource": "8.1.1",
+      "limitations": "刚性基础，台阶宽高比/刚性角控制",
+      "unit": "b:mm, H:mm, pk:kPa",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "pile-cap",
+    "title": "独立桩承台计算",
+    "meta": {
+      "standard": "JGJ 94-2008 建筑桩基技术规范",
+      "formulaSource": "5.9",
+      "limitations": "柱下独立桩承台，冲切/受弯/受剪",
+      "unit": "N:kN, M:kN·m, As:mm²",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "pile-single",
+    "title": "单桩竖向承载力特征值",
+    "meta": {
+      "standard": "JGJ 94-2008 建筑桩基技术规范",
+      "formulaSource": "5.3.5",
+      "limitations": "经验参数法，侧阻+端阻",
+      "unit": "Ra:kN, qsik:kPa, qpk:kPa",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "pile-bearing",
+    "title": "桩基竖向承载力验算",
+    "meta": {
+      "standard": "JGJ 94-2008 建筑桩基技术规范",
+      "formulaSource": "5.2.1, 5.2.2",
+      "limitations": "群桩基础，Nk≤Ra, Nkmax≤1.2Ra",
+      "unit": "N:kN, Ra:kN",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "pile-horizontal",
+    "title": "桩基水平承载力",
+    "meta": {
+      "standard": "JGJ 94-2008 建筑桩基技术规范",
+      "formulaSource": "5.7",
+      "limitations": "m法，单桩水平承载力特征值",
+      "unit": "Rh:kN, α:1/m, EI:N·mm²",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "pile-settle",
+    "title": "桩基沉降计算",
+    "meta": {
+      "standard": "JGJ 94-2008 建筑桩基技术规范",
+      "formulaSource": "5.5.6, 5.5.11",
+      "limitations": "等效作用分层总和法",
+      "unit": "s:mm, p:kPa, Es:MPa",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "pile-bearing-55003",
+    "title": "桩基承载力验算（GB55003）",
+    "meta": {
+      "standard": "GB 55003-2021 建筑与市政地基基础通用规范",
+      "formulaSource": "5.2",
+      "limitations": "标准/地震/偏心4种工况，Ra=Quk/K",
+      "unit": "Nk:kN, Ra:kN, Quk:kN",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "steel-column",
+    "title": "钢压弯构件（柱）验算",
+    "meta": {
+      "standard": "GB 50017-2017 钢结构设计标准",
+      "formulaSource": "第8章",
+      "limitations": "H/工/箱形截面，强度/平面内外稳定/局部稳定",
+      "unit": "N:kN, M:kN·m, φ:—",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "steel-beam",
+    "title": "钢连续梁（钢梁）设计",
+    "meta": {
+      "standard": "GB 50017-2017 钢结构设计标准",
+      "formulaSource": "第6章",
+      "limitations": "2~6跨连续梁，抗弯/抗剪/整体稳定/局部压应力/挠度",
+      "unit": "M:kN·m, V:kN, f:mm, σ:N/mm²",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "weld",
+    "title": "焊缝连接计算",
+    "meta": {
+      "standard": "GB 50017-2017 钢结构设计标准",
+      "formulaSource": "第11章",
+      "limitations": "直角角焊缝+对接焊缝，轴力+弯矩+剪力组合",
+      "unit": "σ:N/mm², τ:N/mm², ffw:N/mm²",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "bolt",
+    "title": "螺栓连接计算",
+    "meta": {
+      "standard": "GB 50017-2017 钢结构设计标准",
+      "formulaSource": "第11章",
+      "limitations": "普通螺栓+高强度螺栓，抗剪/抗拉/拉剪联合",
+      "unit": "N:kN, Nvb:kN, Ntb:kN",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "anchor-bolt",
+    "title": "柱脚锚栓计算",
+    "meta": {
+      "standard": "GB 50017-2017 + GB/T 50010-2010（2024年版）",
+      "formulaSource": "12.7",
+      "limitations": "柱脚底板尺寸+锚栓拉力+锚固长度+局部受压",
+      "unit": "T:kN, d:mm, fta:N/mm²",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "mas-comp",
+    "title": "砌体受压承载力与高厚比验算",
+    "meta": {
+      "standard": "GB 50003-2011 砌体结构设计规范",
+      "formulaSource": "5.1.1, 6.1.1",
+      "limitations": "墙/柱受压承载力+高厚比验算，φfA",
+      "unit": "N:kN, f:MPa, β:—",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "mas-local",
+    "title": "砌体局部受压承载力验算",
+    "meta": {
+      "standard": "GB 50003-2011 砌体结构设计规范",
+      "formulaSource": "5.2",
+      "limitations": "梁端支承处/垫块下局部受压，γ 系数",
+      "unit": "Nl:kN, γ:—, Al,Ab:mm²",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "lintel",
+    "title": "过梁与圈梁计算",
+    "meta": {
+      "standard": "GB 50003-2011 砌体结构设计规范",
+      "formulaSource": "7.1, 7.2",
+      "limitations": "砖砌平拱/钢筋砖/钢筋混凝土过梁",
+      "unit": "M:kN·m, V:kN, As:mm²",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "cantilever",
+    "title": "挑梁计算",
+    "meta": {
+      "standard": "GB 50003-2011 砌体结构设计规范",
+      "formulaSource": "7.4",
+      "limitations": "砌体中挑梁，抗倾覆+局部受压+正斜截面",
+      "unit": "Mov:kN·m, Mmax:kN·m, Nl:kN",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "balcony",
+    "title": "阳台雨篷挑檐计算",
+    "meta": {
+      "standard": "GB 50009-2012 + GB/T 50010-2010（2024年版） + GB 50003-2011",
+      "formulaSource": "—",
+      "limitations": "悬挑板弯矩剪力+抗倾覆+配筋，含施工检修荷载",
+      "unit": "M:kN·m/m, As:mm²/m, L:m",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "wall-beam",
+    "title": "墙梁计算",
+    "meta": {
+      "standard": "GB 50003-2011 砌体结构设计规范",
+      "formulaSource": "7.3",
+      "limitations": "简支墙梁，托梁弯矩/剪力系数+墙体受剪",
+      "unit": "M:kN·m, V:kN, αM,βV:—",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "stage-check",
+    "title": "叠合构件两阶段验算",
+    "meta": {
+      "standard": "GB/T 50010-2010（2024年版） 附录 H",
+      "formulaSource": "H.0.1~H.0.5",
+      "limitations": "叠合板/叠合梁施工阶段+使用阶段，两阶段受力",
+      "unit": "M1,M2:kN·m, σs:N/mm², τ:N/mm²",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "td-slab",
+    "title": "钢筋桁架楼板选型",
+    "meta": {
+      "standard": "22G522-1 + GB 55001-2021",
+      "formulaSource": "—",
+      "limitations": "钢筋桁架楼承板选型+施工阶段挠度+受弯+叠合面受剪",
+      "unit": "M:kN·m/m, f:mm, τ:N/mm²",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "aac-wall",
+    "title": "蒸压加气混凝土外墙板",
+    "meta": {
+      "standard": "JGJ/T 17-2020 + T/CECS 553-2018",
+      "formulaSource": "—",
+      "limitations": "竖向外墙板，风荷载面外受弯/受剪/抗裂/挠度/地震/节点",
+      "unit": "M:kN·m/m, w:mm, σ:N/mm²",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "anchor",
+    "title": "保温外墙锚固件设计",
+    "meta": {
+      "standard": "外墙保温一体化系统应用技术标准(预制混凝土反打保温外墙)",
+      "formulaSource": "5.5",
+      "limitations": "预制反打保温外墙锚固件，反向拉拔/局部承压/混凝土抗拔/尾盘抗拉",
+      "unit": "F:kN, Nt:kN, βc:—",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "l22zg401",
+    "title": "预应力混凝土钢管桁架叠合板",
+    "meta": {
+      "standard": "L22ZG401 预应力混凝土钢管桁架叠合板（鲁2022）",
+      "formulaSource": "山东省建筑标准设计图集",
+      "limitations": "叠合板底板选用、荷载等级计算、施工阶段验算",
+      "unit": "跨度:mm, 荷载:kN/m², M:kN·m/m",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "basement-wall",
+    "title": "地下室外墙计算",
+    "meta": {
+      "standard": "GB/T 50010-2010（2024年版） + GB 50007-2011",
+      "formulaSource": "6.2.10",
+      "limitations": "侧向水土压力，上下支单向板，裂缝宽度",
+      "unit": "M:kN·m/m, As:mm²/m, wmax:mm",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "shear-wall",
+    "title": "剪力墙稳定计算",
+    "meta": {
+      "standard": "GB/T 50010-2010（2024年版） + JGJ 3-2010",
+      "formulaSource": "附录D",
+      "limitations": "墙肢平面外稳定+轴压比+受压承载力",
+      "unit": "N:kN, λ:—, φ:—",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "pool-rect",
+    "title": "矩形水池计算",
+    "meta": {
+      "standard": "GB 50069-2002 + CECS 138",
+      "formulaSource": "—",
+      "limitations": "矩形水池池壁，跨中/支座弯矩+配筋+抗裂",
+      "unit": "M:kN·m/m, As:mm²/m, αct:—",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "pool-circ",
+    "title": "圆形水池计算",
+    "meta": {
+      "standard": "GB 50069-2002 + CECS 138",
+      "formulaSource": "—",
+      "limitations": "圆形池壁，环向拉力+竖向弯矩+抗裂",
+      "unit": "N:kN/m, M:kN·m/m, As:mm²/m",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "retain-cant",
+    "title": "悬臂式挡土墙",
+    "meta": {
+      "standard": "GB 50007-2011 + SL 379",
+      "formulaSource": "6.6, 6.7",
+      "limitations": "朗肯主动土压力，抗滑移/抗倾覆/地基偏心/墙身配筋",
+      "unit": "Ea:kN/m, Kt,Ko:—, p:kPa",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "retain-butt",
+    "title": "扶壁式挡土墙",
+    "meta": {
+      "standard": "GB 50007-2011 + SL 379",
+      "formulaSource": "6.6, 6.7",
+      "limitations": "整体稳定+地基验算，立壁/趾板/踵板配筋",
+      "unit": "Ea:kN/m, M:kN·m/m, As:mm²/m",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "embed-plate",
+    "title": "预埋件计算",
+    "meta": {
+      "standard": "GB/T 50010-2010（2024年版）混凝土结构设计标准",
+      "formulaSource": "9.7",
+      "limitations": "直锚筋受拉/受剪/拉剪弯组合，αr/αv/αb",
+      "unit": "N:kN, V:kN, As:mm²",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "rebar-area",
+    "title": "钢筋面积速查",
+    "meta": {
+      "standard": "—",
+      "formulaSource": "—",
+      "limitations": "钢筋截面积计算与查表，As=πd²/4",
+      "unit": "As:mm², d:mm, s:mm",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "rebar-pick",
+    "title": "配筋选筋助手",
+    "meta": {
+      "standard": "GB/T 50010-2010（2024年版） 混凝土结构设计标准 / GB 1499.2-2024",
+      "formulaSource": "9.2 构造规定 · 附录 A 钢筋公称截面积",
+      "limitations": "仅完成面积匹配，不替代最小配筋率、间距与净距等构造验算",
+      "unit": "A:mm², A/m:mm²/m, d:mm",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "rho-min",
+    "title": "最小配筋率速查",
+    "meta": {
+      "standard": "GB 55008-2021 混凝土结构通用规范 / GB/T 50010-2010（2024年版）混凝土结构设计标准",
+      "formulaSource": "GB 55008-2021 第 4.4.6 条（表 4.4.6）",
+      "limitations": "受弯/受压构件最小配筋率与最小配筋面积；混凝土强度等级上限至 C50",
+      "unit": "ρmin:%, As,min:mm²",
+      "version": "1.1.0"
+    }
+  },
+  {
+    "id": "col-tie",
+    "title": "柱箍筋加密区验算",
+    "meta": {
+      "standard": "GB/T 50011-2010（2024年版）建筑抗震设计标准",
+      "formulaSource": "6.3",
+      "limitations": "加密区长度/间距/体积配箍率/最小λv",
+      "unit": "ρv:%, λv:—, s:mm",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "seismic",
+    "title": "抗震设防参数速查",
+    "meta": {
+      "standard": "GB/T 50011-2010（2024年版）(2016) 2024修订",
+      "formulaSource": "6.1, 表6.1.2",
+      "limitations": "烈度/加速度/分组/场地/结构类型/高度→抗震等级",
+      "unit": "烈度:度, 加速度:g, 等级:—",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "seismic-perf",
+    "title": "抗震性能化设计",
+    "meta": {
+      "standard": "GB/T 50011-2010（2024年版）建筑抗震设计标准",
+      "formulaSource": "3.10, 5.4.1",
+      "limitations": "4级性能目标×3级地震水准矩阵，5级破坏状态",
+      "unit": "—",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "masonry-seismic",
+    "title": "砌体房屋抗震验算",
+    "meta": {
+      "standard": "GB/T 50011-2010（2024年版）建筑抗震设计标准",
+      "formulaSource": "7.2",
+      "limitations": "抗震抗剪强度fve，正应力影响系数ζN",
+      "unit": "fve:MPa, ζN:—, V:kN",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "joint-core",
+    "title": "框架节点核芯区验算",
+    "meta": {
+      "standard": "GB/T 50011-2010（2024年版） 附录D",
+      "formulaSource": "D.1",
+      "limitations": "核芯区剪力设计值+截面限制+受剪承载力",
+      "unit": "Vj:kN, ηj:—, fyv:N/mm²",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "steel-seismic",
+    "title": "钢结构房屋抗震参数",
+    "meta": {
+      "standard": "GB/T 50011-2010（2024年版）建筑抗震设计标准",
+      "formulaSource": "8",
+      "limitations": "最大高度/高宽比/抗震等级/长细比/宽厚比/连接系数",
+      "unit": "λ:—, h/tw:—, ηj:—",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "isolation",
+    "title": "隔震设计简化计算",
+    "meta": {
+      "standard": "GB/T 50011-2010（2024年版）建筑抗震设计标准",
+      "formulaSource": "12",
+      "limitations": "隔震层等效刚度/等效阻尼比/水平减震系数",
+      "unit": "Keq:kN/mm, ζeq:%, β:—",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "load-combo",
+    "title": "荷载组合计算",
+    "meta": {
+      "standard": "GB 55001-2021 工程结构通用规范；GB 50009-2012 建筑结构荷载规范",
+      "formulaSource": "GB 55001 第 3.1.7、3.1.13、3.1.16 条；GB 50009 第 3.2.8～3.2.10 条",
+      "limitations": "房屋建筑、线性叠加、同向不利荷载效应；不含地震、有利作用及偶然作用计算；风雪输入应已按设计工作年限取标准值",
+      "unit": "S:kN或kN·m, γG,γQ:—",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "crane-load",
+    "title": "吊车荷载计算",
+    "meta": {
+      "standard": "GB 50009-2012 建筑结构荷载规范",
+      "formulaSource": "6",
+      "limitations": "纵向/横向水平荷载，多台吊车组合折减",
+      "unit": "Tk:kN, Pmax:kN, μ:—",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "temp-action",
+    "title": "温度作用计算",
+    "meta": {
+      "standard": "GB 50009-2012 建筑结构荷载规范",
+      "formulaSource": "9",
+      "limitations": "均匀温度作用ΔTk，温升/温降",
+      "unit": "ΔTk:℃, α:/℃",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "floor-live",
+    "title": "楼面活荷载查表",
+    "meta": {
+      "standard": "GB 50009-2012 建筑结构荷载规范",
+      "formulaSource": "5",
+      "limitations": "民用建筑楼面/屋面均布活荷载+折减系数",
+      "unit": "qk:kN/m², ψc,ψq,ψ:—",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "wind-snow",
+    "title": "风荷载与雪荷载",
+    "meta": {
+      "standard": "GB 50009-2012 建筑结构荷载规范",
+      "formulaSource": "8.1, 7.1",
+      "limitations": "wk=βz·μs·μz·w0，sk=μr·s0",
+      "unit": "wk:kN/m², sk:kN/m², μz,μs:—",
+      "version": "1.0.0"
+    }
+  },
+  {
+    "id": "local-qa",
+    "title": "规范条文问答（本地）",
+    "meta": {
+      "standard": "GB 50010 / GB 50007 / GB 50011 / GB 50017 / GB 50003 / GB 50009 / JGJ 94 / JGJ 1 等",
+      "formulaSource": "本地条文摘编（60 条）",
+      "limitations": "本地知识库为条文摘编，条号与取值需与规范正文核对；不替代专业人员判断",
+      "unit": "—",
+      "version": "1.0.0"
+    }
+  }
+]

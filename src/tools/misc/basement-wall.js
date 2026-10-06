@@ -66,6 +66,8 @@
                 if (!(h > 0 && H > 0)) return err('墙厚和墙高必须为正数。');
                 if (hw > H) hw = H;
                 var con = CONCRETE[conV];
+                var materialError = concreteRebarError(con, REBAR_FLEX[steelV]);
+                if (materialError) return err(materialError);
                 var fc = con.fc, ft = con.ft, alpha1 = con.alpha1;
                 var fy = (steelV === 'HRB400') ? 360 : 435;
                 var Es = 200000; // MPa

@@ -26,8 +26,8 @@
                 numField('st_gk_step', '踏步及抹灰自重 g<sub>k2</sub>', 'kN/m²', 3.0, '梯段踏步+底板抹灰，按水平投影面计') +
                 numField('st_gk_slab', '梯板自重 g<sub>k3</sub>', 'kN/m²', 2.5, '斜板自重按水平投影：γ·δ·√(1+(r/b)²)') +
                 numField('st_qk', '活荷载 q<sub>k</sub>', 'kN/m²', 3.5, '住宅 2.0；公共建筑 3.5；消防疏散 3.5') +
-                numField('st_gG', '恒载分项系数 γ<sub>G</sub>', '—', 1.2) +
-                numField('st_gQ', '活载分项系数 γ<sub>Q</sub>', '—', 1.4) +
+                numField('st_gG', '恒载分项系数 γ<sub>G</sub>', '—', 1.3) +
+                numField('st_gQ', '活载分项系数 γ<sub>Q</sub>', '—', 1.5) +
                 selField('st_con', '混凝土强度等级', conOpts('C30')) +
                 selField('st_reb', '钢筋级别', opts([{v:'HRB400',t:'HRB400'},{v:'HRB500',t:'HRB500'}], 'HRB400')) +
                 '</div><div class="btn-group">' +
@@ -63,6 +63,8 @@
                 var gQ = parseFloat(document.getElementById('st_gQ').value);
                 var con = CONCRETE[document.getElementById('st_con').value];
                 var reb = REBAR_FLEX[document.getElementById('st_reb').value];
+                var materialError = concreteRebarError(con, reb);
+                if (materialError) return err(materialError);
 
                 if (!(Ln > 0 && bW > 0 && bs > 0 && hs > 0 && delta > 0)) return err('几何尺寸必须为正数。');
                 if (!(asV > 0 && asV < delta)) return err('a<sub>s</sub> 应小于梯板厚度。');
@@ -105,7 +107,7 @@
                 function calcAs(M, h0v) {
                     var Mabs = Math.abs(M) * 1e6;
                     var alpha_s = Mabs / (a1 * fc * b * h0v * h0v);
-                    if (alpha_s > 1) return { As: Infinity, over: true, alpha_s: alpha_s, gamma_s: 0 };
+                    if (alpha_s >= 0.5) return { As: Infinity, over: true, alpha_s: alpha_s, gamma_s: 0 };
                     var gamma_s = 0.5 * (1 + Math.sqrt(1 - 2 * alpha_s));
                     var As = Mabs / (gamma_s * fy * h0v);
                     var xi = 2 * (1 - gamma_s);

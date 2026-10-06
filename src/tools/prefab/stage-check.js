@@ -181,6 +181,8 @@
                 var c2 = CONCRETE[con2];
                 if (!c2) return err('叠合层混凝土参数缺失。');
                 var c = CONCRETE[con], rb = REBAR_FLEX[reb];
+                var materialError = concreteRebarError(c, rb);
+                if (materialError) return err(materialError);
                 if (!c || !rb) return err('材料参数缺失。');
                 if (!(ratio > 0 && ratio <= 1)) return err('施工阶段实际强度比例 k 必须在 1%~100% 之间。');
 

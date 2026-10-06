@@ -19,9 +19,9 @@
                 numField('cb_as', '受拉筋合力点距离 a<sub>s</sub>', 'mm', 40) +
                 selField('cb_con', '混凝土强度等级', conOpts('C30')) +
                 selField('cb_reb', '纵向钢筋级别', opts([{v:'HRB400',t:'HRB400'},{v:'HRB500',t:'HRB500'}], 'HRB400')) +
-                selField('cb_stir', '箍筋级别 f<sub>yv</sub>', opts([{v:'HPB300',t:'HPB300 (270)'},{v:'HRB400',t:'HRB400 (360)'},{v:'HRB500',t:'HRB500 (435)'}], 'HRB400')) +
-                numField('cb_gG', '恒载分项系数 γ<sub>G</sub>', '—', 1.2) +
-                numField('cb_gQ', '活载分项系数 γ<sub>Q</sub>', '—', 1.4) +
+                selField('cb_stir', '箍筋级别 f<sub>yv</sub>', opts([{v:'HPB300',t:'HPB300 (270)'},{v:'HRB400',t:'HRB400 (360)'},{v:'HRB500',t:'HRB500（抗剪取 360）'}], 'HRB400')) +
+                numField('cb_gG', '恒载分项系数 γ<sub>G</sub>', '—', 1.3) +
+                numField('cb_gQ', '活载分项系数 γ<sub>Q</sub>', '—', 1.5) +
                 '</div>' +
                 '<div style="margin-top:14px;font-weight:600;color:#334155;font-size:13.5px;">各跨参数</div>' +
                 '<div class="hint" style="margin-bottom:10px;">输入每跨的跨度、恒载标准值、活载标准值；活载按最不利布置（跨隔跨布置）考虑。</div>' +
@@ -145,6 +145,8 @@
                 var asV = parseFloat(document.getElementById('cb_as').value);
                 var con = CONCRETE[document.getElementById('cb_con').value];
                 var reb = REBAR_FLEX[document.getElementById('cb_reb').value];
+                var materialError = concreteRebarError(con, reb);
+                if (materialError) return err(materialError);
                 var stir = REBAR_STIRRUP[document.getElementById('cb_stir').value];
                 var gG = parseFloat(document.getElementById('cb_gG').value);
                 var gQ = parseFloat(document.getElementById('cb_gQ').value);
@@ -198,13 +200,13 @@
                 }
 
                 // 正截面配筋：对每跨跨中最大正弯矩 + 支座负弯矩分别计算所需 A_s
-                st.push('<div class="step"><b>④ 正截面配筋（单筋矩形）</b>　按 A<sub>s</sub> = M / (γ<sub>s</sub>·f<sub>y</sub>·h<sub>0</sub>)，其中 γ<sub>s</sub> = 0.9·(1+√(1−2α<sub>s</sub>))，α<sub>s</sub> = M/(α<sub>1</sub>f<sub>c</sub>bh<sub>0</sub><sup>2</sup>)。</div>');
+                st.push('<div class="step"><b>④ 正截面配筋（单筋矩形）</b>　按 A<sub>s</sub> = M / (γ<sub>s</sub>·f<sub>y</sub>·h<sub>0</sub>)，其中 γ<sub>s</sub> = 0.5·(1+√(1−2α<sub>s</sub>))，α<sub>s</sub> = M/(α<sub>1</sub>f<sub>c</sub>bh<sub>0</sub><sup>2</sup>)。</div>');
 
                 var rebarResults = []; // {loc, M, As, rho, ok}
                 function calcFlex(M) {
                     var Mabs = Math.abs(M);
                     var alpha_s = Mabs * 1e6 / (a1 * fc * b * h0 * h0);
-                    if (alpha_s > 1) return { As: Infinity, rho: Infinity, over: true, gamma_s: 0 };
+                    if (alpha_s >= 0.5) return { As: Infinity, rho: Infinity, over: true, gamma_s: 0 };
                     var gamma_s = 0.5 * (1 + Math.sqrt(1 - 2 * alpha_s));
                     var As = Mabs * 1e6 / (gamma_s * fy * h0);
                     var xi = 2 * (1 - gamma_s);
@@ -353,8 +355,8 @@
                 document.getElementById('cb_con').value = 'C30';
                 document.getElementById('cb_reb').value = 'HRB400';
                 document.getElementById('cb_stir').value = 'HRB400';
-                document.getElementById('cb_gG').value = 1.2;
-                document.getElementById('cb_gQ').value = 1.4;
+                document.getElementById('cb_gG').value = 1.3;
+                document.getElementById('cb_gQ').value = 1.5;
                 renderSpans(); calc();
             });
             document.getElementById('f-cont').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); calc(); } });

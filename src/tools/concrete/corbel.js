@@ -50,6 +50,8 @@
                 var Fvk = parseFloat(document.getElementById('co_Fvk').value) || Fv / 1.3;
                 var con = CONCRETE[document.getElementById('co_con').value];
                 var reb = REBAR_FLEX[document.getElementById('co_reb').value];
+                var materialError = concreteRebarError(con, reb);
+                if (materialError) return err(materialError);
                 var stir = REBAR_STIRRUP[document.getElementById('co_stir').value] || { fy: 360 };
 
                 if (!(b > 0 && h > 0 && h0 > 0)) return err('牛腿尺寸必须为正数。');

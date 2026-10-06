@@ -2,6 +2,8 @@
  * 从 index.html 拆分，计算逻辑保持不变
  */
 (function () {
+    var BAR_D = [6, 8, 10, 12, 14, 16, 18, 20, 22, 25, 28, 32, 36, 40];
+    var BAR_AREA = BAR_D.map(function (d) { return Math.PI * d * d / 4; });
     var tool = {
         title: '钢筋面积速查',
         sub: '直径 × 根数 / 间距换算与常用配筋速查',
@@ -53,7 +55,7 @@
                     out.innerHTML = '';
                     document.getElementById('f-ra').parentElement.appendChild(out);
                 }
-                if (!(d > 0 && n > 0)) { out.innerHTML = '<div class="error-box">请输入有效直径与根数。</div>'; return; }
+                if (!(d > 0 && n > 0 && Number.isInteger(n))) { out.innerHTML = '<div class="error-box">直径必须为正数，根数必须为正整数。</div>'; return; }
                 var a = Math.PI * d * d / 4 * n;
                 out.innerHTML = '<div class="result-area show" style="margin-top:12px;">' +
                     resultRow('单根面积（φ' + d + '）', fmt(Math.PI*d*d/4, 1) + ' mm²') +

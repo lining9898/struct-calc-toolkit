@@ -19,7 +19,7 @@
                 selField('s_con', '混凝土强度等级', conOpts('C30')) +
                 selField('s_load', '荷载类型', opts([{v:'uniform',t:'均布荷载为主（一般受弯构件）'},{v:'concentrated',t:'集中荷载为主（独立梁，按剪跨比）'}], 'uniform')) +
                 numField('s_lambda', '剪跨比 λ = a/h<sub>0</sub>', '—', 2.0, '集中荷载为主时启用，取 1.5 ≤ λ ≤ 3.0') +
-                selField('s_stir', '箍筋级别 f<sub>yv</sub>', opts([{v:'HPB300',t:'HPB300 (270)'},{v:'HRB400',t:'HRB400 (360)'},{v:'HRB500',t:'HRB500 (435)'}], 'HRB400')) +
+                selField('s_stir', '箍筋级别 f<sub>yv</sub>', opts([{v:'HPB300',t:'HPB300 (270)'},{v:'HRB400',t:'HRB400 (360)'},{v:'HRB500',t:'HRB500（抗剪取 360）'}], 'HRB400')) +
                 numField('s_Asv', '同一截面箍筋各肢总面积 A<sub>sv</sub>', 'mm²（n·A<sub>sv1</sub>）', 101, '例如 φ8 双肢 = 2×50.3 ≈ 101 mm²') +
                 numField('s_s', '箍筋间距 s', 'mm', 150) +
                 '</div><div class="btn-group">' +

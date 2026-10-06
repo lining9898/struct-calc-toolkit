@@ -48,6 +48,7 @@
                 var isHPB = document.getElementById('at_reb').value === 'HPB300';
                 var fyv = isHPB ? 270 : (REBAR_FLEX[document.getElementById('at_reb').value].fy);
                 var fy = fyv; // 吊筋同级别
+                fyv = Math.min(fyv, 360); // 附加箍筋受剪强度按 4.2.3 上限
 
                 var ds = parseFloat(document.getElementById('at_ds').value);
                 var nleg = parseFloat(document.getElementById('at_nleg').value);

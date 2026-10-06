@@ -111,6 +111,8 @@
                 var gQ = parseFloat(document.getElementById('sb_gQ').value);
                 var con = CONCRETE[document.getElementById('sb_con').value];
                 var reb = REBAR_FLEX[document.getElementById('sb_reb').value];
+                var materialError = concreteRebarError(con, reb);
+                if (materialError) return err(materialError);
 
                 if (!(lx > 0 && ly > 0)) return err('跨度必须为正数。');
                 if (!(h > 0)) return err('板厚必须为正数。');
@@ -188,7 +190,7 @@
                 function calcAs(M, h0v) {
                     var Mabs = Math.abs(M) * 1e6; // N·mm/m
                     var alpha_s = Mabs / (a1 * fc * b * h0v * h0v);
-                    if (alpha_s > 1) return { As: Infinity, over: true, alpha_s: alpha_s, gamma_s: 0 };
+                    if (alpha_s >= 0.5) return { As: Infinity, over: true, alpha_s: alpha_s, gamma_s: 0 };
                     var gamma_s = 0.5 * (1 + Math.sqrt(1 - 2 * alpha_s));
                     var As = Mabs / (gamma_s * fy * h0v);
                     var xi = 2 * (1 - gamma_s);
