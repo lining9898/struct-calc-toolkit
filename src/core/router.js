@@ -106,6 +106,7 @@ function renderTool(id) {
         metaHtml += '</div>';
     }
     view.innerHTML = toolHeader(t.title, t.sub) + t.render() + metaHtml;
+    window.scrollTo(0, 0);
     if (t.bind) t.bind();
     else if (t.onReady) t.onReady();
     navActive(id);
