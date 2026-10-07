@@ -426,7 +426,9 @@ function buildWordCalcBookHtml(book) {
         if (step.refs && step.refs.length) {
             var items = '';
             for (var m = 0; m < step.refs.length; m++) {
-                items += '<li>' + tyaiRefText(step.refs[m]) + '</li>';
+                var ref = step.refs[m];
+                var code = (ref.name || '').match(/(?:GB(?:\/T)?|JGJ(?:\/T)?)\s*\d+(?:-\d+)?/);
+                items += '<li>' + (code ? code[0] : ref.name || '') + '，' + (ref.clause || '条文来源未核验') + '</li>';
             }
             refHtml = '<div class="ref-box"><b>规范依据：</b><ul>' + items + '</ul></div>';
         } else {
