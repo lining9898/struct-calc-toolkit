@@ -2,7 +2,7 @@ from http.server import ThreadingHTTPServer,SimpleHTTPRequestHandler
 from functools import partial
 from threading import Thread
 from pathlib import Path
-import json,math
+import json,math,zipfile
 from playwright.sync_api import sync_playwright
 class Quiet(SimpleHTTPRequestHandler):
  def log_message(self,*a):pass
@@ -80,7 +80,8 @@ with sync_playwright() as p:
  page.locator('#r_AsP').fill('1000');page.locator('#r_calc').click()
  with page.expect_download() as dl:
   page.evaluate("exportBook()")
- exported=Path(dl.value.path()).read_text(encoding="utf-8-sig");assert 'β<sub>1</sub>' in exported and '6.2.7' in exported
+ with zipfile.ZipFile(dl.value.path()) as z: exported=z.read("word/document.xml").decode()
+ assert 'β' in exported and 'w:vertAlign w:val="subscript"' in exported and '6.2.7' in exported
  for item in items:page.evaluate('(id)=>goTool(id)',item['id'])
  assert not errs,errs
  print('PASS: 68 tool render smoke; independent beam/column/punching/load checks; material/input limits; foundation minima; actual Word export. This is not a full normative audit of 68 tools.')
