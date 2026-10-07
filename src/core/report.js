@@ -3,7 +3,7 @@
  * ------------------------------------------------------------
  *  含：规范依据库（TYAI_CODE_REFS）、统一计算书数据组装、
  *  A4 打印样式（CALC_BOOK_CSS）、封面 / 签署栏 / 页脚组件、
- *  Word(.doc) 导出（buildWordCalcBookHtml / downloadDoc / exportBook）
+ *  Word(.docx) 导出（buildWordCalcBookHtml / downloadDoc / exportBook）
  *  以及受弯、AAC 外墙板、保温锚固件、预制构件等专用计算书模板。
  * ============================================================ */
 /* ===================== TYAI 规范依据库 ===================== */
@@ -472,32 +472,15 @@ function exportCalcBookWord() {
         return;
     }
     var html = buildWordCalcBookHtml(window.currentCalcBook);
-    var blob = new Blob(['\ufeff', html], { type: 'application/msword;charset=utf-8' });
-    var a = document.createElement('a');
-    var d = new Date();
-    var pad = function(n) { return n < 10 ? '0' + n : '' + n; };
-    var dateStr = d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate());
     var name = window.currentCalcBook.toolName || window.currentCalcBook.title || '计算书';
-    a.href = URL.createObjectURL(blob);
-    a.download = name + '_计算书_' + dateStr + '.doc';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(a.href);
+    return downloadDoc(name + '_计算书.docx', html);
 }
 
 
 
-/* ===== 导出 Word 计算书（浏览器端生成 .doc，Word/WPS 可打开） ===== */
+/* ===== 导出 Word 计算书（浏览器端生成原生 .docx，Word/WPS 可打开） ===== */
 function downloadDoc(name, doc) {
-    var blob = new Blob(['\ufeff', doc], { type: 'application/msword' });
-    var a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = name;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+    return window.downloadNativeWord(name, doc);
 }
 /* 预制构件脱模吊装：对齐单位「板/梁短暂工况验算书」模板格式 */
  // 通用受弯构件计算书模板
@@ -823,7 +806,7 @@ function exportBook() {
         downloadDoc(kn + '短暂工况验算书.doc', buildPrecastBook(r, t));
         return;
     }
-     if (CUR_TOOL === 'stage-check' && window._SC_RESULT) {
+     if (CUR_TOOL === 'stage-check' && window._SC_RESULT && typeof window.buildStageBook === 'function') {
          downloadDoc((window._SC_RESULT.kind === 'slab' ? '叠合板' : '叠合梁') + '施工阶段与使用阶段验算书.doc', buildStageBook(window._SC_RESULT, t));
          return;
      }
@@ -1150,10 +1133,7 @@ function exportBook() {
     for (var k = 0; k < sts.length; k++) steps.push(sts[k].innerHTML);
     // ④ 设计依据（按模块补充规范全称）
     var isLift = CUR_TOOL === 'precast-lift';
-    var basis = [
-        '《混凝土结构设计标准》GB/T 50010-2010（2024年版）',
-        '《建筑结构荷载规范》GB 50009-2012'
-    ];
+    var basis = [t.meta && t.meta.standard ? t.meta.standard : '本模块依据尚未记录'];
     if (isLift) basis.push('《装配式混凝土结构技术规程》JGJ 1-2014');
     var now = new Date();
     var dateStr = now.getFullYear() + '-' + ('0' + (now.getMonth() + 1)).slice(-2) + '-' + ('0' + now.getDate()).slice(-2);
@@ -1169,7 +1149,7 @@ function exportBook() {
     });
     var srows = '';
     steps.forEach(function (s, i) {
-        srows += '<tr><td style="width:6%;">' + (i + 1) + '</td><td>' + s + '</td></tr>';
+        srows += '<div class="step">' + s + '</div>';
     });
     var bstr = '';
     basis.forEach(function (b, i) {
@@ -1194,7 +1174,7 @@ function exportBook() {
         '<h2>二、计算参数</h2>' +
         '<table><tr><th style="width:6%;">序号</th><th>参数</th><th style="width:14%;">单位</th><th style="width:18%;">取值</th></tr>' + rows + '</table>' +
         '<h2>三、计算过程</h2>' +
-        '<table><tr><th style="width:6%;">步骤</th><th>内容</th></tr>' + srows + '</table>' +
+        srows +
         '<h2>四、计算结果</h2>' +
         '<table><tr><th style="width:6%;">序号</th><th>项目</th><th>数值</th></tr>' + rrows + '</table>' +
         '<h2>五、结论与说明</h2>' +
