@@ -127,7 +127,19 @@
                 html += resultRow('判定', badge(ok ? 'badge-ok' : 'badge-err', ok ? '受冲切承载力满足' : '不满足，建议加厚板或配抗冲切钢筋'));
                 if (!ok) html += resultRow('截面上限（非配筋承载力）', fmt(Flu_stir, 0) + ' kN（6.5.3 条限值）');
                 out.innerHTML = html;
-                proc.innerHTML = st.join('');
+                proc.innerHTML = (function () {
+                    var reportSteps = [];
+                    reportSteps.push('<div class="step"><b>第一步：设计依据</b>　' + tool.meta.standard + '；原模块引用条文：' + tool.meta.formulaSource + '。（规范依据待核验）</div>');
+                    var inputs = Array.prototype.map.call(document.querySelectorAll('#f-pc input, #f-pc select'), function (el) {
+                        return (el.id || el.name || '参数') + '=' + String(el.value).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+                    });
+                    reportSteps.push('<div class="step"><b>第二步：输入条件</b>　' + inputs.join('；') + '</div>');
+                    st.forEach(function (step, index) {
+                        reportSteps.push(step.replace(/<b>[①②③④⑤⑥⑦⑧⑨⑩] /, '<b>第' + (index + 3) + '步：'));
+                    });
+                    reportSteps.push('<div class="step"><b>计算结论</b>　原计算结果及判定如下（工程结论待人工核验）：' + out.innerHTML + '</div>');
+                    return reportSteps.join('');
+                })();
                 var _p = proc ? proc.closest('.proc-wrap') : document.querySelector('#view .proc-wrap'); if (_p) _p.classList.add('open');
 
                 window._PC_RESULT = {
