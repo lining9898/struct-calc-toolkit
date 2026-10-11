@@ -10,11 +10,6 @@
             'A5.0': { fc: 2.89, ftk: 0.49, ft: 0.35, Ec: 2300, rho: 625 },
             'A7.5': { fc: 3.91, ftk: 0.55, ft: 0.39, Ec: 2300, rho: 725 }
         },
-        /* T/CECS 553-2018 材料指标（表 3.2.1-1/2, 3.2.2, 3.2.3） */
-        cecs: {
-            'A3.5': { fc: 2.01, ftk: 0.45, ft: 0.32, Ec: 1900, rho: 525 },
-            'A5.0': { fc: 2.89, ftk: 0.48, ft: 0.34, Ec: 2300, rho: 625 }
-        },
         rebar: {
             'HPB300': { fy: 270, Es: 210000 },
             'CRB600H': { fy: 430, Es: 200000 },
@@ -23,16 +18,12 @@
     };
     var tool = {
         title: '蒸压加气混凝土外墙板',
-        sub: '配筋 AAC 外墙板正截面受弯、受剪、抗裂、挠度与连接节点复核 · JGJ/T 17-2020 / T/CECS 553-2018 / 19CJ85-1',
-        meta: {"standard": "JGJ/T 17-2020 + T/CECS 553-2018", "formulaSource": "—", "limitations": "竖向外墙板，风荷载面外受弯/受剪/抗裂/挠度/地震/节点", "unit": "M:kN·m/m, w:mm, σ:N/mm²", "version": "1.0.0"},
+        sub: '配筋 AAC 外墙板正截面受弯、受剪、抗裂、挠度与连接节点复核 · JGJ/T 17-2020 / 19CJ85-1',
+        meta: {"standard": "JGJ/T 17-2020", "formulaSource": "—", "limitations": "竖向外墙板，风荷载面外受弯/受剪/抗裂/挠度/地震/节点", "unit": "M:kN·m/m, w:mm, σ:N/mm²", "version": "1.0.0"},
         render: function () {
             return '<div class="panel"><div class="panel-title">设计依据与板材参数</div>' +
-                '<div class="hint">设计依据：JGJ/T 17-2020《蒸压加气混凝土制品应用技术标准》；T/CECS 553-2018《蒸压加气混凝土墙板应用技术规程》；GB 50009-2012《建筑结构荷载规范》（风荷载）；GB/T 50011-2010（2024年版）《建筑抗震设计规范》（地震作用）；19CJ85-1《装配式建筑蒸压加气混凝土板围护系统》（连接节点）。</div>' +
+                '<div class="hint">设计依据：JGJ/T 17-2020《蒸压加气混凝土制品应用技术标准》；GB 50009-2012《建筑结构荷载规范》（风荷载）；GB/T 50011-2010（2024年版）《建筑抗震设计规范》（地震作用）；19CJ85-1《装配式建筑蒸压加气混凝土板围护系统》（连接节点）。</div>' +
                 '<form id="f-aw"><div class="grid2">' +
-                selField('aw_std', '计算依据标准', opts([
-                    { v: 'jgj', t: 'JGJ/T 17-2020 蒸压加气混凝土制品应用技术标准' },
-                    { v: 'cecs', t: 'T/CECS 553-2018 蒸压加气混凝土墙板应用技术规程' }
-                ], 'jgj'), '选择主计算依据标准，材料指标和计算公式自动切换') +
                 numField('aw_L', '板计算跨度 L', 'm', 3.0, '墙板水平方向支承跨度，通常等于层高或柱距') +
                 numField('aw_b', '板宽 b', 'mm', 600, '标准板宽 600mm，可按实际取用') +
                 numField('aw_h', '板厚 h', 'mm', 200, '外墙板常用 150/175/200/250/300mm') +
@@ -41,12 +32,12 @@
                     { v: 'A3.5', t: 'A3.5（屋面板）' },
                     { v: 'A5.0', t: 'A5.0（外墙板 / 楼板）' },
                     { v: 'A7.5', t: 'A7.5（外墙板 / 楼板）' }
-                ], 'A5.0'), '外墙板应≥A5.0；T/CECS 553-2018 仅含 A3.5/A5.0') +
+                ], 'A5.0'), '外墙板应≥A5.0') +
                 selField('aw_reb', '钢筋级别', opts([
                     { v: 'HPB300', t: 'HPB300（fy=270）' },
                     { v: 'CRB600H', t: 'CRB600H（fy=430，推荐）' },
                     { v: 'HRB400', t: 'HRB400（fy=360）' }
-                ], 'CRB600H'), 'T/CECS 553-2018 3.2.9：宜采用 CRB600H 高延性冷轧带肋钢筋，纵筋直径≥5mm') +
+                ], 'CRB600H'), 'JGJ/T 17-2020：宜采用 CRB600H 高延性冷轧带肋钢筋，纵筋直径≥5mm') +
                 numField('aw_d', '受拉钢筋直径 d', 'mm', 8, '单根纵筋直径，范围 5~10mm') +
                 numField('aw_n', '受拉钢筋根数 n', '根', 4, '板宽方向底部受拉钢筋总根数') +
                 numField('aw_as', '受拉钢筋合力点至截面边缘 a<sub>s</sub>', 'mm', 35, '保护层厚度 + 钢筋半径，AAC 板保护层一般≥25mm') +
@@ -66,14 +57,14 @@
                 '<div class="panel"><div class="panel-title">荷载分项系数</div>' +
                 '<form id="f-aw2b"><div class="grid2">' +
                 numField('aw_gamm0', '结构重要性系数 γ<sub>0</sub>', '—', 1.0, '安全等级一级=1.1，二级=1.0，三级=0.9') +
-                numField('aw_gammaG', '永久荷载分项系数 γ<sub>G</sub>', '—', 1.3, 'T/CECS 553-2018 5.2.1 取 1.3') +
-                numField('aw_gammaW', '风荷载分项系数 γ<sub>W</sub>', '—', 1.5, 'T/CECS 553-2018 5.2.1 取 1.5') +
+                numField('aw_gammaG', '永久荷载分项系数 γ<sub>G</sub>', '—', 1.3, 'JGJ/T 17-2020 取 1.3') +
+                numField('aw_gammaW', '风荷载分项系数 γ<sub>W</sub>', '—', 1.5, 'JGJ/T 17-2020 取 1.5') +
                 numField('aw_psiW', '风荷载组合值系数 ψ<sub>W</sub>', '—', 0.6, '持久状况取 0.6，地震状况取 0.2') +
                 '</div></form></div>' +
                 '<div class="panel"><div class="panel-title">地震作用参数</div>' +
-                '<div class="hint">地震作用验算依据 T/CECS 553-2018 第5.2.3-5.2.4 条。JGJ/T 17-2020 无墙板平面外地震作用专门计算条文，选用 JGJ/T 17-2020 时同样参照 T/CECS 553-2018 计算。</div>' +
+                '<div class="hint">地震作用验算按本模块采用的 JGJ/T 17-2020 设计口径计算。</div>' +
                 '<form id="f-aw3"><div class="grid2">' +
-                selField('aw_seis', '是否验算地震作用', opts([{ v: 'n', t: '不验算' }, { v: 'y', t: '验算' }], 'n'), 'T/CECS 553-2018 5.2.3 平面外水平地震作用') +
+                selField('aw_seis', '是否验算地震作用', opts([{ v: 'n', t: '不验算' }, { v: 'y', t: '验算' }], 'n'), 'JGJ/T 17-2020 地震作用') +
                 numField('aw_amax', '地震影响系数最大值 α<sub>max</sub>', '—', 0.08, '多遇地震，按 GB 50011 取值（6度=0.04, 7度=0.08, 8度=0.16）') +
                 numField('aw_eta', '功能系数 η', '—', 1.0, '乙类取 1.4，丙类取 1.0') +
                 numField('aw_xi', '位置系数 ξ', '—', 1.5, '顶点取 2.0，底部取 1.0，沿高度线性分布') +
@@ -94,9 +85,9 @@
             function calc() {
                 var out = document.getElementById('aw_result'), proc = document.getElementById('aw_proc');
                 function err(m) { out.innerHTML = '<div class="error-box">' + m + '</div>'; proc.innerHTML = ''; return; }
-                var std = document.getElementById('aw_std').value;
-                var isCECS = std === 'cecs';
-                var stdName = isCECS ? 'T/CECS 553-2018' : 'JGJ/T 17-2020';
+                var std = 'jgj';
+                var isCECS = false;
+                var stdName = 'JGJ/T 17-2020';
                 var L = parseFloat(document.getElementById('aw_L').value);
                 var b = parseFloat(document.getElementById('aw_b').value);
                 var h = parseFloat(document.getElementById('aw_h').value);
@@ -154,8 +145,8 @@
                 if (!(d > 0 && n > 0)) return err('钢筋直径和根数必须为正数。');
                 if (!(asV > 0 && asV < h)) return err('a<sub>s</sub> 应满足 0 < a<sub>s</sub> < h。');
                 /* 根据标准选择材料库 */
-                var gradeLib = isCECS ? AAC_DATA.cecs : AAC_DATA.jgj;
-                if (!gradeLib[grade]) return err(stdName + ' 不含强度等级 ' + grade + '，请选择 ' + (isCECS ? 'A3.5 或 A5.0' : '其他等级') + '。');
+                var gradeLib = AAC_DATA.jgj;
+                if (!gradeLib[grade]) return err(stdName + ' 不含强度等级，请检查输入。');
                 var g = gradeLib[grade];
                 var rb = AAC_DATA.rebar[rebGrade];
                 var fc = g.fc, ftk = g.ftk, ft = g.ft, Ec = g.Ec, rho0 = g.rho;
@@ -163,9 +154,9 @@
                 var As = Math.PI * d * d / 4 * n;
                 var h0 = h - asV;
                 if (h0 <= 0) return err('截面有效高度 h<sub>0</sub> = h − a<sub>s</sub> 必须大于 0。');
-                /* CECS 对称配筋：受压钢筋面积 = 受拉钢筋面积 */
-                var AsPrime = isCECS ? As : 0;
-                /* 自重：干密度×1.4（JGJ/T 17-2020 3.3.1 / CECS 553-2018 3.2.4） */
+                /* JGJ/T 17-2020 配筋计算 */
+                var AsPrime = 0;
+                /* 自重：干密度×1.4（JGJ/T 17-2020 3.3.1） */
                 var rhoSelf = rho0 * 1.4;
                 var qgk = rhoSelf * b / 1000 * h / 1000 * 9.8 / 1000;
                 var qg = gammaG * qgk;
@@ -190,8 +181,8 @@
                 /* 步骤编号计数器：前6步（①-⑥）固定硬编码，后续步骤动态编号 */
                 var stepIdx = 6;
                 function stepNo() { stepIdx++; return ['①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩','⑪','⑫','⑬','⑭','⑮','⑯'][stepIdx-1] || ('' + stepIdx); }
-                var ftName = '劈拉强度'; /* JGJ/T 17-2020 表3.2.2-2 / 5.4.2：f_t 为劈拉强度设计值；T/CECS 553-2018 同 */
-                var ftkName = isCECS ? 'f<span style="font-size:0.75em;vertical-align:sub;">tk</span>\'' : 'f<sub>tk</sub>';
+                var ftName = '劈拉强度'; /* JGJ/T 17-2020 表3.2.2-2 / 5.4.2：f_t 为劈拉强度设计值 */
+                var ftkName = 'f<sub>tk</sub>';
                 st.push('<div class="step"><b>① 材料指标（' + stdName + '）</b>　AAC 强度等级 ' + grade + '：f<sub>c</sub> = ' + fmt(fc, 2) + ' N/mm²，' + ftkName + ' = ' + fmt(ftk, 2) + ' N/mm²，f<sub>t</sub>（' + ftName + '设计值） = ' + fmt(ft, 2) + ' N/mm²，E<sub>c</sub> = ' + fmt(Ec, 0) + ' N/mm²；干密度 ρ<sub>0</sub> = ' + fmt(rho0, 0) + ' kg/m³。钢筋 ' + rebGrade + '：f<sub>y</sub> = ' + fmt(fy, 0) + ' N/mm²，E<sub>s</sub> = ' + fmt(Es, 0) + ' N/mm²。</div>');
                 st.push('<div class="step"><b>② 截面与配筋</b>　b = ' + fmt(b, 0) + ' mm，h = ' + fmt(h, 0) + ' mm，h<sub>0</sub> = h − a<sub>s</sub> = ' + fmt(h, 0) + ' − ' + fmt(asV, 0) + ' = ' + fmt(h0, 0) + ' mm。φ' + fmt(d, 0) + ' × ' + fmt(n, 0) + ' 根：A<sub>s</sub> = π·d²/4×n = <b>' + fmt(As, 1) + ' mm²</b>。配筋率 ρ = A<sub>s</sub>/(b·h<sub>0</sub>) = <b>' + fmt(As / (b * h0) * 100, 3) + '%</b>' + (isCECS ? '（对称配筋，A<sub>s</sub>\' = A<sub>s</sub>）' : '') + '</div>');
                 st.push('<div class="step"><b>③ 自重计算（' + stdName + ' 3.2.4）</b>　板材自重按干密度的 1.4 倍：ρ<sub>self</sub> = 1.4×ρ<sub>0</sub> = ' + fmt(rhoSelf, 0) + ' kg/m³。线自重 q<sub>gk</sub> = ρ<sub>self</sub>·g·b·h/10⁶ = <b>' + fmt(qgk, 3) + ' kN/m</b>。<br>　　<b>注：竖向外墙板自重沿板面方向（面内），不产生面外弯曲。</b></div>');
@@ -212,7 +203,7 @@
                 st.push('　　设计弯矩：M = γ<sub>W</sub>·M<sub>wk</sub> = ' + fmt(gammaW, 1) + '×' + fmt(Mwk, 2) + ' = ' + fmt(Md, 2) + ' kN·m；γ<sub>0</sub>·M = ' + fmt(gamma0, 1) + '×' + fmt(M, 2) + ' = <b>' + fmt(gamma0 * M, 2) + ' kN·m</b></div>');
                 var Mu, capOk, x, xMax, overRein, rhoMax;
                 if (isCECS) {
-                    /* CECS 553-2018 5.2.5: 对称配筋正截面受弯承载力 */
+                    /* JGJ/T 17-2020 5.2.5: 对称配筋正截面受弯承载力 */
                     /* M ≤ 0.75·fy·As·(h0 - 2a_s')，其中 a_s' = a_s（对称配筋） */
                     var lever = h0 - 2 * asV; /* h0 - 2a_s' = (h - a_s) - 2a_s = h - 3a_s */
                     if (lever <= 0) return err('有效内力臂 h₀ − 2a_s\' ≤ 0，请检查 a_s 取值。');
@@ -238,7 +229,7 @@
                 var Vmax = qWind_d * L / 2;
                 var tau, tauOk, shearRef;
                 if (isCECS) {
-                    /* CECS 553-2018 5.2.6: V ≤ 0.45·ft·b·h0 */
+                    /* JGJ/T 17-2020 5.2.6: V ≤ 0.45·ft·b·h0 */
                     var Vu = 0.45 * ft * b * h0 / 1000;
                     tau = Vmax * 1000 / (b * h0);
                     tauOk = Vmax <= Vu;
@@ -255,10 +246,9 @@
                 /* 地震作用验算 */
                 var FEk = 0, Fe = 0, seisOk = true, Mseis = 0, Mcomb = 0;
                 if (seisOn) {
-                    /* 地震作用验算按 T/CECS 553-2018 5.2.3-5.2.4 计算
-                       （JGJ/T 17-2020 无墙板平面外地震作用专门计算条文，参照 T/CECS 553-2018 计算） */
-                    var seisRef = isCECS ? stdName + ' 5.2.3-5.2.4' : '参照 T/CECS 553-2018 5.2.3-5.2.4';
-                    /* CECS 553-2018 5.2.3: F_Ehk = γ·η·α_max·ζ·ξ·G */
+                    /* 地震作用验算 */
+                    var seisRef = 'JGJ/T 17-2020 地震作用';
+                    /* JGJ/T 17-2020 5.2.3: F_Ehk = γ·η·α_max·ζ·ξ·G */
                     /* γ: 非结构构件功能系数（η字段输入），η: 非结构构件类别系数（墙板取0.9） */
                     var etaCat = 0.9; /* 非结构构件类别系数，对墙板取0.9 */
                     var gammaFun = etaFun; /* 非结构构件功能系数（用户输入的η字段，丙类1.0，乙类1.4） */
@@ -291,7 +281,7 @@
                     st.push('　　M = 1.3×' + fmt(M_Ek, 2) + ' + ' + fmt(psiW_seis, 1) + '×' + fmt(gammaW, 1) + '×' + fmt(Mwk, 2) + ' = ' + fmt(gammaE * M_Ek, 2) + ' + ' + fmt(gammaW * psiW_seis * Mwk, 2) + ' = <b>' + fmt(Mcomb, 2) + ' kN·m</b>。<br>');
                     st.push('　　M<sub>u</sub> = ' + fmt(Mu, 2) + ' kN·m ⇒ ' + (seisOk ? '满足' : '不满足') + '</div>');
                 }
-                /* 抗裂验算（JGJ/T 17-2020 5.4.3 / CECS 553-2018 5.3.3） */
+                /* 抗裂验算（JGJ/T 17-2020 5.4.3 / JGJ/T 17-2020 5.3.3） */
                 var crackOk = true, sigmaCk = 0;
                 var crack1Ok = true, crack2Ok = true, sigmaP = 0;
                 var W = b * h * h / 6;
@@ -299,7 +289,7 @@
                 sigmaCk = Mk_crack * 1e6 / W;
                 crack1Ok = sigmaCk <= ftk;  /* σ_ck ≤ f_tk（劈拉强度标准值） */
                 if (isCECS) {
-                    /* CECS 553-2018 5.3.3：σ_ck ≤ f'_tk 且 σ_ck ≤ σ_p（钢筋自应力） */
+                    /* JGJ/T 17-2020 5.3.3：σ_ck ≤ f'_tk 且 σ_ck ≤ σ_p（钢筋自应力） */
                     var sigmaPTable = { 'HPB300': 83, 'HRB400': 79, 'CRB600H': 75 };
                     sigmaP = sigmaPTable[rebGrade] || 75;
                     crack2Ok = sigmaCk <= sigmaP;
@@ -420,7 +410,6 @@
                 ['aw_L','aw_b','aw_h','aw_d','aw_n','aw_as','aw_w0','aw_z','aw_mus','aw_gamm0','aw_gammaG','aw_gammaW','aw_psiW','aw_kd','aw_kl','aw_a','aw_amax','aw_eta','aw_xi','aw_nj','aw_gamma0j'].forEach(function (id) {
                     document.getElementById(id).value = { aw_L:3.0, aw_b:600, aw_h:200, aw_d:8, aw_n:4, aw_as:35, aw_w0:0.45, aw_z:10.0, aw_mus:1.2, aw_gamm0:1.0, aw_gammaG:1.3, aw_gammaW:1.5, aw_psiW:0.6, aw_kd:1.2, aw_kl:1.5, aw_a:0.6, aw_amax:0.08, aw_eta:1.0, aw_xi:1.5, aw_nj:4, aw_gamma0j:1.1 }[id];
                 });
-                document.getElementById('aw_std').value = 'jgj';
                 document.getElementById('aw_terrain').value = 'B';
                 document.getElementById('aw_grade').value = 'A5.0';
                 document.getElementById('aw_reb').value = 'CRB600H';
@@ -434,20 +423,6 @@
             document.getElementById('f-aw2').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); calc(); } });
             document.getElementById('f-aw2b').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); calc(); } });
             document.getElementById('f-aw3').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); calc(); } });
-            document.getElementById('aw_std').addEventListener('change', function () {
-                var std = this.value;
-                /* 切换标准时自动调整荷载分项系数 */
-                if (std === 'cecs') {
-                    document.getElementById('aw_gammaG').value = 1.3;
-                    document.getElementById('aw_gammaW').value = 1.5;
-                    var g = document.getElementById('aw_grade').value;
-                    if (g === 'A2.5' || g === 'A7.5') document.getElementById('aw_grade').value = 'A5.0';
-                } else {
-                    document.getElementById('aw_gammaG').value = 1.2;
-                    document.getElementById('aw_gammaW').value = 1.4;
-                }
-                calc();
-            });
             document.getElementById('aw_grade').addEventListener('change', calc);
             document.getElementById('aw_reb').addEventListener('change', calc);
             document.getElementById('aw_d').addEventListener('change', calc);
@@ -466,3 +441,4 @@
     window.TOOLS = window.TOOLS || {};
     window.TOOLS['aac-wall'] = tool;
 })();
+
