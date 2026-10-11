@@ -1,0 +1,7 @@
+{
+  "name": "struct-calc-toolkit-audit",
+  "private": true,
+  "scripts": {
+    "test": "node --check src/tools/concrete/beam-rect.js && node tests/beam-rect-audit.js"
+  }
+}
