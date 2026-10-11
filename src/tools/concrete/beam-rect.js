@@ -137,7 +137,19 @@
                 html += resultRow('最小配筋率 / A<sub>s,min</sub>', fmt(rho_min*100,2) + '% / ' + fmt(AsMin,0) + ' mm²');
                 html += resultRow('判定', badge(stCls, stMsg));
                  out.innerHTML = html;
-                 proc.innerHTML = st.join('');
+                 proc.innerHTML = (function () {
+                    var reportSteps = [];
+                    reportSteps.push('<div class="step"><b>第一步：设计依据</b>　' + tool.meta.standard + '；原模块引用条文：' + tool.meta.formulaSource + '。（规范依据待核验）</div>');
+                    var inputs = Array.prototype.map.call(document.querySelectorAll('#view form input, #view form select'), function (el) {
+                        return (el.id || el.name || '参数') + '=' + String(el.value).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+                    });
+                    reportSteps.push('<div class="step"><b>第二步：输入条件</b>　' + inputs.join('；') + '</div>');
+                    st.forEach(function (step, index) {
+                        reportSteps.push(step.replace(/<b>[①②③④⑤⑥⑦⑧⑨⑩] /, '<b>第' + (index + 3) + '步：'));
+                    });
+                    reportSteps.push('<div class="step"><b>最后一步：计算结论</b>　以下为原计算结果及判定（工程结论待人工核验）：' + out.innerHTML + '</div>');
+                    return reportSteps.join('');
+                })();
                  var _p = proc ? proc.closest('.proc-wrap') : document.querySelector('#view .proc-wrap'); if (_p) _p.classList.add('open');
                  document.getElementById('r_svg').innerHTML = svgPreview(b, h, asV, isD ? as2V : asV, isD);
                  window._BR_RESULT = {
