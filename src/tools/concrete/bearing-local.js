@@ -143,7 +143,19 @@
                 }
                 html += resultRow('最终判定', badge(finalOk ? 'badge-ok' : 'badge-err', finalOk ? '局部受压承载力满足' : '局部受压承载力不满足'));
                 out.innerHTML = html;
-                proc.innerHTML = st.join('');
+                proc.innerHTML = (function () {
+                    var reportSteps = [];
+                    reportSteps.push('<div class="step"><b>第一步：设计依据</b>　' + tool.meta.standard + '；原模块引用条文：' + tool.meta.formulaSource + '。（规范依据待核验）</div>');
+                    var inputs = Array.prototype.map.call(document.querySelectorAll('#view form input, #view form select'), function (el) {
+                        return (el.id || el.name || '参数') + '=' + String(el.value).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+                    });
+                    reportSteps.push('<div class="step"><b>第二步：输入条件</b>　' + inputs.join('；') + '</div>');
+                    st.forEach(function (step, index) {
+                        reportSteps.push(step.replace(/<b>[①②③④⑤⑥⑦⑧⑨⑩] /, '<b>第' + (index + 3) + '步：'));
+                    });
+                    reportSteps.push('<div class="step"><b>最后一步：计算结论</b>　以下为原计算结果及判定（工程结论待人工核验）：' + out.innerHTML + '</div>');
+                    return reportSteps.join('');
+                })();
                 var _p = proc ? proc.closest('.proc-wrap') : document.querySelector('#view .proc-wrap'); if (_p) _p.classList.add('open');
 
                 window._BL_RESULT = {

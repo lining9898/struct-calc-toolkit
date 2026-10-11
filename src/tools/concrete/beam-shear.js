@@ -50,6 +50,20 @@
                 var h0 = h - asV, fc = con.fc, ft = con.ft, fyv = stir.fy, bc = 1.0;
                 var hw = h, hwb = hw / b;
                 var st = [];
+                function formatReportSteps() {
+                    var steps = [];
+                    steps.push('<div class="step"><b>第一步：设计依据</b>　' + tool.meta.standard + '；原模块引用条文：' + tool.meta.formulaSource + '。（规范依据待核验）</div>');
+                    var inputs = Array.prototype.map.call(document.querySelectorAll('#f-shear input, #f-shear select'), function (el) {
+                        return (el.id || el.name || '参数') + '=' + String(el.value).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+                    });
+                    steps.push('<div class="step"><b>第二步：输入条件</b>　' + inputs.join('；') + '</div>');
+                    st.forEach(function (step, index) {
+                        steps.push(step.replace(/<b>[①②③④⑤⑥⑦⑧⑨⑩] /, '<b>第' + (index + 3) + '步：'));
+                    });
+                    steps.push('<div class="step"><b>计算结论</b>　原计算结果及判定（工程结论待人工核验）：' + out.innerHTML + '</div>');
+                    return steps.join('');
+                }
+
                 st.push('<div class="step"><b>① 截面参数</b>　h<sub>0</sub> = h − a<sub>s</sub> = <b>' + fmt(h0) + ' mm</b>；h<sub>w</sub>/b = ' + fmt(hwb,2) + '；f<sub>c</sub>=' + fc + '，f<sub>t</sub>=' + ft + '，f<sub>yv</sub>=' + fyv + ' N/mm²。</div>');
                 // 截面限制（6.3.1）
                 var Vmax;
@@ -62,7 +76,7 @@
                 if (!secOk) {
                     var html0 = resultRow('截面限制 V<sub>max</sub>（6.3.1）', fmt(Vmax,1) + ' kN');
                     html0 += resultRow('判定', badge('badge-err', '截面不足：V &gt; V<sub>max</sub>，应加大截面或提高混凝土等级'));
-                    out.innerHTML = html0; proc.innerHTML = st.join('');
+                    out.innerHTML = html0; proc.innerHTML = formatReportSteps();
                     var _p = proc ? proc.closest('.proc-wrap') : document.querySelector('#view .proc-wrap'); if (_p) _p.classList.add('open');
                     var _p0 = proc ? proc.closest('.proc-wrap') : document.querySelector('#view .proc-wrap'); if (_p0) _p0.classList.add('open'); return;
                 }
@@ -82,7 +96,7 @@
                     h1 += resultRow('最小配箍率 ρ<sub>sv,min</sub>', fmt(rsvMin*100,3) + '%');
                     h1 += resultRow('实际配箍率 ρ<sub>sv</sub>', fmt(rsv*100,3) + '%');
                     h1 += resultRow('判定', rsv >= rsvMin ? badge('badge-ok','满足：无需计算配箍，按构造配箍即可') : badge('badge-warn','构造配箍率不足'));
-                    out.innerHTML = h1; proc.innerHTML = st.join('');
+                    out.innerHTML = h1; proc.innerHTML = formatReportSteps();
                     var _p = proc ? proc.closest('.proc-wrap') : document.querySelector('#view .proc-wrap'); if (_p) _p.classList.add('open');
                     var _p1 = proc ? proc.closest('.proc-wrap') : document.querySelector('#view .proc-wrap'); if (_p1) _p1.classList.add('open'); return;
                 }
@@ -106,7 +120,7 @@
                 html += resultRow('所需 A<sub>sv</sub>/s', fmt(need,3) + ' mm²/mm（s=' + fmt(s,0) + ' 时 ≥ ' + fmt(needAsv,0) + ' mm²）');
                 html += resultRow('配箍率 ρ<sub>sv</sub> / ρ<sub>sv,min</sub>', fmt(rsv2*100,3) + '% / ' + fmt(rsvMin2*100,3) + '%');
                 html += resultRow('判定', badge(stCls, stMsg));
-                out.innerHTML = html; proc.innerHTML = st.join('');
+                out.innerHTML = html; proc.innerHTML = formatReportSteps();
                 var _p = proc ? proc.closest('.proc-wrap') : document.querySelector('#view .proc-wrap'); if (_p) _p.classList.add('open');
             }
             function syncLoad() {

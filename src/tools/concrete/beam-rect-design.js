@@ -212,7 +212,19 @@
                 st.push('<div class="step"><b>⑩ 后续验算提示</b>　本模块仅完成正截面受弯配筋设计；配套还应完成：斜截面受剪（箍筋）、' +
                     '裂缝宽度（GB 50010 第 7.1 章）、挠度（第 7.2 章）以及抗震工况下的承载力调整。可在左侧「构件验算」分组中逐项复核。</div>');
 
-                proc.innerHTML = st.join('');
+                proc.innerHTML = (function () {
+                    var reportSteps = [];
+                    reportSteps.push('<div class="step"><b>第一步：设计依据</b>　' + tool.meta.standard + '；原模块引用条文：' + tool.meta.formulaSource + '。（规范依据待核验）</div>');
+                    var inputs = Array.prototype.map.call(document.querySelectorAll('#f-bd input, #f-bd select'), function (el) {
+                        return (el.id || el.name || '参数') + '=' + String(el.value).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+                    });
+                    reportSteps.push('<div class="step"><b>第二步：输入条件</b>　' + inputs.join('；') + '</div>');
+                    st.forEach(function (step, index) {
+                        reportSteps.push(step.replace(/<b>[①②③④⑤⑥⑦⑧⑨⑩] /, '<b>第' + (index + 3) + '步：'));
+                    });
+                    reportSteps.push('<div class="step"><b>计算结论</b>　原计算结果及判定如下（工程结论待人工核验）：' + out.innerHTML + '</div>');
+                    return reportSteps.join('');
+                })();
                 var wrap = proc.closest ? proc.closest('.proc-wrap') : null;
                 if (wrap) wrap.classList.add('open');
 

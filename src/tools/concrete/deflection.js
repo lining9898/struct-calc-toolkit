@@ -178,7 +178,19 @@
                 html += resultRow('挠跨比 f / l<sub>0</sub>', fmt(f / (L * 1000) * 1000, 2) + '‰（1/' + Math.round(L*1000/f) + '）');
                 html += resultRow('判定', badge(ok ? 'badge-ok' : 'badge-err', ok ? '挠度满足规范限值' : '挠度超限，应增加截面高度或配筋'));
                 out.innerHTML = html;
-                proc.innerHTML = st.join('');
+                proc.innerHTML = (function () {
+                    var reportSteps = [];
+                    reportSteps.push('<div class="step"><b>第一步：设计依据</b>　' + tool.meta.standard + '；原模块引用条文：' + tool.meta.formulaSource + '。（规范依据待核验）</div>');
+                    var inputs = Array.prototype.map.call(document.querySelectorAll('#f-df input, #f-df select'), function (el) {
+                        return (el.id || el.name || '参数') + '=' + String(el.value).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+                    });
+                    reportSteps.push('<div class="step"><b>第二步：输入条件</b>　' + inputs.join('；') + '</div>');
+                    st.forEach(function (step, index) {
+                        reportSteps.push(step.replace(/<b>[①②③④⑤⑥⑦⑧⑨⑩] /, '<b>第' + (index + 3) + '步：'));
+                    });
+                    reportSteps.push('<div class="step"><b>计算结论</b>　原计算结果及判定如下（工程结论待人工核验）：' + out.innerHTML + '</div>');
+                    return reportSteps.join('');
+                })();
                 var _p = proc ? proc.closest('.proc-wrap') : document.querySelector('#view .proc-wrap'); if (_p) _p.classList.add('open');
 
                 window._DF_RESULT = {

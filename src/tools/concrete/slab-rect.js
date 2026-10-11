@@ -347,7 +347,21 @@
                     asprInputs[_i].addEventListener('input', function (e) { updateJudge(e.target); });
                 }
 
-                proc.innerHTML = st.join('') + buildStep7();
+                proc.innerHTML = (function () {
+                    var originalSteps = st.join('') + buildStep7();
+                    var inputList = Array.prototype.map.call(document.querySelectorAll('#f-slab input, #f-slab select'), function (el) {
+                        return (el.id || el.name || '参数') + '=' + String(el.value).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+                    });
+                    var stepNo = 2;
+                    var numbered = originalSteps.replace(/<div class="step"><b>[^<]*<\/b>/g, function (heading) {
+                        stepNo += 1;
+                        return heading.replace(/<b>[^<]*<\/b>/, '<b>第' + stepNo + '步：计算与验算</b>');
+                    });
+                    return '<div class="step"><b>第一步：设计依据</b>　' + tool.meta.standard + '；原模块引用条文：' + tool.meta.formulaSource + '。（规范依据待核验）</div>' +
+                        '<div class="step"><b>第二步：输入条件</b>　' + inputList.join('；') + '</div>' +
+                        numbered +
+                        '<div class="step"><b>计算结论</b>　原计算结果及判定（工程结论待人工核验）：' + out1.innerHTML + out2.innerHTML + '</div>';
+                })();
                 var _p = proc ? proc.closest('.proc-wrap') : document.querySelector('#view .proc-wrap'); if (_p) _p.classList.add('open');
 
                 window._SLAB_RESULT = {
