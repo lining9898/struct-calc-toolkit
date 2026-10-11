@@ -63,6 +63,20 @@
                 var useArea = rhoP > 0.03 ? A - AsP : A;
                 var Nu = 0.9 * phi * (fc * useArea + fyp * AsP) / 1000;
                 var st = [];
+                function formatReportSteps() {
+                    var steps = [];
+                    steps.push('<div class="step"><b>第一步：设计依据</b>　' + tool.meta.standard + '；原模块引用条文：' + tool.meta.formulaSource + '。（规范依据待核验）</div>');
+                    var inputs = Array.prototype.map.call(document.querySelectorAll('#f-col input, #f-col select'), function (el) {
+                        return (el.id || el.name || '参数') + '=' + String(el.value).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+                    });
+                    steps.push('<div class="step"><b>第二步：输入条件</b>　' + inputs.join('；') + '</div>');
+                    st.forEach(function (step, index) {
+                        steps.push(step.replace(/<b>[①②③④⑤⑥⑦⑧⑨⑩] /, '<b>第' + (index + 3) + '步：'));
+                    });
+                    steps.push('<div class="step"><b>计算结论</b>　原计算结果及判定（工程结论待人工核验）：' + out.innerHTML + '</div>');
+                    return steps.join('');
+                }
+
                 st.push('<div class="step"><b>① 截面参数</b>　A = b×h = ' + fmt(A,0) + ' mm²；l<sub>0</sub>/b = ' + fmt(lb,2) + '；f<sub>c</sub>=' + fc + '，f<sub>y</sub>\u2032=' + fyp + ' N/mm²。</div>');
                 st.push('<div class="step"><b>② 稳定系数</b>　按表 6.2.15 插值，l<sub>0</sub>/b = ' + fmt(lb,1) + ' ⇒ <b>φ = ' + fmt(phi,3) + '</b>' + (rhoP > 0.03 ? '（配筋率 &gt; 3%，A 改用净截面 A−A<sub>s</sub>\u2032）' : '') + '</div>');
                 st.push('<div class="step"><b>③ 轴压承载力</b>　N<sub>u</sub> = 0.9φ(f<sub>c</sub>' + (rhoP > 0.03 ? '(A−A<sub>s</sub>\u2032)' : 'A') + ' + f<sub>y</sub>\u2032A<sub>s</sub>\u2032) = 0.9×' + fmt(phi,3) + '×(' + fc + '×' + fmt(useArea,0) + ' + ' + fyp + '×' + AsP + ') = <b>' + fmt(Nu,1) + ' kN</b></div>');
@@ -81,14 +95,14 @@
                  html += resultRow('纵筋配筋率 ρ\u2032', fmt(rhoP*100,2) + '%（全部纵筋 ρ<sub>min</sub>=' + fmt(rhoMinAll*100,2) + '%）');
                  html += resultRow('所需纵筋面积 A<sub>s</sub>\u2032,req', fmt(Math.max(0, need),0) + ' mm²');
                  html += resultRow('判定', ok && rhoOk ? badge('badge-ok', '本项轴压与全部纵筋下限满足；一侧配筋、抗震及构造另验') : (!ok ? badge('badge-err', '不满足：N &gt; N<sub>u</sub>') : badge('badge-warn', '承载力满足，但配筋率不足')));
-                 out.innerHTML = html; proc.innerHTML = st.join('');
+                 out.innerHTML = html; proc.innerHTML = formatReportSteps();
                  var _p = proc ? proc.closest('.proc-wrap') : document.querySelector('#view .proc-wrap'); if (_p) _p.classList.add('open');
                  window._CA_RESULT = {
                       b: b, h: h, l0: l0, N: N,
                       conGrade: document.getElementById('c_con').value,
                       rebGrade: document.getElementById('c_reb').value,
                       fc: fc, fyp: fyp, A: A, AsP: AsP, lambda: lb, phi: phi,
-                      Nu: Nu, ok: ok, rhoP: rhoP, rhoOk: rhoOk, steps: st.join('')
+                      Nu: Nu, ok: ok, rhoP: rhoP, rhoOk: rhoOk, steps: formatReportSteps()
                   };
              }
             function reset() {
