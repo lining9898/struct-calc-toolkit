@@ -32,19 +32,25 @@
         },
         bind: function () {
             function svgT(b, h, bf, hf) {
-                var W = 200, H = 220, s = Math.min(150 / Math.max(h, 400), 1.2), x0 = 16, y0 = 14;
+                var W = 230, H = 250, s = Math.min(150 / Math.max(h, 400), 1.2), x0 = 28, y0 = 14;
                 var db = Math.max(b * s, 30), dh = h * s, dbf = Math.max(bf * s, db + 20);
                 var o = '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto;display:block;">';
                 var cx = (W - dbf) / 2;
                 o += '<path d="M' + cx + ' ' + y0 + ' h' + dbf + ' v' + (hf*s) + ' h' + (-(dbf-db)/2) + ' v' + (dh-hf*s) + ' h' + (-db) + ' v' + (-(dh-hf*s)) + ' Z" fill="#eef2f7" stroke="#94a3b8" stroke-width="1.2"/>';
                 o += '<rect x="' + fmt(cx+ (dbf-db)/2 + db*0.15,1) + '" y="' + fmt(y0+dh-3.5,1) + '" width="' + fmt(db*0.7,1) + '" height="7" rx="3.5" fill="#2563eb"/>';
-                o += '<text x="' + fmt(cx+ (dbf-db)/2 + db/2,1) + '" y="' + fmt(y0+dh+14,1) + '" text-anchor="middle" font-size="11" fill="#1e293b">As</text>';
+                o += '<text x="' + fmt(cx+ (dbf-db)/2 + db/2,1) + '" y="' + fmt(y0+dh+10,1) + '" text-anchor="middle" font-size="11" fill="#1e293b">As</text>';
                 o += '<line x1="' + fmt(cx-4,1) + '" y1="' + y0 + '" x2="' + fmt(cx-4,1) + '" y2="' + fmt(y0+dh,1) + '" stroke="#94a3b8" stroke-width="1"/>';
                 o += '<text x="' + fmt(cx-8,1) + '" y="' + fmt(y0+dh/2+3,1) + '" text-anchor="end" font-size="10" fill="#64748b">h</text>';
                 o += '<line x1="' + cx + '" y1="' + fmt(y0+dh+4,1) + '" x2="' + fmt(cx+dbf,1) + '" y2="' + fmt(y0+dh+4,1) + '" stroke="#94a3b8" stroke-width="1"/>';
-                o += '<text x="' + fmt(cx+dbf/2,1) + '" y="' + fmt(y0+dh+17,1) + '" text-anchor="middle" font-size="10" fill="#64748b">bf\u2032</text>';
-                o += '<line x1="' + fmt(cx+ (dbf-db)/2 + db + 4,1) + '" y1="' + fmt(y0+hf*s,1) + '" x2="' + fmt(cx+ (dbf-db)/2 + db + 4,1) + '" y2="' + fmt(y0+dh,1) + '" stroke="#94a3b8" stroke-width="1"/>';
-                o += '<text x="' + fmt(cx+ (dbf-db)/2 + db + 7,1) + '" y="' + fmt(y0+(hf*s+dh)/2+3,1) + '" font-size="10" fill="#64748b">b</text>';
+                o += '<text x="' + fmt(cx+dbf/2,1) + '" y="' + fmt(y0+dh+12,1) + '" text-anchor="middle" font-size="10" fill="#64748b">bf\u2032</text>';
+                /* 腹板宽度 b：水平尺寸线 */
+                var webLeft = cx + (dbf-db)/2, webRight = webLeft + db;
+                o += '<line x1="' + fmt(webLeft,1) + '" y1="' + fmt(y0+dh+24,1) + '" x2="' + fmt(webRight,1) + '" y2="' + fmt(y0+dh+24,1) + '" stroke="#94a3b8" stroke-width="1"/>';
+                o += '<text x="' + fmt((webLeft+webRight)/2,1) + '" y="' + fmt(y0+dh+37,1) + '" text-anchor="middle" font-size="10" fill="#64748b">b</text>';
+                /* 翼缘厚度 hf′：右侧上部竖向尺寸线 */
+                var dimX = cx + dbf + 12;
+                o += '<line x1="' + fmt(dimX,1) + '" y1="' + y0 + '" x2="' + fmt(dimX,1) + '" y2="' + fmt(y0+hf*s,1) + '" stroke="#94a3b8" stroke-width="1"/>';
+                o += '<text x="' + fmt(dimX+4,1) + '" y="' + fmt(y0+hf*s/2+3,1) + '" font-size="10" fill="#64748b">hf′</text>';
                 o += '</svg>';
                 return o;
             }
