@@ -112,6 +112,16 @@
                 if (over) { stMsg = '超筋，按界限承载力估算'; stCls = 'badge-err'; }
                 else if (!isUnder) { stMsg = '少筋，不满足 GB 55008-2021 第 4.4.6 条'; stCls = 'badge-warn'; }
                 else { stMsg = '适筋截面，满足要求（' + (isFirst ? '第一类' : '第二类') + '）'; stCls = 'badge-ok'; }
+                // 仅统一计算书展示；原计算步骤、公式及判定逻辑保持不变。
+                var reportSteps = [
+                    '<div class="step"><b>第一步：设计依据</b>　' + tool.meta.standard + '；原模块引用条文：' + tool.meta.formulaSource + '；最小配筋率判定引用 GB 55008-2021 第 4.4.6 条。（规范依据及工程结论待人工核验）</div>',
+                    '<div class="step"><b>第二步：输入条件</b>　b=' + b + ' mm；h=' + h + ' mm；b<sub>f</sub>′=' + bf + ' mm；h<sub>f</sub>′=' + hf + ' mm；A<sub>s</sub>=' + As + ' mm²；a<sub>s</sub>=' + asV + ' mm；混凝土=' + document.getElementById('t_con').value + '；钢筋=' + document.getElementById('t_reb').value + '。</div>'
+                ];
+                st.forEach(function (step, index) {
+                    reportSteps.push(step.replace(/<b>[①②③④⑤⑥⑦] /, '<b>第' + (index + 3) + '步：'));
+                });
+                reportSteps.push('<div class="step"><b>最后一步：计算结论</b>　' + stMsg + '；M<sub>u</sub>=' + fmt(Mu,2) + ' kN·m；规范依据与工程结论待人工核验。</div>');
+                var reportHtml = reportSteps.join('');
                 var html = resultRow('截面类型', isFirst ? '第一类 T 形（x ≤ h<sub>f</sub>\u2032）' : '第二类 T 形（x &gt; h<sub>f</sub>\u2032）');
                 html += resultRow('受压区高度 x', fmt(x,1) + ' mm' + (over ? '（界限）' : ''));
                 html += resultRow('相对受压区高度 ξ / ξ<sub>b</sub>', fmt(x/h0,4) + ' / ' + fmt(xi_b,4));
@@ -120,7 +130,7 @@
                 html += resultRow('最小配筋率 / A<sub>s,min</sub>', fmt(rho_min*100,2) + '% / ' + fmt(AsMin,0) + ' mm²');
                 html += resultRow('判定', badge(stCls, stMsg));
                  out.innerHTML = html;
-                 proc.innerHTML = st.join('');
+                 proc.innerHTML = reportHtml;
                  var _p = proc ? proc.closest('.proc-wrap') : document.querySelector('#view .proc-wrap'); if (_p) _p.classList.add('open');
                  document.getElementById('t_svg').innerHTML = svgT(b, h, bf, hf);
                  window._BT_RESULT = {
@@ -131,7 +141,7 @@
                      type: isFirst ? '第一类' : '第二类', h0: h0, x: x, xi: xi, xi_b: xi_b,
                      Mu: Mu, over: over, rho_min: rho_min, AsMin: AsMin,
                      rho: rho, isUnder: isUnder, stMsg: stMsg, stCls: stCls,
-                     steps: st.join('')
+                     steps: reportHtml
                  };
              }
             function reset() {
