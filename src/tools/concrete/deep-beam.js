@@ -156,7 +156,19 @@
                 html += resultRow('水平分布筋配筋率', fmt(rho_sh*100, 3) + '%（最小 0.2%）' + badge(rho_sh >= rho_sh_min ? 'badge-ok' : 'badge-warn', rho_sh >= rho_sh_min ? '满足' : '配筋不足'));
                 html += resultRow('总体判定', badge(totalOk ? 'badge-ok' : 'badge-err', totalOk ? '深梁正斜截面均满足' : '不满足，需调整'));
                 out.innerHTML = html;
-                proc.innerHTML = st.join('');
+                proc.innerHTML = (function () {
+                    var reportSteps = [];
+                    reportSteps.push('<div class="step"><b>第一步：设计依据</b>　' + tool.meta.standard + '；原模块引用条文：' + tool.meta.formulaSource + '。（规范依据待核验）</div>');
+                    var inputs = Array.prototype.map.call(document.querySelectorAll('#f-db input, #f-db select'), function (el) {
+                        return (el.id || el.name || '参数') + '=' + String(el.value).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+                    });
+                    reportSteps.push('<div class="step"><b>第二步：输入条件</b>　' + inputs.join('；') + '</div>');
+                    st.forEach(function (step, index) {
+                        reportSteps.push(step.replace(/<b>[①②③④⑤⑥⑦⑧⑨⑩] /, '<b>第' + (index + 3) + '步：'));
+                    });
+                    reportSteps.push('<div class="step"><b>计算结论</b>　原计算结果及判定如下（工程结论待人工核验）：' + out.innerHTML + '</div>');
+                    return reportSteps.join('');
+                })();
                 var _p = proc ? proc.closest('.proc-wrap') : document.querySelector('#view .proc-wrap'); if (_p) _p.classList.add('open');
 
                 window._DB_RESULT = {
