@@ -57,20 +57,20 @@
                 '<div class="panel"><div class="panel-title">荷载分项系数</div>' +
                 '<form id="f-aw2b"><div class="grid2">' +
                 numField('aw_gamm0', '结构重要性系数 γ<sub>0</sub>', '—', 1.0, '安全等级一级=1.1，二级=1.0，三级=0.9') +
-                numField('aw_gammaG', '永久荷载分项系数 γ<sub>G</sub>', '—', 1.3, 'JGJ/T 17-2020 取 1.3') +
-                numField('aw_gammaW', '风荷载分项系数 γ<sub>W</sub>', '—', 1.5, 'JGJ/T 17-2020 取 1.5') +
+                numField('aw_gammaG', '永久荷载分项系数 γ<sub>G</sub>', '—', 1.3, '取值应按项目适用荷载规范核定') +
+                numField('aw_gammaW', '风荷载分项系数 γ<sub>W</sub>', '—', 1.5, '取值应按项目适用荷载规范核定') +
                 numField('aw_psiW', '风荷载组合值系数 ψ<sub>W</sub>', '—', 0.6, '持久状况取 0.6，地震状况取 0.2') +
                 '</div></form></div>' +
                 '<div class="panel"><div class="panel-title">地震作用参数</div>' +
-                '<div class="hint">地震作用验算按本模块采用的 JGJ/T 17-2020 设计口径计算。</div>' +
+                '<div class="hint">JGJ/T 17-2020 第5.4.6条要求外墙板进行抗震承载力验算。本模块地震公式与系数来源尚待核实，仅输出参考计算，不作抗震合格判定。</div>' +
                 '<form id="f-aw3"><div class="grid2">' +
-                selField('aw_seis', '是否验算地震作用', opts([{ v: 'n', t: '不验算' }, { v: 'y', t: '验算' }], 'n'), 'JGJ/T 17-2020 地震作用') +
+                selField('aw_seis', '是否验算地震作用', opts([{ v: 'n', t: '不验算' }, { v: 'y', t: '验算' }], 'n'), '地震参考计算（待核验）') +
                 numField('aw_amax', '地震影响系数最大值 α<sub>max</sub>', '—', 0.08, '多遇地震，按 GB 50011 取值（6度=0.04, 7度=0.08, 8度=0.16）') +
                 numField('aw_eta', '功能系数 η', '—', 1.0, '乙类取 1.4，丙类取 1.0') +
                 numField('aw_xi', '位置系数 ξ', '—', 1.5, '顶点取 2.0，底部取 1.0，沿高度线性分布') +
                 '</div></form></div>' +
                 '<div class="panel"><div class="panel-title">连接节点参数（19CJ85-1 B1）</div>' +
-                '<div class="hint">19CJ85-1 第6.6条：连接件承载力设计的安全等级应提高一级。连接节点及预埋件的承载力设计值不应小于2倍风荷载设计值。</div>' +
+                '<div class="hint">JGJ/T 17-2020 第5.4.7条要求连接件承载力设计安全等级提高一级。此处仅计算作用需求，实际节点抗力及19CJ85-1具体节点适用条件需另行核验。</div>' +
                 '<form id="f-aw4"><div class="grid2">' +
                 numField('aw_nj', '每块板连接件数量 n<sub>j</sub>', '个', 4, '每块板连接件总数（上下支座各 n<sub>j</sub>/2）') +
                 numField('aw_gamma0j', '连接件重要性系数 γ<sub>0j</sub>', '—', 1.1, '安全等级提高一级，二级→一级取1.1') +
@@ -139,10 +139,10 @@
                 var amax = parseFloat(document.getElementById('aw_amax').value);
                 var etaFun = parseFloat(document.getElementById('aw_eta').value);
                 var xiPos = parseFloat(document.getElementById('aw_xi').value);
-                var nj = parseInt(document.getElementById('aw_nj').value);
+                var nj = Number(document.getElementById('aw_nj').value);
                 var gamma0j = parseFloat(document.getElementById('aw_gamma0j').value);
                 if (!(L > 0 && b > 0 && h > 0)) return err('尺寸参数必须为正数。');
-                if (!(d > 0 && n > 0)) return err('钢筋直径和根数必须为正数。');
+                if (!(d > 0 && Number.isInteger(n) && n > 0)) return err('钢筋直径必须为正数，根数必须为正整数。');
                 if (!(asV > 0 && asV < h)) return err('a<sub>s</sub> 应满足 0 < a<sub>s</sub> < h。');
                 /* 根据标准选择材料库 */
                 var gradeLib = AAC_DATA.jgj;
@@ -208,7 +208,7 @@
                     var lever = h0 - 2 * asV; /* h0 - 2a_s' = (h - a_s) - 2a_s = h - 3a_s */
                     if (lever <= 0) return err('有效内力臂 h₀ − 2a_s\' ≤ 0，请检查 a_s 取值。');
                     Mu = 0.75 * fy * As * lever / 1e6;
-                    capOk = gamma0 * M <= Mu;
+                    capOk = !overRein && gamma0 * M <= Mu;
                     rhoMax = 2.0; /* CECS 无显式最大配筋率限制，取构造上限 */
                     st.push('<div class="step"><b>⑤ 正截面受弯承载力（' + stdName + ' 5.2.5，对称配筋）</b>　配筋墙板应采用对称配筋，正截面承载力按下式计算：<br>');
                     st.push('　　内力臂 z = h<sub>0</sub> − 2a<sub>s</sub>\' = ' + fmt(h0, 0) + ' − 2×' + fmt(asV, 0) + ' = ' + fmt(lever, 0) + ' mm（对称配筋 a<sub>s</sub>\' = a<sub>s</sub>）。<br>');
@@ -247,7 +247,7 @@
                 var FEk = 0, Fe = 0, seisOk = true, Mseis = 0, Mcomb = 0;
                 if (seisOn) {
                     /* 地震作用验算 */
-                    var seisRef = 'JGJ/T 17-2020 地震作用';
+                    var seisRef = '参考模型，公式与系数来源待核验';
                     /* JGJ/T 17-2020 5.2.3: F_Ehk = γ·η·α_max·ζ·ξ·G */
                     /* γ: 非结构构件功能系数（η字段输入），η: 非结构构件类别系数（墙板取0.9） */
                     var etaCat = 0.9; /* 非结构构件类别系数，对墙板取0.9 */
@@ -279,7 +279,7 @@
                     st.push('　　地震设计状况组合（式5.2.1-2）：S = γ<sub>E</sub>·M<sub>Ek</sub> + ψ<sub>W</sub>·γ<sub>W</sub>·M<sub>Wk</sub>（自重面外分量为0）<br>');
                     st.push('　　M<sub>Ek</sub> = F<sub>Ehk</sub>·L/4 = ' + fmt(FEk, 2) + '×' + fmt(L, 2) + '/4 = ' + fmt(M_Ek, 2) + ' kN·m<br>');
                     st.push('　　M = 1.3×' + fmt(M_Ek, 2) + ' + ' + fmt(psiW_seis, 1) + '×' + fmt(gammaW, 1) + '×' + fmt(Mwk, 2) + ' = ' + fmt(gammaE * M_Ek, 2) + ' + ' + fmt(gammaW * psiW_seis * Mwk, 2) + ' = <b>' + fmt(Mcomb, 2) + ' kN·m</b>。<br>');
-                    st.push('　　M<sub>u</sub> = ' + fmt(Mu, 2) + ' kN·m ⇒ ' + (seisOk ? '满足' : '不满足') + '</div>');
+                    st.push('　　M<sub>u</sub> = ' + fmt(Mu, 2) + ' kN·m ⇒ ' + '待核验（仅为参考模型数值比较）' + '</div>');
                 }
                 /* 抗裂验算（JGJ/T 17-2020 5.4.3 / JGJ/T 17-2020 5.3.3） */
                 var crackOk = true, sigmaCk = 0;
@@ -312,7 +312,7 @@
                 var Bs = 0.85 * Ec * I0;                 /* 短期刚度 N·mm² */
                 var theta = 2.0;                         /* 长期作用影响系数，取2.0（5.4.5-2） */
                 var Ml = 0;                              /* 准永久组合弯矩：风荷载为短时荷载，准永久值取0 */
-                var B = Mk_crack * 1e6 / (Ml * 1e6 * (theta - 1) + Mk_crack * 1e6) * Bs;
+                var B = Ml === 0 ? Bs : Mk_crack * 1e6 / (Ml * 1e6 * (theta - 1) + Mk_crack * 1e6) * Bs;
                 var qk = wk * 0.001 * b;                 /* 标准线荷载 N/mm */
                 var Lmm = L * 1000;
                 var defl = 5 * qk * Math.pow(Lmm, 4) / (384 * B);
@@ -324,7 +324,7 @@
                 st.push('　　长期刚度 B = M<sub>k</sub>/(M<sub>l</sub>(θ−1)+M<sub>k</sub>)·B<sub>s</sub>，θ = ' + fmt(theta, 1) + '；风荷载无准永久组合（M<sub>l</sub> = 0）⇒ B = B<sub>s</sub> = <b>' + fmt(B, 0) + ' N·mm²</b>。<br>');
                 st.push('　　标准线荷载 q<sub>k</sub> = w<sub>k</sub>·b = ' + fmt(qk, 3) + ' N/mm；挠度 f = 5·q·L⁴/(384·B) = <b>' + fmt(defl, 1) + ' mm</b>，限值 l<sub>0</sub>/200 = ' + fmt(Lmm, 0) + '/200 = ' + fmt(deflLim, 1) + ' mm ⇒ ' + (deflOk ? '满足' : '不满足') + '</div>');
                 /* 连接节点支座反力复核（19CJ85-1 B1 结构说明） */
-                if (!(nj > 0)) return err('连接件数量 n<sub>j</sub> 必须为正整数。');
+                if (!(Number.isInteger(nj) && nj > 0)) return err('连接件数量 n<sub>j</sub> 必须为正整数。');
                 var Apanel = qWind_k * L;  /* 风荷载总力标准值 kN */
                 /* 风荷载工况支座反力（面外） */
                 var Nw_total = gamma0j * gammaW * Apanel;
@@ -335,8 +335,8 @@
                 /* 19CJ85-1 B1：节点承载力设计值 ≥ 2倍风荷载设计值 */
                 var Rd_node = 2 * Nwj;
                 var nodeSeisOk = seisOn ? (Vsj <= Rd_node) : true;
-                var nodeOk = nodeSeisOk;
-                st.push('<div class="step"><b>' + stepNo() + ' 连接节点支座反力复核（19CJ85-1 B1 结构说明）</b>　每块板连接件 n<sub>j</sub> = ' + fmt(nj, 0) + ' 个，连接件重要性系数 γ<sub>0j</sub> = ' + fmt(gamma0j, 2) + '（安全等级提高一级，19CJ85-1 第6.6条）。<br>');
+                var nodeOk = null; /* 未提供实际节点抗力，不能判定合格 */
+                st.push('<div class="step"><b>' + stepNo() + ' 连接节点支座反力复核（19CJ85-1 B1 结构说明）</b>　每块板连接件 n<sub>j</sub> = ' + fmt(nj, 0) + ' 个，连接件重要性系数 γ<sub>0j</sub> = ' + fmt(gamma0j, 2) + '（安全等级提高一级，JGJ/T 17-2020 第5.4.7条）。<br>');
                 st.push('　　每块板受风面积 A = L×b = ' + fmt(L, 2) + '×' + fmt(b / 1000, 2) + ' = ' + fmt(L * b / 1000, 3) + ' m²；风荷载总力标准值 W<sub>k</sub> = w<sub>k</sub>×A = ' + fmt(wk, 3) + '×' + fmt(L * b / 1000, 3) + ' = <b>' + fmt(Apanel, 2) + ' kN</b>。<br>');
                 st.push('　　<b>风荷载工况</b>：支座反力设计值 N<sub>w</sub> = γ<sub>0j</sub>·γ<sub>W</sub>·W<sub>k</sub> = ' + fmt(gamma0j, 2) + '×' + fmt(gammaW, 1) + '×' + fmt(Apanel, 2) + ' = ' + fmt(Nw_total, 2) + ' kN → 单个连接件 N<sub>wj</sub> = N<sub>w</sub>/n<sub>j</sub> = <b>' + fmt(Nwj, 2) + ' kN</b>。<br>');
                 if (seisOn) {
@@ -344,20 +344,14 @@
                 } else {
                     st.push('　　（未验算地震作用，地震工况不计）<br>');
                 }
-                st.push('　　19CJ85-1 B1要求：节点承载力设计值 R<sub>d</sub> ≥ 2×N<sub>wj</sub> = 2×' + fmt(Nwj, 2) + ' = <b>' + fmt(Rd_node, 2) + ' kN</b>。<br>');
+                st.push('　　参考需求（图集适用条件待核验）：2×N<sub>wj</sub> = 2×' + fmt(Nwj, 2) + ' = <b>' + fmt(Rd_node, 2) + ' kN</b>。<br>');
                 if (seisOn) {
-                    st.push('　　地震工况复核：V<sub>sj</sub> = ' + fmt(Vsj, 2) + ' kN ' + (nodeSeisOk ? '≤' : '&gt;') + ' R<sub>d</sub> = ' + fmt(Rd_node, 2) + ' kN ⇒ ' + (nodeSeisOk ? '满足（风荷载控制节点设计）' : '不满足（地震作用控制，需按地震工况设计节点承载力）') + '<br>');
+                    st.push('　　参考作用比较（非节点抗力验算）：V<sub>sj</sub> = ' + fmt(Vsj, 2) + ' kN ' + (nodeSeisOk ? '≤' : '&gt;') + ' 两倍风荷载需求 = ' + fmt(Rd_node, 2) + ' kN ⇒ ' + (nodeSeisOk ? '参考地震作用未超过两倍风作用' : '参考地震作用超过两倍风作用') + '<br>');
                 }
-                st.push('　　<b>结论</b>：' + (nodeOk ? '连接节点支座反力满足 19CJ85-1 B1 要求' + (seisOn ? '，节点承载力按2倍风荷载设计值控制' : '') + '。' : '地震工况支座反力超过2倍风荷载设计值，需按地震作用控制节点设计，增加连接件数量或提高节点承载力。') + '</div>');
-                /* 构造要求 */
-                if (isCECS) {
-                    var minThkOk = h >= 150;
-                    var spanOk = L * 1000 <= 35 * h;
-                    var minBarsOk = n >= 3;
-                    st.push('<div class="step"><b>' + stepNo() + ' 构造要求（' + stdName + ' 5.4）</b>　①外墙板最小厚度 ≥ 150mm（5.4.4）：h=' + fmt(h, 0) + 'mm ' + (minThkOk ? '✓' : '✗') + '；②两支点间距 ≤ 35h（5.4.5）：L/h = ' + fmt(L * 1000 / h, 1) + ' ' + (spanOk ? '✓' : '✗') + '；③焊接网双排配筋，纵筋≥3根（5.4.2）：n=' + fmt(n, 0) + '根 ' + (minBarsOk ? '✓' : '✗') + '；④横向间距 ≤ 1000mm（5.4.2）；⑤纵筋直径 ≥ 5mm（3.2.10）：d=' + fmt(d, 0) + 'mm ✓；⑥连接件防腐处理（5.4.3）；⑦柔性连接（5.4.8）；⑧层间变位角 ≥ 1/200（5.1.2）。</div>');
-                } else {
-                    st.push('<div class="step"><b>' + stepNo() + ' 构造要求</b>　外墙板强度等级应≥A5.0；钢筋宜采用 CRB600H（d=5~10mm）；防锈钢筋与 AAC 间粘结强度≥1.0MPa；板拼缝封堵材料应符合 GB 23864 和 GB/T 24267；金属连接件防腐等级应高于被连接构件。</div>');
-                }
+                st.push('　　<b>结论</b>：待核验。未输入节点实际承载力，尚未验算自重支撑、锚固、连接变形及罕遇地震可靠性，不能判定连接节点满足。</div>');
+                /* 已核实的构造条文：未输入的项目不作合格判断 */
+                var minBarsOk = n >= 3;
+                st.push('<div class="step"><b>' + stepNo() + ' 构造检查</b>　JGJ/T 17-2020 5.5.20：每片板钢筋网片主筋不少于3根；输入受拉主筋 n=' + fmt(n,0) + ' ⇒ ' + (minBarsOk ? '根数检查通过' : '不满足') + '。其余网片、横向筋、支撑件、柔性连接、防腐及层间变形资料未输入，待核验（5.5.16～5.5.20、5.5.27～5.5.31、5.1.5）。</div>');
                 window._AW_RESULT = {
                     std: std, stdName: stdName, isCECS: isCECS,
                     grade: grade, rebGrade: rebGrade, L: L, b: b, h: h, h0: h0, asV: asV,
@@ -369,13 +363,13 @@
                     Mwk: Mwk, Md: Md, M: M, Mwk_ctrl: Mwk_ctrl,
                     x: x || 0, xMax: xMax || 0, overRein: overRein || false, Mu: Mu, capOk: capOk,
                     Vmax: Vmax, tau: tau, tauOk: tauOk,
-                    seisOn: seisOn, FEk: FEk, Fe: Fe, Mseis: Mseis, seisOk: seisOk, Mcomb: Mcomb,
+                    seisOn: seisOn, FEk: FEk, Fe: Fe, Mseis: Mseis, seisOk: null, seismicReferenceOk: seisOk, Mcomb: Mcomb,
                     sigmaCk: sigmaCk, crackOk: crackOk,
                     crack1Ok: crack1Ok, crack2Ok: crack2Ok, sigmaP: sigmaP,
                     I0: I0, Bs: Bs, B: B, defl: defl, deflLim: deflLim, deflOk: deflOk,
                     nj: nj, gamma0j: gamma0j, Apanel: Apanel,
                     Nw_total: Nw_total, Nwj: Nwj,
-                    Ve_total: Ve_total, Vsj: Vsj, Rd_node: Rd_node, nodeOk: nodeOk,
+                    Ve_total: Ve_total, Vsj: Vsj, Rd_node: Rd_node, nodeOk: nodeOk, minBarsOk: minBarsOk, reviewRequired: true,
                     steps: st.join('')
                 };
                 var html = '';
@@ -390,7 +384,7 @@
                 html += resultRow('受弯承载力 M<sub>u</sub>', fmt(Mu, 2) + ' kN·m ' + (capOk ? tag('ok', '满足') : tag('err', '不满足')));
                 html += resultRow('受剪 V ≤ 0.45·f<sub>t</sub>·b·h<sub>0</sub>', fmt(Vmax, 2) + ' ≤ ' + fmt(0.45 * ft * b * h0 / 1000, 2) + ' kN ' + (tauOk ? tag('ok', '满足') : tag('err', '不满足')));
                 if (seisOn) {
-                    html += resultRow('地震组合弯矩', fmt(Mcomb, 2) + ' kN·m ' + (seisOk ? tag('ok', '满足') : tag('err', '不满足')));
+                    html += resultRow('地震组合弯矩', fmt(Mcomb, 2) + ' kN·m ' + (tag('warn', '待核验：参考计算')));
                 }
                 html += resultRow('抗裂 σ<sub>ck</sub> ≤ f<sub>tk</sub>', fmt(sigmaCk, 2) + ' ≤ ' + fmt(ftk, 2) + ' N/mm² ' + (crack1Ok ? tag('ok', '满足') : tag('err', '不满足')));
                 if (isCECS) {
@@ -399,22 +393,24 @@
                 html += resultRow('挠度 f ≤ l<sub>0</sub>/200', fmt(defl, 1) + ' ≤ ' + fmt(deflLim, 1) + ' mm ' + (deflOk ? tag('ok', '满足') : tag('err', '不满足')));
                 html += resultRow('节点风荷载 N<sub>wj</sub>', fmt(Nwj, 2) + ' kN');
                 if (seisOn) {
-                    html += resultRow('节点地震 V<sub>sj</sub> ≤ 2×N<sub>wj</sub>', fmt(Vsj, 2) + ' ≤ ' + fmt(Rd_node, 2) + ' kN ' + (nodeOk ? tag('ok', '满足') : tag('err', '不满足')));
+                    html += resultRow('节点参考作用比较（待核验）', fmt(Vsj, 2) + ' ≤ ' + fmt(Rd_node, 2) + ' kN ' + (tag('warn', '待核验：未提供实际抗力')));
                 }
-                var allOk = capOk && tauOk && nodeOk && crackOk && deflOk && (!seisOn || seisOk);
-                html += resultRow('综合判定', allOk ? badge('badge-ok', '满足：承载力 / 受剪 / 抗裂 / 挠度 / 连接节点' + (seisOn ? ' / 地震' : '') + ' 均满足') : badge('badge-err', '存在不满足项，请调整截面、配筋、连接件或板厚'));
+                var knownFailure = !capOk || !tauOk || !crackOk || !deflOk || !minBarsOk;
+                html += resultRow('主筋根数（5.5.20）', minBarsOk ? '根数检查通过；其余构造待核验' : '不满足：少于3根');
+                html += resultRow('核验范围', '抗震' + (seisOn ? '公式及组合' : '未验算') + '、节点实际抗力、构造、材料表与公式系数、换算截面刚度及地震组合剪力待核验');
+                html += resultRow('综合判定', knownFailure ? badge('badge-err', '存在不满足项；其余项目待核验，不能判定整体满足') : badge('badge-warn', '待核验：已有计算未超限，不能判定外墙板整体满足'));
                 out.innerHTML = html; proc.innerHTML = st.join('');
                 var _p = proc ? proc.closest('.proc-wrap') : document.querySelector('#view .proc-wrap'); if (_p) _p.classList.add('open');
             }
             function reset() {
-                ['aw_L','aw_b','aw_h','aw_d','aw_n','aw_as','aw_w0','aw_z','aw_mus','aw_gamm0','aw_gammaG','aw_gammaW','aw_psiW','aw_kd','aw_kl','aw_a','aw_amax','aw_eta','aw_xi','aw_nj','aw_gamma0j'].forEach(function (id) {
-                    document.getElementById(id).value = { aw_L:3.0, aw_b:600, aw_h:200, aw_d:8, aw_n:4, aw_as:35, aw_w0:0.45, aw_z:10.0, aw_mus:1.2, aw_gamm0:1.0, aw_gammaG:1.3, aw_gammaW:1.5, aw_psiW:0.6, aw_kd:1.2, aw_kl:1.5, aw_a:0.6, aw_amax:0.08, aw_eta:1.0, aw_xi:1.5, aw_nj:4, aw_gamma0j:1.1 }[id];
+                ['aw_L','aw_b','aw_h','aw_d','aw_n','aw_as','aw_w0','aw_z','aw_mus','aw_gamm0','aw_gammaG','aw_gammaW','aw_psiW','aw_amax','aw_eta','aw_xi','aw_nj','aw_gamma0j'].forEach(function (id) {
+                    document.getElementById(id).value = { aw_L:3.0, aw_b:600, aw_h:200, aw_d:8, aw_n:4, aw_as:35, aw_w0:0.45, aw_z:10.0, aw_mus:1.2, aw_gamm0:1.0, aw_gammaG:1.3, aw_gammaW:1.5, aw_psiW:0.6, aw_amax:0.08, aw_eta:1.0, aw_xi:1.5, aw_nj:4, aw_gamma0j:1.1 }[id];
                 });
                 document.getElementById('aw_terrain').value = 'B';
                 document.getElementById('aw_grade').value = 'A5.0';
                 document.getElementById('aw_reb').value = 'CRB600H';
                 document.getElementById('aw_seis').value = 'n';
-                document.getElementById('aw_lift').value = 'y';
+                
                 calc();
             }
             document.getElementById('aw_calc').addEventListener('click', calc);
