@@ -18,11 +18,11 @@
     };
     var tool = {
         title: '蒸压加气混凝土外墙板',
-        sub: '配筋 AAC 外墙板正截面受弯、受剪、抗裂、挠度与连接节点复核 · JGJ/T 17-2020 / 19CJ85-1',
+        sub: '配筋 AAC 外墙板正截面受弯、受剪、抗裂、挠度与连接节点复核 · JGJ/T 17-2020 / 19CJ85 B1',
         meta: {"standard": "JGJ/T 17-2020", "formulaSource": "—", "limitations": "竖向外墙板，风荷载面外受弯/受剪/抗裂/挠度/地震/节点", "unit": "M:kN·m/m, w:mm, σ:N/mm²", "version": "1.0.0"},
         render: function () {
             return '<div class="panel"><div class="panel-title">设计依据与板材参数</div>' +
-                '<div class="hint">设计依据：JGJ/T 17-2020《蒸压加气混凝土制品应用技术标准》；GB 50009-2012《建筑结构荷载规范》（风荷载）；GB/T 50011-2010（2024年版）《建筑抗震设计规范》（地震作用）；19CJ85-1《装配式建筑蒸压加气混凝土板围护系统》（连接节点）。</div>' +
+                '<div class="hint">设计依据：JGJ/T 17-2020《蒸压加气混凝土制品应用技术标准》；GB 50009-2012《建筑结构荷载规范》（风荷载）；GB/T 50011-2010（2024年版）《建筑抗震设计规范》（地震作用）；19CJ85 B1《装配式建筑蒸压加气混凝土板围护系统》（连接节点）。</div>' +
                 '<form id="f-aw"><div class="grid2">' +
                 numField('aw_L', '板计算跨度 L', 'm', 3.0, '墙板水平方向支承跨度，通常等于层高或柱距') +
                 numField('aw_b', '板宽 b', 'mm', 600, '标准板宽 600mm，可按实际取用') +
@@ -69,8 +69,8 @@
                 numField('aw_eta', '功能系数 η', '—', 1.0, '乙类取 1.4，丙类取 1.0') +
                 numField('aw_xi', '位置系数 ξ', '—', 1.5, '顶点取 2.0，底部取 1.0，沿高度线性分布') +
                 '</div></form></div>' +
-                '<div class="panel"><div class="panel-title">连接节点参数（19CJ85-1 B1）</div>' +
-                '<div class="hint">JGJ/T 17-2020 第5.4.7条要求连接件承载力设计安全等级提高一级。此处仅计算作用需求，实际节点抗力及19CJ85-1具体节点适用条件需另行核验。</div>' +
+                '<div class="panel"><div class="panel-title">连接节点参数（19CJ85 B1 B1）</div>' +
+                '<div class="hint">JGJ/T 17-2020 第5.4.7条要求连接件承载力设计安全等级提高一级；连接节点采用19CJ85 B1。此处仅计算作用需求，实际节点抗力及节点构造适用条件需另行核验。</div>' +
                 '<form id="f-aw4"><div class="grid2">' +
                 numField('aw_nj', '每块板连接件数量 n<sub>j</sub>', '个', 4, '每块板连接件总数（上下支座各 n<sub>j</sub>/2）') +
                 numField('aw_gamma0j', '连接件重要性系数 γ<sub>0j</sub>', '—', 1.1, '安全等级提高一级，二级→一级取1.1') +
@@ -323,7 +323,7 @@
                 st.push('　　短期刚度 B<sub>s</sub> = 0.85·E<sub>c</sub>·I<sub>0</sub> = 0.85×' + fmt(Ec, 0) + '×' + fmt(I0, 0) + ' = <b>' + fmt(Bs, 0) + ' N·mm²</b>。<br>');
                 st.push('　　长期刚度 B = M<sub>k</sub>/(M<sub>l</sub>(θ−1)+M<sub>k</sub>)·B<sub>s</sub>，θ = ' + fmt(theta, 1) + '；风荷载无准永久组合（M<sub>l</sub> = 0）⇒ B = B<sub>s</sub> = <b>' + fmt(B, 0) + ' N·mm²</b>。<br>');
                 st.push('　　标准线荷载 q<sub>k</sub> = w<sub>k</sub>·b = ' + fmt(qk, 3) + ' N/mm；挠度 f = 5·q·L⁴/(384·B) = <b>' + fmt(defl, 1) + ' mm</b>，限值 l<sub>0</sub>/200 = ' + fmt(Lmm, 0) + '/200 = ' + fmt(deflLim, 1) + ' mm ⇒ ' + (deflOk ? '满足' : '不满足') + '</div>');
-                /* 连接节点支座反力复核（19CJ85-1 B1 结构说明） */
+                /* 连接节点支座反力复核（19CJ85 B1 B1 结构说明） */
                 if (!(Number.isInteger(nj) && nj > 0)) return err('连接件数量 n<sub>j</sub> 必须为正整数。');
                 var Apanel = qWind_k * L;  /* 风荷载总力标准值 kN */
                 /* 风荷载工况支座反力（面外） */
@@ -332,11 +332,11 @@
                 /* 地震作用工况支座反力（面外） */
                 var Ve_total = seisOn ? (gamma0j * 1.3 * FEk) : 0;
                 var Vsj = Ve_total / nj;
-                /* 19CJ85-1 B1：节点承载力设计值 ≥ 2倍风荷载设计值 */
+                /* 19CJ85 B1 B1：节点承载力设计值 ≥ 2倍风荷载设计值 */
                 var Rd_node = 2 * Nwj;
                 var nodeSeisOk = seisOn ? (Vsj <= Rd_node) : true;
                 var nodeOk = null; /* 未提供实际节点抗力，不能判定合格 */
-                st.push('<div class="step"><b>' + stepNo() + ' 连接节点支座反力复核（19CJ85-1 B1 结构说明）</b>　每块板连接件 n<sub>j</sub> = ' + fmt(nj, 0) + ' 个，连接件重要性系数 γ<sub>0j</sub> = ' + fmt(gamma0j, 2) + '（安全等级提高一级，JGJ/T 17-2020 第5.4.7条）。<br>');
+                st.push('<div class="step"><b>' + stepNo() + ' 连接节点支座反力复核（19CJ85 B1 B1 结构说明）</b>　每块板连接件 n<sub>j</sub> = ' + fmt(nj, 0) + ' 个，连接件重要性系数 γ<sub>0j</sub> = ' + fmt(gamma0j, 2) + '（安全等级提高一级，JGJ/T 17-2020 第5.4.7条）。<br>');
                 st.push('　　每块板受风面积 A = L×b = ' + fmt(L, 2) + '×' + fmt(b / 1000, 2) + ' = ' + fmt(L * b / 1000, 3) + ' m²；风荷载总力标准值 W<sub>k</sub> = w<sub>k</sub>×A = ' + fmt(wk, 3) + '×' + fmt(L * b / 1000, 3) + ' = <b>' + fmt(Apanel, 2) + ' kN</b>。<br>');
                 st.push('　　<b>风荷载工况</b>：支座反力设计值 N<sub>w</sub> = γ<sub>0j</sub>·γ<sub>W</sub>·W<sub>k</sub> = ' + fmt(gamma0j, 2) + '×' + fmt(gammaW, 1) + '×' + fmt(Apanel, 2) + ' = ' + fmt(Nw_total, 2) + ' kN → 单个连接件 N<sub>wj</sub> = N<sub>w</sub>/n<sub>j</sub> = <b>' + fmt(Nwj, 2) + ' kN</b>。<br>');
                 if (seisOn) {
