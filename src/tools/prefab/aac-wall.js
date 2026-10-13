@@ -19,7 +19,7 @@
     var tool = {
         title: '蒸压加气混凝土外墙板',
         sub: '配筋 AAC 外墙板正截面受弯、受剪、抗裂、挠度与连接节点复核 · JGJ/T 17-2020 / 19CJ85 B1',
-        meta: {"standard": "JGJ/T 17-2020", "formulaSource": "—", "limitations": "竖向外墙板，风荷载面外受弯/受剪/抗裂/挠度/地震/节点", "unit": "M:kN·m/m, w:mm, σ:N/mm²", "version": "1.0.0"},
+        meta: {"standard": "JGJ/T 17-2020；抗震补充计算采用 T/CECS 553-2018 5.2.3～5.2.4", "formulaSource": "—", "limitations": "竖向外墙板，风荷载面外受弯/受剪/抗裂/挠度/地震/节点", "unit": "M:kN·m/m, w:mm, σ:N/mm²", "version": "1.0.0"},
         render: function () {
             return '<div class="panel"><div class="panel-title">设计依据与板材参数</div>' +
                 '<div class="hint">设计依据：JGJ/T 17-2020《蒸压加气混凝土制品应用技术标准》；GB 50009-2012《建筑结构荷载规范》（风荷载）；GB/T 50011-2010（2024年版）《建筑抗震设计规范》（地震作用）；19CJ85 B1《装配式建筑蒸压加气混凝土板围护系统》（连接节点）。</div>' +
@@ -62,9 +62,9 @@
                 numField('aw_psiW', '风荷载组合值系数 ψ<sub>W</sub>', '—', 0.6, '持久状况取 0.6，地震状况取 0.2') +
                 '</div></form></div>' +
                 '<div class="panel"><div class="panel-title">地震作用参数</div>' +
-                '<div class="hint">JGJ/T 17-2020 第5.4.6条要求外墙板进行抗震承载力验算。本模块地震公式与系数来源尚待核实，仅输出参考计算，不作抗震合格判定。</div>' +
+                '<div class="hint">JGJ/T 17-2020 第5.4.6条要求外墙板进行抗震承载力验算；本模块抗震作用补充采用 T/CECS 553-2018 第5.2.3～5.2.4条。参数应按项目抗震设防条件核定。</div>' +
                 '<form id="f-aw3"><div class="grid2">' +
-                selField('aw_seis', '是否验算地震作用', opts([{ v: 'n', t: '不验算' }, { v: 'y', t: '验算' }], 'n'), '地震参考计算（待核验）') +
+                selField('aw_seis', '是否验算地震作用', opts([{ v: 'n', t: '不验算' }, { v: 'y', t: '验算' }], 'n'), '地震作用（T/CECS 553-2018 5.2.3～5.2.4）') +
                 numField('aw_amax', '地震影响系数最大值 α<sub>max</sub>', '—', 0.08, '多遇地震，按 GB 50011 取值（6度=0.04, 7度=0.08, 8度=0.16）') +
                 numField('aw_eta', '功能系数 η', '—', 1.0, '乙类取 1.4，丙类取 1.0') +
                 numField('aw_xi', '位置系数 ξ', '—', 1.5, '顶点取 2.0，底部取 1.0，沿高度线性分布') +
@@ -247,7 +247,7 @@
                 var FEk = 0, Fe = 0, seisOk = true, Mseis = 0, Mcomb = 0;
                 if (seisOn) {
                     /* 地震作用验算 */
-                    var seisRef = '参考模型，公式与系数来源待核验';
+                    var seisRef = 'T/CECS 553-2018 5.2.3～5.2.4';
                     /* JGJ/T 17-2020 5.2.3: F_Ehk = γ·η·α_max·ζ·ξ·G */
                     /* γ: 非结构构件功能系数（η字段输入），η: 非结构构件类别系数（墙板取0.9） */
                     var etaCat = 0.9; /* 非结构构件类别系数，对墙板取0.9 */
@@ -397,7 +397,7 @@
                 }
                 var knownFailure = !capOk || !tauOk || !crackOk || !deflOk || !minBarsOk;
                 html += resultRow('主筋根数（5.5.20）', minBarsOk ? '根数检查通过；其余构造待核验' : '不满足：少于3根');
-                html += resultRow('核验范围', '抗震' + (seisOn ? '公式及组合' : '未验算') + '、节点实际抗力、构造、材料表与公式系数、换算截面刚度及地震组合剪力待核验');
+                html += resultRow('核验范围', '抗震（T/CECS 553-2018 5.2.3～5.2.4）' + (seisOn ? '公式及组合' : '未验算') + '、节点实际抗力、构造、材料表与公式系数、换算截面刚度及地震组合剪力待核验');
                 html += resultRow('综合判定', knownFailure ? badge('badge-err', '存在不满足项；其余项目待核验，不能判定整体满足') : badge('badge-warn', '待核验：已有计算未超限，不能判定外墙板整体满足'));
                 out.innerHTML = html; proc.innerHTML = st.join('');
                 var _p = proc ? proc.closest('.proc-wrap') : document.querySelector('#view .proc-wrap'); if (_p) _p.classList.add('open');
