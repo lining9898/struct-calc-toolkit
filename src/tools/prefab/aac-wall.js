@@ -323,7 +323,7 @@
                 st.push('　　短期刚度 B<sub>s</sub> = 0.85·E<sub>c</sub>·I<sub>0</sub> = 0.85×' + fmt(Ec, 0) + '×' + fmt(I0, 0) + ' = <b>' + fmt(Bs, 0) + ' N·mm²</b>。<br>');
                 st.push('　　长期刚度 B = M<sub>k</sub>/(M<sub>l</sub>(θ−1)+M<sub>k</sub>)·B<sub>s</sub>，θ = ' + fmt(theta, 1) + '；风荷载无准永久组合（M<sub>l</sub> = 0）⇒ B = B<sub>s</sub> = <b>' + fmt(B, 0) + ' N·mm²</b>。<br>');
                 st.push('　　标准线荷载 q<sub>k</sub> = w<sub>k</sub>·b = ' + fmt(qk, 3) + ' N/mm；挠度 f = 5·q·L⁴/(384·B) = <b>' + fmt(defl, 1) + ' mm</b>，限值 l<sub>0</sub>/200 = ' + fmt(Lmm, 0) + '/200 = ' + fmt(deflLim, 1) + ' mm ⇒ ' + (deflOk ? '满足' : '不满足') + '</div>');
-                /* 连接节点支座反力复核（19CJ85 B1 B1 结构说明） */
+                /* 连接节点支座反力复核（19CJ85 B1 结构说明） */
                 if (!(Number.isInteger(nj) && nj > 0)) return err('连接件数量 n<sub>j</sub> 必须为正整数。');
                 var Apanel = qWind_k * L;  /* 风荷载总力标准值 kN */
                 /* 风荷载工况支座反力（面外） */
@@ -332,19 +332,18 @@
                 /* 地震作用工况支座反力（面外） */
                 var Ve_total = seisOn ? (gamma0j * 1.3 * FEk) : 0;
                 var Vsj = Ve_total / nj;
-                /* 19CJ85 B1 B1：节点承载力设计值 ≥ 2倍风荷载设计值 */
+                /* 19CJ85 B1：节点承载力设计值与风、震控制作用比较 */
                 /* 19CJ85-1 B1：节点面外承载力设计值（kN），不计板材竖向自重 */
                 var b1SwingRd = h <= 150 ? 12 : h <= 200 ? 12 + (h-150)*3/50 : h <= 250 ? 15 + (h-200)*3/50 : h <= 300 ? 18 + (h-250)*2/50 : 20;
                 var b1PipeRd = h <= 150 ? 5 : h <= 200 ? 5 + (h-150)*2/50 : h <= 250 ? 7 + (h-200)/50 : h <= 300 ? 8 + (h-250)*2/50 : 10;
                 var b1PlateRd = h <= 150 ? 8 : h <= 200 ? 8 + (h-150)*2/50 : h <= 250 ? 10 + (h-200)*3/50 : h <= 300 ? 13 + (h-250)*3/50 : 16;
-                var b1WindSwingOk = Nwj <= b1SwingRd, b1WindPipeOk = Nwj <= b1PipeRd, b1WindPlateOk = Nwj <= b1PlateRd;
-                var b1SeisSwingOk = !seisOn || Vsj <= b1SwingRd, b1SeisPipeOk = !seisOn || Vsj <= b1PipeRd, b1SeisPlateOk = !seisOn || Vsj <= b1PlateRd;
+                                var b1SeisSwingOk = !seisOn || Vsj <= b1SwingRd, b1SeisPipeOk = !seisOn || Vsj <= b1PipeRd, b1SeisPlateOk = !seisOn || Vsj <= b1PlateRd;
+                var Rd_node = 2 * Nwj;
                 var nodeDemand = seisOn ? Math.max(Rd_node, Vsj) : Rd_node;
                 var b1WindSwingOk = nodeDemand <= b1SwingRd, b1WindPipeOk = nodeDemand <= b1PipeRd, b1WindPlateOk = nodeDemand <= b1PlateRd;
                 var b1NodeOk = b1WindSwingOk && b1WindPipeOk && b1WindPlateOk;
-                var Rd_node = 2 * Nwj;
                 var nodeSeisOk = seisOn ? (Vsj <= Rd_node) : true;
-                var nodeOk = null; /* 未提供实际节点抗力，不能判定合格 */
+                var nodeOk = b1NodeOk;
                 st.push('<div class="step"><b>' + stepNo() + ' 连接节点支座反力复核（19CJ85 B1 B1 结构说明）</b>　每块板连接件 n<sub>j</sub> = ' + fmt(nj, 0) + ' 个，连接件重要性系数 γ<sub>0j</sub> = ' + fmt(gamma0j, 2) + '（安全等级提高一级，JGJ/T 17-2020 第5.4.7条）。<br>');
                 st.push('　　每块板受风面积 A = L×b = ' + fmt(L, 2) + '×' + fmt(b / 1000, 2) + ' = ' + fmt(L * b / 1000, 3) + ' m²；风荷载总力标准值 W<sub>k</sub> = w<sub>k</sub>×A = ' + fmt(wk, 3) + '×' + fmt(L * b / 1000, 3) + ' = <b>' + fmt(Apanel, 2) + ' kN</b>。<br>');
                 st.push('　　<b>风荷载工况</b>：支座反力设计值 N<sub>w</sub> = γ<sub>0j</sub>·γ<sub>W</sub>·W<sub>k</sub> = ' + fmt(gamma0j, 2) + '×' + fmt(gammaW, 1) + '×' + fmt(Apanel, 2) + ' = ' + fmt(Nw_total, 2) + ' kN → 单个连接件 N<sub>wj</sub> = N<sub>w</sub>/n<sub>j</sub> = <b>' + fmt(Nwj, 2) + ' kN</b>。<br>');
