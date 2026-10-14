@@ -140,6 +140,7 @@
 
                 var n = parseInt(document.getElementById('cb_n').value);
                 if (n < 2 || n > 10) return err('跨数应在 2~10 之间。');
+                if (!Number.isInteger(n)) return err('跨数必须为整数。');
                 var b = parseFloat(document.getElementById('cb_b').value);
                 var h = parseFloat(document.getElementById('cb_h').value);
                 var asV = parseFloat(document.getElementById('cb_as').value);
@@ -300,6 +301,8 @@
                     midHtml += '<span class="badge badge-ok">' + c.n + 'φ' + c.d + ' = ' + fmt(c.a, 0) + ' mm²</span>';
                 });
                 midHtml += '</div>';
+                var finiteResults = [].concat(Msup || [], spanResults.map(function (v) { return [v.MmaxPos, v.MmaxNeg, v.VmaxAbs]; }), rebarResults.map(function (v) { return [v.As, v.AsMin, v.Mu]; }), shearResults.map(function (v) { return [v.Vmax, v.needAsv_s]; }));
+                if (finiteResults.some(function (v) { return !Number.isFinite(v); })) return err('计算无法完成：中间结果出现非有限数值或不可解状态。');
                 outMid.innerHTML = midHtml;
 
                 // 斜截面配箍表
