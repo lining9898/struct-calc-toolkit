@@ -69,7 +69,7 @@
                 numField('aw_eta', '功能系数 η', '—', 1.0, '乙类取 1.4，丙类取 1.0') +
                 numField('aw_xi', '位置系数 ξ', '—', 1.5, '顶点取 2.0，底部取 1.0，沿高度线性分布') +
                 '</div></form></div>' +
-                '<div class="panel"><div class="panel-title">连接节点参数（19CJ85 B1 B1）</div>' +
+                '<div class="panel"><div class="panel-title">连接节点参数（19CJ85 B1）</div>' +
                 '<div class="hint">JGJ/T 17-2020 第5.4.7条要求连接件承载力设计安全等级提高一级；连接节点采用19CJ85 B1。此处仅计算作用需求，实际节点抗力及节点构造适用条件需另行核验。</div>' +
                 '<form id="f-aw4"><div class="grid2">' +
                 numField('aw_nj', '每块板连接件数量 n<sub>j</sub>', '个', 4, '每块板连接件总数（上下支座各 n<sub>j</sub>/2）') +
@@ -375,7 +375,7 @@
                     I0: I0, Bs: Bs, B: B, defl: defl, deflLim: deflLim, deflOk: deflOk,
                     nj: nj, gamma0j: gamma0j, Apanel: Apanel,
                     Nw_total: Nw_total, Nwj: Nwj,
-                    Ve_total: Ve_total, Vsj: Vsj, Rd_node: Rd_node, nodeOk: nodeOk, minBarsOk: minBarsOk, reviewRequired: true,
+                    Ve_total: Ve_total, Vsj: Vsj, Rd_node: Rd_node, nodeOk: nodeOk, reviewRequired: true,
                     steps: st.join('')
                 };
                 var html = '';
