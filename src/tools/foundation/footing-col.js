@@ -78,6 +78,8 @@
                 var fy = reb.fy;
                 var rho_min = 0.0015; // GB 50007-2011 第8.2.1条第3款、GB 55008-2021 第4.4.6条第2款地基上板。
 
+                var finiteInputs = [lx, ly, h, asV, gk, qk, gG, gQ];
+                if (finiteInputs.some(function (v) { return !Number.isFinite(v); })) return err('输入参数必须为有效有限数值。');
                 var st = [];
                 st.push('<div class="step"><b>① 基本参数</b>　柱截面 b<sub>c</sub>×h<sub>c</sub> = ' + bc + '×' + hc + ' mm；基础底面 b×L = ' + B + '×' + L + ' m；基础高度 h = ' + h + ' mm，h<sub>0</sub> = ' + h0 + ' mm；f<sub>a</sub> = ' + fa + ' kPa；f<sub>t</sub> = ' + ft + ' N/mm²。</div>');
 
