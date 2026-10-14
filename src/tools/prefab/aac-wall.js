@@ -402,7 +402,7 @@
                 }
                 var knownFailure = !capOk || !tauOk || !crackOk || !deflOk || !b1NodeOk || (seisOn && !seisOk);
                                 html += resultRow('节点控制作用', fmt(nodeDemand, 2) + ' kN/个（风荷载需求与水平地震作用取大值）');
-                html += resultRow('综合判定', knownFailure ? badge('badge-err', '存在不满足项；其余项目待核验，不能判定整体满足') : badge('badge-warn', '待核验：已有计算未超限，不能判定外墙板整体满足'));
+                html += resultRow('综合判定', knownFailure ? badge('badge-err', '存在不满足项；其余项目待核验，不能判定整体满足') : badge('badge-warn', '已计算项目均满足；未纳入本模块的项目待核验'));
                 out.innerHTML = html; proc.innerHTML = st.join('');
                 var _p = proc ? proc.closest('.proc-wrap') : document.querySelector('#view .proc-wrap'); if (_p) _p.classList.add('open');
             }
