@@ -22,7 +22,7 @@
         meta: {"standard": "JGJ/T 17-2020；抗震补充计算采用 T/CECS 553-2018 5.2.3～5.2.4", "formulaSource": "—", "limitations": "竖向外墙板，风荷载面外受弯/受剪/抗裂/挠度/地震/节点", "unit": "M:kN·m/m, w:mm, σ:N/mm²", "version": "1.0.0"},
         render: function () {
             return '<div class="panel"><div class="panel-title">设计依据与板材参数</div>' +
-                '<div class="hint">设计依据：JGJ/T 17-2020《蒸压加气混凝土制品应用技术标准》；GB 50009-2012《建筑结构荷载规范》（风荷载）；GB/T 50011-2010（2024年版）《建筑抗震设计规范》（地震作用）；19CJ85 B1《装配式建筑蒸压加气混凝土板围护系统》（连接节点）。</div>' +
+                '<div class="hint">设计依据：<a href="https://gf.cabr-fire.com/m/article-64855.htm" target="_blank" rel="noopener">JGJ/T 17-2020 第3.2节（材料性能）</a>；<a href="https://gf.cabr-fire.com/m/article-64856.htm" target="_blank" rel="noopener">第3.3节（自重）</a>；<a href="https://gf.cabr-fire.com/m/article-64862.htm" target="_blank" rel="noopener">第5.1节（设计原则）</a>；<a href="https://gf.cabr-fire.com/m/article-64865.htm" target="_blank" rel="noopener">第5.4节（板材设计计算）</a>；GB 50009-2012《建筑结构荷载规范》；GB/T 50011-2010（2024年版）《建筑抗震设计规范》；19CJ85 B1《装配式建筑蒸压加气混凝土板围护系统》（连接节点）。</div>' +
                 '<form id="f-aw"><div class="grid2">' +
                 numField('aw_L', '板计算跨度 L', 'm', 3.0, '墙板水平方向支承跨度，通常等于层高或柱距') +
                 numField('aw_b', '板宽 b', 'mm', 600, '标准板宽 600mm，可按实际取用') +
@@ -62,7 +62,7 @@
                 numField('aw_psiW', '风荷载组合值系数 ψ<sub>W</sub>', '—', 0.6, '持久状况取 0.6，地震状况取 0.2') +
                 '</div></form></div>' +
                 '<div class="panel"><div class="panel-title">地震作用参数</div>' +
-                '<div class="hint">JGJ/T 17-2020 第5.4.6条要求外墙板进行抗震承载力验算；本模块抗震作用补充采用 T/CECS 553-2018 第5.2.3～5.2.4条。参数应按项目抗震设防条件核定。</div>' +
+                '<div class="hint">JGJ/T 17-2020 第5.4.6条要求外墙板进行抗震承载力验算；本模块抗震作用补充采用 <a href="https://www.gongbiaoku.com/read/3ak19982kpm" target="_blank" rel="noopener">T/CECS 553-2018 第5.2.3～5.2.4条</a>。参数应按项目抗震设防条件核定。</div>' +
                 '<form id="f-aw3"><div class="grid2">' +
                 selField('aw_seis', '是否验算地震作用', opts([{ v: 'n', t: '不验算' }, { v: 'y', t: '验算' }], 'n'), '地震作用（T/CECS 553-2018 5.2.3～5.2.4）') +
                 numField('aw_amax', '地震影响系数最大值 α<sub>max</sub>', '—', 0.08, '多遇地震，按 GB 50011 取值（6度=0.04, 7度=0.08, 8度=0.16）') +
