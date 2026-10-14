@@ -114,6 +114,8 @@
                 var materialError = concreteRebarError(con, reb);
                 if (materialError) return err(materialError);
 
+                var finiteInputs = [lx, ly, h, asV, gk, qk, gG, gQ];
+                if (finiteInputs.some(function (v) { return !Number.isFinite(v); })) return err('输入参数必须为有效有限数值。');
                 if (!(lx > 0 && ly > 0)) return err('跨度必须为正数。');
                 if (!(h > 0)) return err('板厚必须为正数。');
                 if (!(asV > 0 && asV < h)) return err('a<sub>s</sub> 应小于板厚。');
