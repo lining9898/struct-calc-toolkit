@@ -270,7 +270,7 @@
                     /* 更准确地：Mcomb = γE·M_E + ψ_W·γ_W·M_wk，其中 M_E = FEk·L/4 */
                     var M_Ek = FEk * L / 4;  /* 地震作用标准弯矩 */
                     Mcomb = gammaG * 0 + gammaE * M_Ek + gammaW * psiW_seis * Mwk;
-                    seisOk = Mcomb <= Mu;
+                    seisOk = !overRein && Number.isFinite(Mcomb) && Number.isFinite(Mu) && Mcomb <= Mu;
                     st.push('<div class="step"><b>' + stepNo() + ' 地震作用验算（' + seisRef + '）</b>　G<sub>k</sub> = q<sub>gk</sub>·L = ' + fmt(qgk, 3) + '×' + fmt(L, 2) + ' = ' + fmt(Gk, 2) + ' kN。<br>');
                     st.push('　　F<sub>Ehk</sub> = γ·η·α<sub>max</sub>·ζ·ξ·G<sub>k</sub><br>');
                     st.push('　　γ = ' + fmt(gammaFun, 1) + '（功能系数，丙类1.0 / 乙类1.4）；η = ' + fmt(etaCat, 1) + '（类别系数，墙板取0.9）；α<sub>max</sub> = ' + fmt(amax, 2) + '；ζ = ' + fmt(zeta, 1) + '（状态系数）；ξ = ' + fmt(xiPos, 1) + '（位置系数）<br>');
@@ -279,7 +279,7 @@
                     st.push('　　地震设计状况组合（式5.2.1-2）：S = γ<sub>E</sub>·M<sub>Ek</sub> + ψ<sub>W</sub>·γ<sub>W</sub>·M<sub>Wk</sub>（自重面外分量为0）<br>');
                     st.push('　　M<sub>Ek</sub> = F<sub>Ehk</sub>·L/4 = ' + fmt(FEk, 2) + '×' + fmt(L, 2) + '/4 = ' + fmt(M_Ek, 2) + ' kN·m<br>');
                     st.push('　　M = 1.3×' + fmt(M_Ek, 2) + ' + ' + fmt(psiW_seis, 1) + '×' + fmt(gammaW, 1) + '×' + fmt(Mwk, 2) + ' = ' + fmt(gammaE * M_Ek, 2) + ' + ' + fmt(gammaW * psiW_seis * Mwk, 2) + ' = <b>' + fmt(Mcomb, 2) + ' kN·m</b>。<br>');
-                    st.push('　　M<sub>u</sub> = ' + fmt(Mu, 2) + ' kN·m ⇒ ' + '待核验（仅为参考模型数值比较）' + '</div>');
+                    st.push('　　M<sub>u</sub> = ' + fmt(Mu, 2) + ' kN·m ⇒ ' + (seisOk ? '满足（现有模型数值比较，依据及项目参数待核验）' : '不满足（现有模型数值比较）') + '</div>');
                 }
                 /* 抗裂验算（JGJ/T 17-2020 5.4.3 / JGJ/T 17-2020 5.3.3） */
                 var crackOk = true, sigmaCk = 0;
@@ -363,7 +363,7 @@
                     Mwk: Mwk, Md: Md, M: M, Mwk_ctrl: Mwk_ctrl,
                     x: x || 0, xMax: xMax || 0, overRein: overRein || false, Mu: Mu, capOk: capOk,
                     Vmax: Vmax, tau: tau, tauOk: tauOk,
-                    seisOn: seisOn, FEk: FEk, Fe: Fe, Mseis: Mseis, seisOk: null, seismicReferenceOk: seisOk, Mcomb: Mcomb,
+                    seisOn: seisOn, FEk: FEk, Fe: Fe, Mseis: Mseis, seisOk: seisOn ? seisOk : null, seismicReferenceOk: seisOk, Mcomb: Mcomb,
                     sigmaCk: sigmaCk, crackOk: crackOk,
                     crack1Ok: crack1Ok, crack2Ok: crack2Ok, sigmaP: sigmaP,
                     I0: I0, Bs: Bs, B: B, defl: defl, deflLim: deflLim, deflOk: deflOk,
@@ -384,7 +384,7 @@
                 html += resultRow('受弯承载力 M<sub>u</sub>', fmt(Mu, 2) + ' kN·m ' + (capOk ? tag('ok', '满足') : tag('err', '不满足')));
                 html += resultRow('受剪 V ≤ 0.45·f<sub>t</sub>·b·h<sub>0</sub>', fmt(Vmax, 2) + ' ≤ ' + fmt(0.45 * ft * b * h0 / 1000, 2) + ' kN ' + (tauOk ? tag('ok', '满足') : tag('err', '不满足')));
                 if (seisOn) {
-                    html += resultRow('地震组合弯矩', fmt(Mcomb, 2) + ' kN·m ' + (tag('warn', '待核验：参考计算')));
+                    html += resultRow('地震组合弯矩', fmt(Mcomb, 2) + ' kN·m ' + (seisOk ? tag('ok', '满足（现有模型数值比较）') : tag('err', '不满足（现有模型数值比较）')));
                 }
                 html += resultRow('抗裂 σ<sub>ck</sub> ≤ f<sub>tk</sub>', fmt(sigmaCk, 2) + ' ≤ ' + fmt(ftk, 2) + ' N/mm² ' + (crack1Ok ? tag('ok', '满足') : tag('err', '不满足')));
                 if (isCECS) {
@@ -395,7 +395,7 @@
                 if (seisOn) {
                     html += resultRow('节点参考作用比较（待核验）', fmt(Vsj, 2) + ' ≤ ' + fmt(Rd_node, 2) + ' kN ' + (tag('warn', '待核验：未提供实际抗力')));
                 }
-                var knownFailure = !capOk || !tauOk || !crackOk || !deflOk || !minBarsOk;
+                var knownFailure = !capOk || !tauOk || !crackOk || !deflOk || !minBarsOk || (seisOn && !seisOk);
                 html += resultRow('主筋根数（5.5.20）', minBarsOk ? '根数检查通过；其余构造待核验' : '不满足：少于3根');
                 html += resultRow('核验范围', '抗震（T/CECS 553-2018 5.2.3～5.2.4）' + (seisOn ? '公式及组合' : '未验算') + '、节点实际抗力、构造、材料表与公式系数、换算截面刚度及地震组合剪力待核验');
                 html += resultRow('综合判定', knownFailure ? badge('badge-err', '存在不满足项；其余项目待核验，不能判定整体满足') : badge('badge-warn', '待核验：已有计算未超限，不能判定外墙板整体满足'));
