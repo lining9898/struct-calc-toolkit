@@ -358,9 +358,6 @@
                     st.push('　　参考作用比较（非节点抗力验算）：V<sub>sj</sub> = ' + fmt(Vsj, 2) + ' kN ' + (nodeSeisOk ? '≤' : '&gt;') + ' 两倍风荷载需求 = ' + fmt(Rd_node, 2) + ' kN ⇒ ' + (nodeSeisOk ? '参考地震作用未超过两倍风作用' : '参考地震作用超过两倍风作用') + '<br>');
                 }
                 st.push('　　板材竖向自重由托件或主体结构承担，本节点面外验算不计自重。19CJ85-1 B1表承载力：预埋件摇摆 ' + fmt(b1SwingRd, 2) + ' kN、钢管锚 ' + fmt(b1PipeRd, 2) + ' kN、平板螺栓 ' + fmt(b1PlateRd, 2) + ' kN。<br>　　<b>结论</b>：风荷载作用下三种节点分别' + (b1WindSwingOk ? '满足' : '不满足') + '、' + (b1WindPipeOk ? '满足' : '不满足') + '、' + (b1WindPlateOk ? '满足' : '不满足') + '；抗震开启时另按水平地震作用比较。两种工况取大值控制。</div>');
-                /* 已核实的构造条文：未输入的项目不作合格判断 */
-                var minBarsOk = n >= 3;
-                st.push('<div class="step"><b>' + stepNo() + ' 构造检查</b>　JGJ/T 17-2020 5.5.20：每片板钢筋网片主筋不少于3根；输入受拉主筋 n=' + fmt(n,0) + ' ⇒ ' + (minBarsOk ? '根数检查通过' : '不满足') + '。其余网片、横向筋、支撑件、柔性连接、防腐及层间变形资料未输入，待核验（5.5.16～5.5.20、5.5.27～5.5.31、5.1.5）。</div>');
                 window._AW_RESULT = {
                     std: std, stdName: stdName, isCECS: isCECS,
                     grade: grade, rebGrade: rebGrade, L: L, b: b, h: h, h0: h0, asV: asV,
@@ -404,9 +401,8 @@
                 if (seisOn) {
                     html += resultRow('19CJ85-1 B1节点（不计竖向自重）', '预埋件摇摆 ' + fmt(b1SwingRd, 2) + ' kN：' + (b1WindSwingOk ? '满足' : '不满足') + '；钢管锚 ' + fmt(b1PipeRd, 2) + ' kN：' + (b1WindPipeOk ? '满足' : '不满足') + '；平板螺栓 ' + fmt(b1PlateRd, 2) + ' kN：' + (b1WindPlateOk ? '满足' : '不满足'));
                 }
-                var knownFailure = !capOk || !tauOk || !crackOk || !deflOk || !minBarsOk || !b1NodeOk || (seisOn && !seisOk);
-                html += resultRow('主筋根数（5.5.20）', minBarsOk ? '根数检查通过；其余构造待核验' : '不满足：少于3根');
-                html += resultRow('节点控制作用', fmt(nodeDemand, 2) + ' kN/个（风荷载需求与水平地震作用取大值）');
+                var knownFailure = !capOk || !tauOk || !crackOk || !deflOk || !b1NodeOk || (seisOn && !seisOk);
+                                html += resultRow('节点控制作用', fmt(nodeDemand, 2) + ' kN/个（风荷载需求与水平地震作用取大值）');
                 html += resultRow('综合判定', knownFailure ? badge('badge-err', '存在不满足项；其余项目待核验，不能判定整体满足') : badge('badge-warn', '待核验：已有计算未超限，不能判定外墙板整体满足'));
                 out.innerHTML = html; proc.innerHTML = st.join('');
                 var _p = proc ? proc.closest('.proc-wrap') : document.querySelector('#view .proc-wrap'); if (_p) _p.classList.add('open');
