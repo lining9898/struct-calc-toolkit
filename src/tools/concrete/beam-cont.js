@@ -140,6 +140,7 @@
 
                 var n = parseInt(document.getElementById('cb_n').value);
                 if (n < 2 || n > 10) return err('跨数应在 2~10 之间。');
+                if (!Number.isInteger(n)) return err('跨数必须为整数。');
                 var b = parseFloat(document.getElementById('cb_b').value);
                 var h = parseFloat(document.getElementById('cb_h').value);
                 var asV = parseFloat(document.getElementById('cb_as').value);
