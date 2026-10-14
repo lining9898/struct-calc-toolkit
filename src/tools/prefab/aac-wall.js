@@ -339,7 +339,9 @@
                 var b1PlateRd = h <= 150 ? 8 : h <= 200 ? 8 + (h-150)*2/50 : h <= 250 ? 10 + (h-200)*3/50 : h <= 300 ? 13 + (h-250)*3/50 : 16;
                 var b1WindSwingOk = Nwj <= b1SwingRd, b1WindPipeOk = Nwj <= b1PipeRd, b1WindPlateOk = Nwj <= b1PlateRd;
                 var b1SeisSwingOk = !seisOn || Vsj <= b1SwingRd, b1SeisPipeOk = !seisOn || Vsj <= b1PipeRd, b1SeisPlateOk = !seisOn || Vsj <= b1PlateRd;
-                var b1NodeOk = b1WindSwingOk && b1WindPipeOk && b1WindPlateOk && b1SeisSwingOk && b1SeisPipeOk && b1SeisPlateOk;
+                var nodeDemand = seisOn ? Math.max(Rd_node, Vsj) : Rd_node;
+                var b1WindSwingOk = nodeDemand <= b1SwingRd, b1WindPipeOk = nodeDemand <= b1PipeRd, b1WindPlateOk = nodeDemand <= b1PlateRd;
+                var b1NodeOk = b1WindSwingOk && b1WindPipeOk && b1WindPlateOk;
                 var Rd_node = 2 * Nwj;
                 var nodeSeisOk = seisOn ? (Vsj <= Rd_node) : true;
                 var nodeOk = null; /* 未提供实际节点抗力，不能判定合格 */
@@ -355,7 +357,7 @@
                 if (seisOn) {
                     st.push('　　参考作用比较（非节点抗力验算）：V<sub>sj</sub> = ' + fmt(Vsj, 2) + ' kN ' + (nodeSeisOk ? '≤' : '&gt;') + ' 两倍风荷载需求 = ' + fmt(Rd_node, 2) + ' kN ⇒ ' + (nodeSeisOk ? '参考地震作用未超过两倍风作用' : '参考地震作用超过两倍风作用') + '<br>');
                 }
-                st.push('　　板材竖向自重由托件或主体结构承担，本节点面外验算不计自重。19CJ85-1 B1表承载力：预埋件摇摆 ' + fmt(b1SwingRd, 2) + ' kN、钢管锚 ' + fmt(b1PipeRd, 2) + ' kN、平板螺栓 ' + fmt(b1PlateRd, 2) + ' kN。<br>　　<b>结论</b>：风荷载作用下三种节点分别' + (b1WindSwingOk ? '满足' : '不满足') + '、' + (b1WindPipeOk ? '满足' : '不满足') + '、' + (b1WindPlateOk ? '满足' : '不满足') + '；抗震开启时另按水平地震作用比较。自重支撑、锚固构造和检测报告仍需核验。</div>');
+                st.push('　　板材竖向自重由托件或主体结构承担，本节点面外验算不计自重。19CJ85-1 B1表承载力：预埋件摇摆 ' + fmt(b1SwingRd, 2) + ' kN、钢管锚 ' + fmt(b1PipeRd, 2) + ' kN、平板螺栓 ' + fmt(b1PlateRd, 2) + ' kN。<br>　　<b>结论</b>：风荷载作用下三种节点分别' + (b1WindSwingOk ? '满足' : '不满足') + '、' + (b1WindPipeOk ? '满足' : '不满足') + '、' + (b1WindPlateOk ? '满足' : '不满足') + '；抗震开启时另按水平地震作用比较。两种工况取大值控制。</div>');
                 /* 已核实的构造条文：未输入的项目不作合格判断 */
                 var minBarsOk = n >= 3;
                 st.push('<div class="step"><b>' + stepNo() + ' 构造检查</b>　JGJ/T 17-2020 5.5.20：每片板钢筋网片主筋不少于3根；输入受拉主筋 n=' + fmt(n,0) + ' ⇒ ' + (minBarsOk ? '根数检查通过' : '不满足') + '。其余网片、横向筋、支撑件、柔性连接、防腐及层间变形资料未输入，待核验（5.5.16～5.5.20、5.5.27～5.5.31、5.1.5）。</div>');
@@ -404,7 +406,7 @@
                 }
                 var knownFailure = !capOk || !tauOk || !crackOk || !deflOk || !minBarsOk || !b1NodeOk || (seisOn && !seisOk);
                 html += resultRow('主筋根数（5.5.20）', minBarsOk ? '根数检查通过；其余构造待核验' : '不满足：少于3根');
-                html += resultRow('核验范围', '抗震（T/CECS 553-2018 5.2.3～5.2.4）' + (seisOn ? '公式及组合' : '未验算') + '、节点实际抗力、构造、材料表与公式系数、换算截面刚度及地震组合剪力待核验');
+                html += resultRow('节点控制作用', fmt(nodeDemand, 2) + ' kN/个（风荷载需求与水平地震作用取大值）');
                 html += resultRow('综合判定', knownFailure ? badge('badge-err', '存在不满足项；其余项目待核验，不能判定整体满足') : badge('badge-warn', '待核验：已有计算未超限，不能判定外墙板整体满足'));
                 out.innerHTML = html; proc.innerHTML = st.join('');
                 var _p = proc ? proc.closest('.proc-wrap') : document.querySelector('#view .proc-wrap'); if (_p) _p.classList.add('open');
