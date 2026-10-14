@@ -217,6 +217,8 @@
                     var labels = { mx: '短跨跨中（x 向）', my: '长跨跨中（y 向）', mx0: '短跨支座（x 向）', my0: '长跨支座（y 向）' };
                     var rsMap = { mx: rx, my: ry, mx0: rx0, my0: ry0 };
                     var asProvided = (window._SLAB_RESULT && window._SLAB_RESULT.asProvided) ? window._SLAB_RESULT.asProvided : {};
+                var finiteResults = [mx, my, mx0, my0, rx, ry, rx0, ry0, q, AsMin];
+                if (finiteResults.some(function (v) { return v !== undefined && !Number.isFinite(v); })) return err('计算无法完成：中间结果出现非有限数值或不可解状态。');
                     var html = '<div class="step"><b>⑦ 实配钢筋复核</b>　';
                     var parts = [];
                     for (var k = 0; k < keys.length; k++) {
