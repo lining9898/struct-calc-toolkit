@@ -244,7 +244,7 @@
                 html += resultRow('构造检查 ⑦距板边缘', fmt(ep, 0) + ' mm ∈ [120,250] ' + (ckE ? tag(true, '满足') : tag(false, '不满足')));
                 html += resultRow('构造检查 ⑧边缘小板数量', '单块 ' + fmt(Apanel, 3) + 'm²，' + fmt(nPanel, 0) + ' 个/块 ' + (ckSmall ? tag(true, '满足') : tag(false, '不满足')));
                 html += resultRow('构造检查 ⑨墙边缘板幅', fmt(Apanel, 3) + 'm²≥0.3 且短边 ' + fmt(shortSide, 0) + 'mm≥150 ' + (ckEdge ? tag(true, '满足') : tag(false, '不满足')));
-                html += resultRow('综合判定', allOk ? badge(true, '已计算项目均满足') : badge(false, deformationPending ? '变形验算待核验，不得判定整体满足' : '存在不满足项，请调整锚固件规格、布置或保温板厚度'));
+                html += resultRow('综合判定', allOk ? badge(true, '已计算项目均满足') : badge(false, deformationPending ? '已验算项目均满足；变形验算待核验' : '存在不满足项，请调整锚固件规格、布置或保温板厚度'));
                 html += '</tbody></table>';
                 out.innerHTML = html;
                 proc.innerHTML = st.join('');
