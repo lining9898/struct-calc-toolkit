@@ -13,6 +13,7 @@
                 numField('an_w0', '基本风压 w<sub>0</sub>', 'kN/m²', 0.45, 'GB 50009-2012 附录E，50年重现期') +
                 selField('an_terr', '地面粗糙度', opts([{ v: 'A', t: 'A类（近海海面）' }, { v: 'B', t: 'B类（田野、乡村、丘陵）' }, { v: 'C', t: 'C类（城市密集区）' }, { v: 'D', t: 'D类（密集高层区）' }], 'B'), 'GB 50009-2012 表8.2.1') +
                 numField('an_z', '计算高度 z', 'm', 10, '锚固件所在高度，用于风压高度变化系数 μ<sub>z</sub> 与阵风系数 β<sub>gz</sub>') +
+                numField('an_H', '建筑总高度 H', 'm', 24, '用于判断建筑高度超过60m的构造要求') +
                 numField('an_musl', '局部体型系数 μ<sub>sl</sub>', '—', 1.2, '围护构件按 GB 50009-2012 表8.3.3 取绝对值（墙面约 -1.2~-1.4，檐口/边角 -1.8 等），按控制值取用') +
                 '</div></form></div>' +
                 '<div class="panel"><div class="panel-title">锚固件参数</div>' +
@@ -54,6 +55,7 @@
                 var w0 = parseFloat(document.getElementById('an_w0').value);
                 var terr = document.getElementById('an_terr').value;
                 var z = parseFloat(document.getElementById('an_z').value);
+                var H = parseFloat(document.getElementById('an_H').value);
                 var musl = Math.abs(parseFloat(document.getElementById('an_musl').value));
                 var d = parseInt(document.getElementById('an_d').value, 10);
                 var Lrod = parseInt(document.getElementById('an_Lrod').value, 10);
@@ -72,7 +74,11 @@
                 var sp = parseFloat(document.getElementById('an_s').value);
                 var ep = parseFloat(document.getElementById('an_e').value);
                 if (!(w0 > 0)) return err('基本风压 w<sub>0</sub> 必须为正数。');
+                if (!(Number.isFinite(H) && H > 0)) return err('建筑总高度 H 必须为有效正数。');
                 if (!(z >= 5)) return err('计算高度 z 不应小于 5m。');
+                var finiteInputs = [w0, z, H, musl, d, Lrod, tail, tt, nPanel, t, rho, gface, gamma0, amax, bp, hp, sp, ep];
+                if (finiteInputs.some(function (v) { return !Number.isFinite(v); })) return err('输入参数必须为有效有限数值。');
+                if (!(gamma0 > 0 && amax >= 0 && rho >= 0 && gface >= 0 && Number.isInteger(nPanel))) return err('重要性系数、地震参数、荷载和锚固件数量输入无效；锚固件数量必须为正整数。');
                 if (!(d >= 6 && nPanel > 0 && t > 0 && Lrod > t)) return err('锚杆直径应≥6mm，每块板锚固件数量、板厚为正数，且锚杆长度应大于保温板厚度。');
                 if (!(bp > 0 && hp > 0 && sp > 0 && ep > 0)) return err('保温板宽高、锚固件间距与边距必须为正数。');
 
@@ -186,7 +192,7 @@
 
                 /* ⑨ 构造要求检查（5.5.11~5.5.15） */
                 var ckD = d >= 6;
-                var ckD8 = (z > 60 || layout !== 'board') ? d >= 8 : true;
+                var ckD8 = (H > 60 || layout !== 'board') ? d >= 8 : true;
                 var ckT = tail >= 8 * d && tail >= 60;
                 var ckTT = tt >= 1.2;
                 var ckN = n >= (layout === 'board' ? 3 : 4);
@@ -211,7 +217,8 @@
                 st.push('　　⑧ 单块板面积 ' + fmt(Apanel, 3) + ' m²，每块锚固件 ' + fmt(nPanel, 0) + ' 个' + (reqN > 0 ? ' ≥ ' + reqN + ' 个（5.5.13-3 边缘小板）：' + (ckSmall ? '满足' : '不满足') : '（≥1.0m² 按密度控制）：满足') + '<br>');
                 st.push('　　⑨ 墙边缘板面积 ' + fmt(Apanel, 3) + ' m² ≥ 0.3 且短边 ' + fmt(shortSide, 0) + ' mm ≥ 150（5.5.14）：' + (ckEdge ? '满足' : '不满足') + '</div>');
 
-                var allOk = okT && okC && okD && okP && okTe && okCe && okDe && okPe && ckD && ckD8 && ckT && ckTT && ckN && ckL && ckS && ckE && ckSmall && ckEdge;
+                var deformationPending = true; /* 产品刚度试验数据未输入，不能判定变形满足 */
+                var allOk = !deformationPending && okT && okC && okD && okP && okTe && okCe && okDe && okPe && ckD && ckD8 && ckT && ckTT && ckN && ckL && ckS && ckE && ckSmall && ckEdge;
 
                 var html = '<table class="result-table"><tbody>';
                 function resultRow(k, v) { return '<tr><td>' + k + '</td><td>' + v + '</td></tr>'; }
@@ -227,7 +234,7 @@
                 html += resultRow('持久组合·风控 N<sub>1</sub>（5.5.5-1，γ<sub>G</sub>=0）', fmt(N1, 3) + ' kN ' + (N1 <= minR ? tag(true, '≤ min(R)') : tag(false, '> min(R)')));
                 html += resultRow('持久组合·含自重 N<sub>2</sub>（5.5.6-2，γ<sub>G</sub>=1.3）', fmt(N2, 3) + ' kN ' + (N2 <= minR ? tag(true, '≤ min(R)') : tag(false, '> min(R)')));
                 if (seisOn) html += resultRow('地震组合 N<sub>E</sub>（表5.5.5 四档包络）', fmt(Ne, 3) + ' kN ' + (Ne <= minR ? tag(true, '≤ min(R)') : tag(false, '> min(R)')));
-                html += resultRow('变形验算限值 L/100', fmt(L100, 2) + ' mm，控制内力 N<sub>k</sub> = ' + fmt(deflN, 3) + ' kN');
+                html += resultRow('变形验算限值 L/100', fmt(L100, 2) + ' mm，控制内力 N<sub>k</sub> = ' + fmt(deflN, 3) + ' kN ' + tag(false, '待核验：缺少产品刚度试验数据'));
                 html += resultRow('构造检查 ①锚杆直径', fmt(d, 0) + ' mm ≥ 6mm ' + (ckD && ckD8 ? tag(true, '满足') : tag(false, '不满足')));
                 html += resultRow('构造检查 ②尾盘直径', fmt(tail, 0) + ' ≥ ' + fmt(Math.max(8 * d, 60), 0) + ' mm ' + (ckT ? tag(true, '满足') : tag(false, '不满足')));
                 html += resultRow('构造检查 ③尾盘厚度', fmt(tt, 1) + ' ≥ 1.2 mm ' + (ckTT ? tag(true, '满足') : tag(false, '不满足')));
@@ -237,14 +244,14 @@
                 html += resultRow('构造检查 ⑦距板边缘', fmt(ep, 0) + ' mm ∈ [120,250] ' + (ckE ? tag(true, '满足') : tag(false, '不满足')));
                 html += resultRow('构造检查 ⑧边缘小板数量', '单块 ' + fmt(Apanel, 3) + 'm²，' + fmt(nPanel, 0) + ' 个/块 ' + (ckSmall ? tag(true, '满足') : tag(false, '不满足')));
                 html += resultRow('构造检查 ⑨墙边缘板幅', fmt(Apanel, 3) + 'm²≥0.3 且短边 ' + fmt(shortSide, 0) + 'mm≥150 ' + (ckEdge ? tag(true, '满足') : tag(false, '不满足')));
-                html += resultRow('综合判定', allOk ? badge(true, '满足：承载力 / 变形 / 构造 均满足') : badge(false, '存在不满足项，请调整锚固件规格、布置或保温板厚度'));
+                html += resultRow('综合判定', allOk ? badge(true, '已计算项目均满足') : badge(false, deformationPending ? '已验算项目均满足；变形验算待核验' : '存在不满足项，请调整锚固件规格、布置或保温板厚度'));
                 html += '</tbody></table>';
                 out.innerHTML = html;
                 proc.innerHTML = st.join('');
                 var _p = proc ? proc.closest('.proc-wrap') : null;
                 if (_p) _p.classList.add('open');
                 window._AN_RESULT = {
-                    w0: w0, terr: terr, z: z, musl: musl, wk: wk, bgz: bgz, muz: muz,
+                    w0: w0, terr: terr, z: z, H: H, musl: musl, wk: wk, bgz: bgz, muz: muz,
                     d: d, Lrod: Lrod, tail: tail, tt: tt, layout: layout, n: n, nPanel: nPanel, t: t,
                     rho: rho, gface: gface, gamma0: gamma0, amax: amax, seisOn: seisOn,
                     G_insul: G_insul, G_face: G_face, Gk: Gk, A1: A1,
@@ -263,6 +270,7 @@
                 document.getElementById('an_w0').value = 0.45;
                 document.getElementById('an_terr').value = 'B';
                 document.getElementById('an_z').value = 10;
+                document.getElementById('an_H').value = 24;
                 document.getElementById('an_musl').value = 1.2;
                 document.getElementById('an_d').value = 8;
                 document.getElementById('an_Lrod').value = 180;
