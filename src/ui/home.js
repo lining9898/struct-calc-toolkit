@@ -8,10 +8,7 @@ function renderHome() {
     var html = '';
 
     // 动态统计工具数量
-    var totalToolIds = Object.keys(window.TOOLS || {}).length;
-    var hasLocalQA = window.TOOLS && window.TOOLS['local-qa'];
-    var nonCalcCount = hasLocalQA ? 1 : 0;
-    var calcToolCount = totalToolIds - nonCalcCount;
+    var calcToolCount = Object.keys(window.TOOLS || {}).length;
 
     // 首页与侧栏共用一套分类，标题采用工具注册表中的正式名称。
     function toolEntries(entries) {

@@ -735,16 +735,5 @@
       "unit": "wk:kN/m², sk:kN/m², μz,μs:—",
       "version": "1.0.0"
     }
-  },
-  {
-    "id": "local-qa",
-    "title": "规范条文问答（本地）",
-    "meta": {
-      "standard": "GB 50010 / GB 50007 / GB 50011 / GB 50017 / GB 50003 / GB 50009 / JGJ 94 / JGJ 1 等",
-      "formulaSource": "本地条文摘编（60 条）",
-      "limitations": "本地知识库为条文摘编，条号与取值需与规范正文核对；不替代专业人员判断",
-      "unit": "—",
-      "version": "1.0.0"
-    }
   }
 ]

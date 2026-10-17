@@ -1,6 +1,6 @@
 /* ============================================================
  *  统一专业目录：混凝土、地基、桩基、钢结构、砌体、装配式、
- *  荷载抗震、水池挡土墙、配筋规范速查。
+ *  荷载抗震、水池挡土墙、常用工具。
  *  首页和侧栏共用此数据；工具 ID、路由及计算模块保持不变。
  * ============================================================ */
 (function () {
@@ -124,11 +124,10 @@
             ]
         },
         {
-            id: 'quick-reference', title: '配筋与规范速查', icon: 'ref',
+            id: 'quick-reference', title: '常用工具', icon: 'ref',
             tools: [
                 { id: 'rebar-area', title: '钢筋面积速查' },
                 { id: 'rebar-pick', title: '配筋选筋助手' },
-                { id: 'local-qa', title: '规范条文问答（本地）' },
                 { id: 'rho-min', title: '最小配筋率速查' }
             ]
         }
@@ -147,7 +146,6 @@
         'td-slab': '<path d="M3 12h18M3 8h18M3 16h18"/><path d="M6 4v4M10 4v4M14 4v4M18 4v4"/>',
         'l22zg401': '<path d="M3 8h18M3 12h18M3 16h18"/><path d="M5 4v4M9 4v4M13 4v4M17 4v4"/><circle cx="12" cy="20" r="1.5"/>',
         'rebar-pick': '<circle cx="7" cy="7" r="2.5"/><circle cx="17" cy="7" r="2.5"/><circle cx="7" cy="17" r="2.5"/><path d="M17 14.5v5M14.5 17h5"/>',
-        'local-qa': '<path d="M5 4h9a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M8 8h6M8 12h4"/>',
         'seismic-perf': '<path d="M3 12h4l3-8 4 16 3-8h4"/>',
         'joint-core': '<rect x="4" y="4" width="16" height="16" rx="1"/><path d="M4 12h16M12 4v16"/><circle cx="12" cy="12" r="3.5" stroke-dasharray="2 2"/>',
         'steel-seismic': '<path d="M4 4h16v2H4z"/><path d="M4 18h16v2H4z"/><path d="M10 6v12M14 6v12"/>',

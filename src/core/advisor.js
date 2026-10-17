@@ -474,8 +474,8 @@
             box.className = 'rs-sec rs-extra';
             box.innerHTML = '<div class="rs-sec-title">相关规范条文（本地知识库）</div><div class="rs-clauses">' +
                 list.slice(0, 8).map(function (a) {
-                    return '<a class="rs-clause" href="#/local-qa" title="在「规范条文问答（本地）」中查看全文">' +
-                        '<b>' + a.standard_name + '</b> ' + (a.article || '') + '　' + (a.title || '') + '</a>';
+                    return '<div class="rs-clause">' +
+                        '<b>' + a.standard_name + '</b> ' + (a.article || '') + '　' + (a.title || '') + '</div>';
                 }).join('') + '</div>' +
                 '<div class="rs-more">条文为本地摘编，正式设计前请与规范正文核对条号与取值。</div>';
             host.appendChild(box);
@@ -514,7 +514,6 @@
             '.rs-adv-w{font-size:12.5px;line-height:1.8;color:var(--ink-secondary)}',
             '.rs-clauses{display:flex;flex-direction:column;gap:5px}',
             '.rs-clause{font-size:12.5px;color:var(--primary-deep);text-decoration:none;padding:6px 10px;border:1px solid var(--primary-line);background:var(--primary-bg-subdued);border-radius:6px;line-height:1.6}',
-            '.rs-clause:hover{background:#d3e4f8}',
             '.rs-tools{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}',
             '@media (max-width:640px){.rs-k{flex:0 0 100%}.rs-row{flex-direction:column;gap:2px}}'
         ].join('\n');
