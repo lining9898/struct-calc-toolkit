@@ -31,32 +31,35 @@
                 '<div class="panel"><div class="proc-wrap"><div class="proc-head"><span>查看详细计算过程（可追溯）</span><span class="proc-copy-msg" style="display:none"></span><button type="button" class="proc-copy-btn" onclick="copyProc(this);event.stopPropagation();return false;">复制</button></div><div class="proc-body"><div id="t_proc"></div></div></div></div>';
         },
         bind: function () {
-            function svgT(b, h, bf, hf) {
-                var W = 230, H = 250, s = Math.min(150 / Math.max(h, 400), 1.2), x0 = 28, y0 = 14;
-                var db = Math.max(b * s, 30), dh = h * s, dbf = Math.max(bf * s, db + 20);
+            function svgT(b, h, bf, hf, asV) {
+                var W = 230, H = 235, s = Math.min(150 / h, 140 / bf);
+                var db = b * s, dh = h * s, dbf = bf * s, df = hf * s;
+                var cx = (W - dbf) / 2, webLeft = cx + (dbf - db) / 2;
+                var webRight = webLeft + db, y0 = 32, bottom = y0 + dh;
+                var overhang = (dbf - db) / 2, rebarY = bottom - asV * s;
                 var o = '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto;display:block;">';
-                var cx = (W - dbf) / 2;
-                o += '<path d="M' + cx + ' ' + y0 + ' h' + dbf + ' v' + (hf*s) + ' h' + (-(dbf-db)/2) + ' v' + (dh-hf*s) + ' h' + (-db) + ' v' + (-(dh-hf*s)) + ' Z" fill="#eef2f7" stroke="#94a3b8" stroke-width="1.2"/>';
-                o += '<rect x="' + fmt(cx+ (dbf-db)/2 + db*0.15,1) + '" y="' + fmt(y0+dh-3.5,1) + '" width="' + fmt(db*0.7,1) + '" height="7" rx="3.5" fill="#2563eb"/>';
-                o += '<text x="' + fmt(cx+ (dbf-db)/2 + db/2,1) + '" y="' + fmt(y0+dh+10,1) + '" text-anchor="middle" font-size="11" fill="#1e293b">As</text>';
-                o += '<line x1="' + fmt(cx-4,1) + '" y1="' + y0 + '" x2="' + fmt(cx-4,1) + '" y2="' + fmt(y0+dh,1) + '" stroke="#94a3b8" stroke-width="1"/>';
-                o += '<text x="' + fmt(cx-8,1) + '" y="' + fmt(y0+dh/2+3,1) + '" text-anchor="end" font-size="10" fill="#64748b">h</text>';
-                o += '<line x1="' + cx + '" y1="' + fmt(y0+dh+4,1) + '" x2="' + fmt(cx+dbf,1) + '" y2="' + fmt(y0+dh+4,1) + '" stroke="#94a3b8" stroke-width="1"/>';
-                o += '<text x="' + fmt(cx+dbf/2,1) + '" y="' + fmt(y0+dh+12,1) + '" text-anchor="middle" font-size="10" fill="#64748b">bf\u2032</text>';
-                /* 腹板宽度 b：水平尺寸线 */
-                var webLeft = cx + (dbf-db)/2, webRight = webLeft + db;
-                o += '<line x1="' + fmt(webLeft,1) + '" y1="' + fmt(y0+dh+24,1) + '" x2="' + fmt(webRight,1) + '" y2="' + fmt(y0+dh+24,1) + '" stroke="#94a3b8" stroke-width="1"/>';
-                o += '<text x="' + fmt((webLeft+webRight)/2,1) + '" y="' + fmt(y0+dh+37,1) + '" text-anchor="middle" font-size="10" fill="#64748b">b</text>';
-                /* 翼缘厚度 hf′：右侧上部竖向尺寸线 */
-                var dimX = cx + dbf + 12;
-                o += '<line x1="' + fmt(dimX,1) + '" y1="' + y0 + '" x2="' + fmt(dimX,1) + '" y2="' + fmt(y0+hf*s,1) + '" stroke="#94a3b8" stroke-width="1"/>';
-                o += '<text x="' + fmt(dimX+4,1) + '" y="' + fmt(y0+hf*s/2+3,1) + '" font-size="10" fill="#64748b">hf′</text>';
+                o += '<path d="M' + fmt(cx,1) + ' ' + y0 + ' h' + fmt(dbf,1) + ' v' + fmt(df,1) +
+                    ' h' + fmt(-overhang,1) + ' v' + fmt(dh-df,1) + ' h' + fmt(-db,1) +
+                    ' v' + fmt(-(dh-df),1) + ' h' + fmt(-overhang,1) + ' Z" fill="#eef2f7" stroke="#64748b" stroke-width="1.3"/>';
+                o += '<line x1="' + fmt(cx,1) + '" y1="22" x2="' + fmt(cx+dbf,1) + '" y2="22" stroke="#64748b" stroke-width="1"/>';
+                o += '<text x="115" y="17" text-anchor="middle" font-size="10" fill="#334155">bf′</text>';
+                o += '<line x1="' + fmt(cx-13,1) + '" y1="' + y0 + '" x2="' + fmt(cx-13,1) + '" y2="' + fmt(bottom,1) + '" stroke="#64748b" stroke-width="1"/>';
+                o += '<text x="' + fmt(cx-18,1) + '" y="' + fmt(y0+dh/2,1) + '" text-anchor="end" font-size="10" fill="#334155">h</text>';
+                o += '<line x1="' + fmt(cx+dbf+12,1) + '" y1="' + y0 + '" x2="' + fmt(cx+dbf+12,1) + '" y2="' + fmt(y0+df,1) + '" stroke="#64748b" stroke-width="1"/>';
+                o += '<text x="' + fmt(cx+dbf+17,1) + '" y="' + fmt(y0+df/2+3,1) + '" font-size="10" fill="#334155">hf′</text>';
+                var bars = [webLeft + db*0.3, webLeft + db*0.5, webLeft + db*0.7];
+                bars.forEach(function (x) { o += '<circle cx="' + fmt(x,1) + '" cy="' + fmt(rebarY,1) + '" r="3" fill="#2563eb"/>'; });
+                o += '<text x="' + fmt(webLeft+db/2,1) + '" y="' + fmt(rebarY-9,1) + '" text-anchor="middle" font-size="10" fill="#1d4ed8">As</text>';
+                o += '<line x1="' + fmt(webRight+8,1) + '" y1="' + fmt(rebarY,1) + '" x2="' + fmt(webRight+8,1) + '" y2="' + fmt(bottom,1) + '" stroke="#64748b" stroke-width="1"/>';
+                o += '<text x="' + fmt(webRight+12,1) + '" y="' + fmt(bottom-2,1) + '" font-size="10" fill="#334155">as</text>';
+                o += '<line x1="' + fmt(webLeft,1) + '" y1="' + fmt(bottom+17,1) + '" x2="' + fmt(webRight,1) + '" y2="' + fmt(bottom+17,1) + '" stroke="#64748b" stroke-width="1"/>';
+                o += '<text x="115" y="' + fmt(bottom+30,1) + '" text-anchor="middle" font-size="10" fill="#334155">b</text>';
                 o += '</svg>';
                 return o;
             }
             function calc() {
                 var out = document.getElementById('t_result'), proc = document.getElementById('t_proc');
-                function err(m) { out.innerHTML = '<div class="error-box">' + m + '</div>'; proc.innerHTML = ''; return; }
+                function err(m) { out.innerHTML = '<div class="error-box">' + m + '</div>'; proc.innerHTML = ''; document.getElementById('t_svg').innerHTML = ''; return; }
                 var b = parseFloat(document.getElementById('t_b').value);
                 var h = parseFloat(document.getElementById('t_h').value);
                 var bf = parseFloat(document.getElementById('t_bf').value);
@@ -67,9 +70,9 @@
                 if (materialError) return err(materialError);
                 var As = parseFloat(document.getElementById('t_As').value);
                 var asV = parseFloat(document.getElementById('t_as').value);
-                if (!(b > 0 && h > 0 && bf > b && hf > 0)) return err('请输入有效截面：腹板 b &gt; 0，翼缘计算宽度 b<sub>f</sub>\u2032 &gt; b。');
+                if (!(b > 0 && h > 0 && bf > b && hf > 0 && hf < h)) return err('请输入有效截面：腹板 b &gt; 0，翼缘宽度 b<sub>f</sub>\u2032 &gt; b，且 0 &lt; h<sub>f</sub>\u2032 &lt; h。');
                 if (!(As > 0)) return err('受拉钢筋面积 A<sub>s</sub> 必须大于 0。');
-                if (!(asV > 0 && asV < h)) return err('a<sub>s</sub> 应介于 0 与 h 之间。');
+                if (!(asV > 0 && asV < h - hf)) return err('a<sub>s</sub> 应大于 0，且受拉钢筋合力点应位于腹板内。');
                 var h0 = h - asV, fc = con.fc, ft = con.ft, a1 = con.alpha1, b1 = con.beta1, ecu = con.ecu;
                 var fy = reb.fy, es = reb.es;
                 var xi_b = b1 / (1 + fy / (es * ecu));
@@ -132,7 +135,7 @@
                  out.innerHTML = html;
                  proc.innerHTML = reportHtml;
                  var _p = proc ? proc.closest('.proc-wrap') : document.querySelector('#view .proc-wrap'); if (_p) _p.classList.add('open');
-                 document.getElementById('t_svg').innerHTML = svgT(b, h, bf, hf);
+                 document.getElementById('t_svg').innerHTML = svgT(b, h, bf, hf, asV);
                  window._BT_RESULT = {
                      b: b, h: h, bf: bf, hf: hf, asV: asV, As: As,
                      conGrade: document.getElementById('t_con').value,

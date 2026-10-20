@@ -260,13 +260,13 @@ function buildBeamRectBook(r) {
             formula: 'x = f<sub>y</sub>·A<sub>s</sub> / (α<sub>1</sub>·f<sub>c</sub>·b)',
             substitution: 'x = ' + fmt(r.fy, 0) + ' × ' + fmt(r.As, 1) + ' / (' + fmt(r.alpha1, 1) + ' × ' + fmt(r.fc, 2) + ' × ' + fmt(r.b, 0) + ') = ' + fmt(xActual, 1) + ' mm',
             result: 'x = ' + fmt(xActual, 1) + ' mm，ξ = ' + fmt(r.xi, 4) + (r.over ? ' ＞ ξ<sub>b</sub> = ' + fmt(r.xi_b, 4) + '，超筋' : ' ≤ ξ<sub>b</sub> = ' + fmt(r.xi_b, 4) + '，适筋'),
-            judge: r.over ? '不满足受压区高度限制，以下仅为界限承载力估算' : '适筋截面，受拉钢筋屈服',
+            judge: r.over ? '不满足受压区高度限制，不提供可用于设计的承载力' : '适筋截面，受拉钢筋屈服',
             refs: [
                 { name: gb.name, clause: '第 6.2.8、6.2.10 条', source: 'https://gf.cabr-fire.com/m/article-12605.htm', desc: '矩形截面受弯承载力计算公式' }
             ]
         });
     } else {
-        var branchText = r.branch === 'dy' ? '受压钢筋屈服（x ≥ 2a<sub>s</sub>′）' : '受压钢筋未屈服（x < 2a<sub>s</sub>′，按应变协调）';
+        var branchText = r.branch === 'dy' ? '受压钢筋屈服' : '受压钢筋未屈服（按应变协调）';
         steps.push({
             title: '受压区高度（双筋矩形截面）',
             formula: r.branch === 'ds' ? 'α<sub>1</sub>f<sub>c</sub>bx + σ<sub>s</sub>′A<sub>s</sub>′ = f<sub>y</sub>A<sub>s</sub>；σ<sub>s</sub>′ = E<sub>s</sub>ε<sub>cu</sub>(1 − β<sub>1</sub>a<sub>s</sub>′/x)' : 'x = (f<sub>y</sub>·A<sub>s</sub> − f<sub>y</sub>′·A<sub>s</sub>′) / (α<sub>1</sub>·f<sub>c</sub>·b)',
@@ -279,13 +279,14 @@ function buildBeamRectBook(r) {
         });
     }
     // 步骤 4：正截面受弯承载力
-    var muFormula = r.over ? 'M<sub>u,估算</sub> = α<sub>1</sub>f<sub>c</sub>bx<sub>b</sub>(h<sub>0</sub> − x<sub>b</sub>/2)' + (isD ? ' + f<sub>y</sub>′A<sub>s</sub>′(h<sub>0</sub> − a<sub>s</sub>′)' : '') : isD ? 'M<sub>u</sub> = α<sub>1</sub>·f<sub>c</sub>·b·x·(h<sub>0</sub> − x/2) + σ<sub>s</sub>′·A<sub>s</sub>′·(h<sub>0</sub> − a<sub>s</sub>′)' : 'M<sub>u</sub> = f<sub>y</sub>·A<sub>s</sub>·(h<sub>0</sub> − x/2)';
+    var shortCompressionZone = isD && xActual < 2 * r.as2V;
+    var muFormula = r.over ? 'ξ ＞ ξ<sub>b</sub>，受拉钢筋屈服假定不成立' : shortCompressionZone ? 'M<sub>u</sub> = f<sub>y</sub>·A<sub>s</sub>·(h<sub>0</sub> − a<sub>s</sub>′)（第 6.2.14 条）' : isD ? 'M<sub>u</sub> = α<sub>1</sub>·f<sub>c</sub>·b·x·(h<sub>0</sub> − x/2) + σ<sub>s</sub>′·A<sub>s</sub>′·(h<sub>0</sub> − a<sub>s</sub>′)' : 'M<sub>u</sub> = f<sub>y</sub>·A<sub>s</sub>·(h<sub>0</sub> − x/2)';
     steps.push({
         title: '正截面受弯承载力',
         formula: muFormula,
-        result: 'M<sub>u</sub> = <b>' + fmt(r.Mu, 2) + ' kN·m</b>',
+        result: r.over ? '超筋；本模块不提供可用于设计的 M<sub>u</sub>' : 'M<sub>u</sub> = <b>' + fmt(r.Mu, 2) + ' kN·m</b>',
         refs: [
-            { name: gb.name, clause: '第 6.2.8、6.2.10 条', source: 'https://gf.cabr-fire.com/m/article-12605.htm', desc: '矩形截面正截面受弯承载力' }
+            { name: gb.name, clause: shortCompressionZone ? '第 6.2.14 条' : '第 6.2.8、6.2.10 条', source: 'https://gf.cabr-fire.com/m/article-12605.htm', desc: '矩形截面正截面受弯承载力' }
         ]
     });
     // 步骤 5：最小配筋率
@@ -302,7 +303,7 @@ function buildBeamRectBook(r) {
     // 结论
     var conclusion = '';
     if (r.over) {
-        conclusion = '该截面为超筋截面（ξ ＞ ξ<sub>b</sub>），受弯承载力按界限破坏估算为 ' + fmt(r.Mu, 2) + ' kN·m。建议增大截面尺寸或提高混凝土强度等级。';
+        conclusion = '该截面为超筋截面（ξ ＞ ξ<sub>b</sub>），本模块不提供可用于设计的受弯承载力。建议调整截面或配筋后重新验算。';
     } else if (!r.isUnder) {
         conclusion = '该截面为少筋截面（A<sub>s</sub> ＜ ρ<sub>min</sub>·b·h），不满足最小配筋率要求。建议增加受拉钢筋面积。';
     } else {

@@ -1,13 +1,13 @@
 (function () {
     var tool = {
         title: '矩形梁正截面承载力',
-        sub: '单筋 / 双筋矩形截面受弯 · GB/T 50010-2010（2024年版） 第 6.2.10 条',
+        sub: '单筋 / 双筋矩形截面受弯 · GB/T 50010-2010（2024年版） 第 6.2.10、6.2.14 条',
         meta: {
             standard: 'GB/T 50010-2010（2024年版）混凝土结构设计标准',
-            formulaSource: '6.2.1、6.2.6～6.2.10；未屈服受压筋按6.2.8应变协调',
+            formulaSource: '第 6.2.1、6.2.6～6.2.10、6.2.14 条',
             limitations: '矩形截面受弯构件，单筋/双筋，适筋梁',
             unit: 'M:kN·m, As:mm², b,h:mm',
-            version: '1.0.0'
+            version: '1.0.1'
         },
         render: function () {
             return '<div class="grid2">' +
@@ -61,7 +61,7 @@
             }
             function calc() {
                 var out = document.getElementById('r_result'), proc = document.getElementById('r_proc');
-                function err(m) { out.innerHTML = '<div class="error-box">' + m + '</div>'; proc.innerHTML = ''; document.getElementById('r_svg').innerHTML = ''; return; }
+                function err(m) { out.innerHTML = '<div class="error-box">' + m + '</div>'; proc.innerHTML = ''; document.getElementById('r_svg').innerHTML = ''; window._BR_RESULT = null; window.currentCalcBook = null; return; }
                 var b = parseFloat(document.getElementById('r_b').value);
                 var h = parseFloat(document.getElementById('r_h').value);
                 var con = CONCRETE[document.getElementById('r_con').value];
@@ -69,13 +69,15 @@
                 var materialError = concreteRebarError(con, reb);
                 if (materialError) return err(materialError);
                 var As = parseFloat(document.getElementById('r_As').value);
-                var AsP = parseFloat(document.getElementById('r_AsP').value) || 0;
+                var AsP = parseFloat(document.getElementById('r_AsP').value);
                 var asV = parseFloat(document.getElementById('r_as').value);
-                var as2V = parseFloat(document.getElementById('r_as2').value) || asV;
-                if (!(b > 0 && h > 0)) return err('截面宽度 b 与高度 h 必须为正数。');
-                if (!(As > 0)) return err('受拉钢筋面积 A<sub>s</sub> 必须大于 0。');
-                if (!(asV > 0 && asV < h)) return err('a<sub>s</sub> 应介于 0 与 h 之间。');
-                if (AsP > 0 && !(as2V > 0 && as2V < h)) return err('a<sub>s</sub>\u2032 应介于 0 与 h 之间。');
+                var as2V = parseFloat(document.getElementById('r_as2').value);
+                if (!(Number.isFinite(b) && b > 0 && Number.isFinite(h) && h > 0)) return err('截面宽度 b 与高度 h 必须为正数。');
+                if (!(Number.isFinite(As) && As > 0)) return err('受拉钢筋面积 A<sub>s</sub> 必须大于 0。');
+                if (!(Number.isFinite(AsP) && AsP >= 0)) return err('受压钢筋面积 A<sub>s</sub>′ 必须为非负数（单筋填 0）。');
+                if (!(Number.isFinite(asV) && asV > 0 && asV < h)) return err('a<sub>s</sub> 应介于 0 与 h 之间。');
+                if (AsP > 0 && !(Number.isFinite(as2V) && as2V > 0 && as2V < h - asV)) return err('a<sub>s</sub>\u2032 应介于 0 与 h<sub>0</sub> 之间。');
+                if (AsP === 0 && !Number.isFinite(as2V)) as2V = asV;
                 var h0 = h - asV, fc = con.fc, ft = con.ft, a1 = con.alpha1, b1 = con.beta1, ecu = con.ecu;
                 var fy = reb.fy, fyp = reb.fyp, es = reb.es;
                 var xi_b = b1 / (1 + fy / (es * ecu));
@@ -88,7 +90,6 @@
                     st.push('<div class="step"><b>③ 受压区高度（单筋）</b>　x = f<sub>y</sub>A<sub>s</sub>/(α<sub>1</sub>f<sub>c</sub>b) = ' + fy + '×' + As + '/(1.0×' + fc + '×' + b + ') = <b>' + fmt(x, 1) + ' mm</b></div>');
                 } else {
                     var xY = (fy * As - fyp * AsP) / (a1 * fc * b);
-                    if (xY <= 0) return err('受压钢筋相对过多（f<sub>y</sub>A<sub>s</sub> − f<sub>y</sub>\u2032A<sub>s</sub>\u2032 ≤ 0），截面无法平衡。');
                     if (xY >= 2 * as2V) {
                         x = xY; sigmaSp = fyp; branch = 'dy';
                         st.push('<div class="step"><b>③ 受压区高度（双筋）</b>　x = (f<sub>y</sub>A<sub>s</sub>−f<sub>y</sub>\u2032A<sub>s</sub>\u2032)/(α<sub>1</sub>f<sub>c</sub>b) = <b>' + fmt(x, 1) + ' mm</b> ≥ 2a<sub>s</sub>\u2032 = ' + fmt(2*as2V,0) + '，受压钢筋屈服' + tag('ok','受压筋屈服') + '</div>');
@@ -97,6 +98,7 @@
                         var disc = B * B - 4 * A * C;
                         if (disc < 0) return err('计算出现负判别式，请检查参数。');
                         x = (-B + Math.sqrt(disc)) / (2 * A);
+                        if (!(Number.isFinite(x) && x > 0)) return err('受压区高度无有效解，请检查输入参数。');
                         sigmaSp = es * ecu * (x - b1 * as2V) / x;
                         if (sigmaSp >= fyp) { x = xY; sigmaSp = fyp; branch = 'dy'; }
                         else branch = 'ds';
@@ -108,16 +110,17 @@
                         }
                     }
                 }
-                var xi = x / h0, over = xi > xi_b, Mu, xDisp = x;
+                var xi = x / h0, over = xi > xi_b, Mu = null, xDisp = x;
                 if (over) {
-                    var xb = xi_b * h0, Mc = a1 * fc * b * xb * (h0 - xb / 2), Ms = isD ? fyp * AsP * (h0 - as2V) : 0;
-                    Mu = (Mc + Ms) / 1e6; xDisp = xb;
                     st.push('<div class="step"><b>④ 破坏形态</b>　ξ = ' + fmt(xi,4) + ' &gt; ξ<sub>b</sub> = ' + fmt(xi_b,4) + '，超筋' + tag('err','超筋') + '</div>');
-                    st.push('<div class="step"><b>⑤ 承载力（界限估算）</b>　M<sub>u</sub> = α<sub>1</sub>f<sub>c</sub>b x<sub>b</sub>(h<sub>0</sub>−x<sub>b</sub>/2)' + (isD ? ' + f<sub>y</sub>\u2032A<sub>s</sub>\u2032(h<sub>0</sub>−a<sub>s</sub>\u2032)' : '') + ' = <b>' + fmt(Mu,2) + ' kN·m</b></div>');
+                    st.push('<div class="step"><b>⑤ 承载力</b>　x 超过界限值，受拉钢筋屈服假定不成立；本模块不提供可用于设计的 M<sub>u</sub>，请调整截面或配筋后重算。</div>');
                 } else {
                     st.push('<div class="step"><b>④ 破坏形态</b>　ξ = ' + fmt(xi,4) + ' ≤ ξ<sub>b</sub> = ' + fmt(xi_b,4) + '，适筋' + tag('ok','适筋') + '</div>');
                     if (branch === 'single') { Mu = fy * As * (h0 - x / 2) / 1e6; st.push('<div class="step"><b>⑤ 承载力</b>　M<sub>u</sub> = f<sub>y</sub>A<sub>s</sub>(h<sub>0</sub>−x/2) = <b>' + fmt(Mu,2) + ' kN·m</b></div>'); }
-                    else { var Mc2 = a1*fc*b*x*(h0-x/2), Ms2 = sigmaSp*AsP*(h0-as2V); Mu = (Mc2+Ms2)/1e6;
+                    else if (x < 2 * as2V) {
+                        Mu = fy * As * (h0 - as2V) / 1e6;
+                        st.push('<div class="step"><b>⑤ 承载力（第 6.2.14 条）</b>　x &lt; 2a<sub>s</sub>\u2032，M<sub>u</sub> = f<sub>y</sub>A<sub>s</sub>(h<sub>0</sub>−a<sub>s</sub>\u2032) = <b>' + fmt(Mu,2) + ' kN·m</b></div>');
+                    } else { var Mc2 = a1*fc*b*x*(h0-x/2), Ms2 = sigmaSp*AsP*(h0-as2V); Mu = (Mc2+Ms2)/1e6;
                         st.push('<div class="step"><b>⑤ 承载力</b>　M<sub>u</sub> = α<sub>1</sub>f<sub>c</sub>b x(h<sub>0</sub>−x/2) + σ<sub>s</sub>\u2032A<sub>s</sub>\u2032(h<sub>0</sub>−a<sub>s</sub>\u2032) = ' + fmt(Mc2/1e6,2) + ' + ' + fmt(Ms2/1e6,2) + ' = <b>' + fmt(Mu,2) + ' kN·m</b></div>'); }
                 }
                 var rho_min = rhoMinFlex(ft, fy).rho;
@@ -125,14 +128,14 @@
                 var isUnder = As >= AsMin;
                 st.push('<div class="step"><b>⑥ 最小配筋率（GB 55008-2021 第 4.4.6 条，按全截面 b·h）</b>　ρ<sub>min</sub> = max(0.2%, 0.45f<sub>t</sub>/f<sub>y</sub>) = ' + fmt(rho_min*100,2) + '%；A<sub>s,min</sub> = ' + fmt(AsMin,0) + ' mm²；A<sub>s</sub>=' + As + ' mm² ⇒ ' + (isUnder ? '满足' : '不满足') + (isUnder ? tag('ok','满足') : tag('err','少筋')) + '</div>');
                 var stMsg, stCls;
-                if (over) { stMsg = '超筋（ξ &gt; ξ<sub>b</sub>），按界限承载力估算'; stCls = 'badge-err'; }
+                if (over) { stMsg = '超筋（ξ &gt; ξ<sub>b</sub>），不提供可用承载力'; stCls = 'badge-err'; }
                 else if (!isUnder) { stMsg = '少筋：A<sub>s</sub> &lt; ρ<sub>min</sub>·b·h，不满足 GB 55008-2021 第 4.4.6 条'; stCls = 'badge-warn'; }
                 else { stMsg = '满足本项截面条件与最小配筋率；承载需求、抗震及构造另验'; stCls = 'badge-ok'; }
                 var html = resultRow('相对受压区高度 ξ', fmt(xi,4) + (over ? '（&gt;ξ<sub>b</sub>）' : ''));
                 html += resultRow('界限受压区高度 ξ<sub>b</sub>', fmt(xi_b,4));
-                html += resultRow('受压区高度 x', fmt(xDisp,1) + ' mm' + (over ? '（界限 x<sub>b</sub>）' : ''));
+                html += resultRow('受压区高度 x', fmt(xDisp,1) + ' mm');
                 if (isD && !over) html += resultRow('受压钢筋应力 σ<sub>s</sub>\u2032', branch === 'dy' ? fmt(fyp,0) + ' N/mm²（屈服）' : fmt(sigmaSp,1) + ' N/mm²（未屈服）');
-                html += resultRow('抗弯承载力 M<sub>u</sub>', '<span class="highlight">' + fmt(Mu,2) + ' kN·m</span>');
+                html += resultRow('抗弯承载力 M<sub>u</sub>', over ? '不可按本模型给出（超筋）' : '<span class="highlight">' + fmt(Mu,2) + ' kN·m</span>');
                 html += resultRow('配筋率 ρ（b·h<sub>0</sub>）', fmt(rho*100,2) + '%');
                 html += resultRow('最小配筋率 / A<sub>s,min</sub>', fmt(rho_min*100,2) + '% / ' + fmt(AsMin,0) + ' mm²');
                 html += resultRow('判定', badge(stCls, stMsg));
