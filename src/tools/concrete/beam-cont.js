@@ -1,11 +1,11 @@
 (function () {
     var tool = {
         title: '连续梁计算',
-        sub: '2~10 跨等截面连续梁 · 三弯矩方程 · 正截面受弯 + 斜截面受剪配筋',
+        sub: '2~10 跨等截面连续梁 · 活载不利布置包络 · 正截面受弯 + 斜截面受剪配筋',
         meta: {
             standard: '结构力学三弯矩方程 + GB/T 50010-2010（2024年版）',
             formulaSource: '6.2.10, 6.3.4',
-            limitations: '2~10跨等截面连续梁，均布荷载',
+            limitations: '2~10跨等截面连续梁，各跨均布荷载，活载按跨间布置取包络',
             unit: 'M:kN·m, V:kN, b,h:mm',
             version: '1.0.0'
         },
@@ -110,9 +110,10 @@
                 var Rl = q * L - Rr;
                 // 弯矩方程：M(x) = Ml + Rl*x - qx²/2
                 // 最大正弯矩位置（剪力为零）：Rl - q*x = 0 => x = Rl/q
-                var xMax = Rl / q;
+                // q=0 时该跨弯矩图为直线，最大值只可能出现在端部。
+                var xMax = q > 0 ? Rl / q : (Rl >= 0 ? L : 0);
                 var MmaxPos = -9e9, MmaxNeg = 9e9;
-                if (xMax >= 0 && xMax <= L) {
+                if (q > 0 && xMax >= 0 && xMax <= L) {
                     MmaxPos = Ml + Rl * xMax - q * xMax * xMax / 2;
                 }
                 // 两端弯矩
@@ -173,31 +174,73 @@
                 var st = [];
                 st.push('<div class="step"><b>① 基本参数</b>　n = ' + n + ' 跨；b×h = ' + b + '×' + h + ' mm，h<sub>0</sub> = ' + fmt(h0,0) + ' mm；f<sub>c</sub>=' + fc + '，f<sub>t</sub>=' + ft + '，f<sub>y</sub>=' + fy + ' N/mm²；γ<sub>G</sub>=' + gG + '，γ<sub>Q</sub>=' + gQ + '。</div>');
 
-                // 恒载 + 全部活载（基本组合，仅一种布置作为代表）
-                // 再算活载最不利布置：跨中最大正弯矩 = 本跨+隔跨活载；支座最大负弯矩 = 相邻两跨+隔跨活载
-                // 简化：给出恒载+全跨活载的包络（保守简化，实际应多工况组合，此处展示原理）
+                // 恒载全跨保留，活载按跨间布置枚举。连续梁支座负弯矩与跨中正弯矩
+                // 的控制布置通常不同，不能用一个“全跨活载”工况代替包络。
                 var qDesign = [];
                 for (var k = 0; k < n; k++) qDesign.push(gG * gk[k] + gQ * qk[k]);
 
-                st.push('<div class="step"><b>② 荷载设计值（基本组合：γ<sub>G</sub>·g<sub>k</sub> + γ<sub>Q</sub>·q<sub>k</sub>）</b>　');
+                st.push('<div class="step"><b>② 荷载设计值与活载布置</b>　恒载全跨布置；活载按每跨有载/无载的全部组合枚举，共 ' + Math.pow(2, n) + ' 个工况。基本组合：γ<sub>G</sub>·g<sub>k</sub> + γ<sub>Q</sub>·q<sub>k</sub>。全跨加载参考值：');
                 var qStr = []; for (var kk = 0; kk < n; kk++) qStr.push('q<sub>' + (kk+1) + '</sub> = ' + fmt(qDesign[kk],2) + ' kN/m');
                 st[st.length-1] += qStr.join('；') + '。</div>';
 
-                // 三弯矩方程求解支座弯矩
-                var Msup = threeMoment(L, qDesign);
-                // Msup[0..n] 共 n+1 个支座，单位 kN·m
-                st.push('<div class="step"><b>③ 三弯矩方程求解支座弯矩</b>　按等截面连续梁三弯矩方程（克莱佩隆定理），追赶法求解。各支座弯矩：');
+                function caseLabel(mask) {
+                    var loaded = [];
+                    for (var ci = 0; ci < n; ci++) if (mask & (1 << ci)) loaded.push(ci + 1);
+                    return loaded.length ? '活载跨 ' + loaded.join('、') : '仅恒载';
+                }
+                function analyzeCase(mask) {
+                    var qCase = [];
+                    for (var qi = 0; qi < n; qi++) qCase.push(gG * gk[qi] + gQ * qk[qi] * ((mask & (1 << qi)) ? 1 : 0));
+                    var mCase = threeMoment(L, qCase);
+                    var sCase = [];
+                    for (var si = 0; si < n; si++) sCase.push(spanAnalysis(L[si], qCase[si], mCase[si], mCase[si + 1]));
+                    return { mask: mask, label: caseLabel(mask), q: qCase, Msup: mCase, spans: sCase };
+                }
+
+                var cases = [];
+                for (var mask = 0; mask < Math.pow(2, n); mask++) cases.push(analyzeCase(mask));
+                var supEnvelope = [], spanEnvelope = [], shearEnvelope = [];
+                for (var si = 0; si <= n; si++) supEnvelope.push({ min: si === 0 || si === n ? 0 : Infinity, max: si === 0 || si === n ? 0 : -Infinity, minCase: null, maxCase: null });
+                for (var ei = 0; ei < n; ei++) {
+                    spanEnvelope.push({ pos: -Infinity, neg: Infinity, posCase: null, negCase: null });
+                    shearEnvelope.push({ left: 0, right: 0, max: 0, leftCase: null, rightCase: null, maxCase: null });
+                }
+                cases.forEach(function (cs) {
+                    cs.Msup.forEach(function (m, idx) {
+                        if (m < supEnvelope[idx].min) { supEnvelope[idx].min = m; supEnvelope[idx].minCase = cs; }
+                        if (m > supEnvelope[idx].max) { supEnvelope[idx].max = m; supEnvelope[idx].maxCase = cs; }
+                    });
+                    cs.spans.forEach(function (sp, idx) {
+                        if (sp.MmaxPos > spanEnvelope[idx].pos) { spanEnvelope[idx].pos = sp.MmaxPos; spanEnvelope[idx].posCase = cs; }
+                        if (sp.MmaxNeg < spanEnvelope[idx].neg) { spanEnvelope[idx].neg = sp.MmaxNeg; spanEnvelope[idx].negCase = cs; }
+                        var sh = shearEnvelope[idx];
+                        if (Math.abs(sp.Vleft) > sh.left) { sh.left = Math.abs(sp.Vleft); sh.leftCase = cs; }
+                        if (Math.abs(sp.Vright) > sh.right) { sh.right = Math.abs(sp.Vright); sh.rightCase = cs; }
+                    });
+                });
+                // 全零荷载时没有严格小于/大于的更新，使用首个工况作为有限包络值。
+                for (var fi = 1; fi < n; fi++) {
+                    if (!supEnvelope[fi].minCase) { supEnvelope[fi].min = cases[0].Msup[fi]; supEnvelope[fi].minCase = cases[0]; }
+                    if (!supEnvelope[fi].maxCase) { supEnvelope[fi].max = cases[0].Msup[fi]; supEnvelope[fi].maxCase = cases[0]; }
+                }
+                for (var fj = 0; fj < n; fj++) {
+                    if (!spanEnvelope[fj].posCase) { spanEnvelope[fj].pos = cases[0].spans[fj].MmaxPos; spanEnvelope[fj].posCase = cases[0]; }
+                    if (!spanEnvelope[fj].negCase) { spanEnvelope[fj].neg = cases[0].spans[fj].MmaxNeg; spanEnvelope[fj].negCase = cases[0]; }
+                    if (!shearEnvelope[fj].leftCase) shearEnvelope[fj].leftCase = cases[0];
+                    if (!shearEnvelope[fj].rightCase) shearEnvelope[fj].rightCase = cases[0];
+                }
+                var Msup = cases[cases.length - 1].Msup;
+                var spanResults = cases[cases.length - 1].spans;
+                for (var se = 0; se < n; se++) {
+                    var shEnv = shearEnvelope[se];
+                    shEnv.max = Math.max(shEnv.left, shEnv.right);
+                    shEnv.maxCase = shEnv.left >= shEnv.right ? shEnv.leftCase : shEnv.rightCase;
+                }
+                st.push('<div class="step"><b>③ 三弯矩方程与内力包络</b>　对每个活载布置按等截面连续梁三弯矩方程求解，分别取支座负弯矩、跨中正弯矩和端部剪力的最不利值。支座负弯矩包络：');
                 for (var s = 0; s <= n; s++) {
-                    st[st.length-1] += ' M<sub>' + s + '</sub> = ' + fmt(Msup[s],2) + ' kN·m；';
+                    st[st.length-1] += ' M<sub>' + s + '</sub> = ' + fmt(supEnvelope[s].min,2) + ' kN·m（' + (supEnvelope[s].minCase ? supEnvelope[s].minCase.label : '端支座') + '）；';
                 }
                 st[st.length-1] += '</div>';
-
-                // 各跨分析
-                var spanResults = [];
-                for (var i = 0; i < n; i++) {
-                    var sa = spanAnalysis(L[i], qDesign[i], Msup[i], Msup[i+1]);
-                    spanResults.push(sa);
-                }
 
                 // 正截面配筋：对每跨跨中最大正弯矩 + 支座负弯矩分别计算所需 A_s
                 st.push('<div class="step"><b>④ 正截面配筋（单筋矩形）</b>　按 A<sub>s</sub> = M / (γ<sub>s</sub>·f<sub>y</sub>·h<sub>0</sub>)，其中 γ<sub>s</sub> = 0.5·(1+√(1−2α<sub>s</sub>))，α<sub>s</sub> = M/(α<sub>1</sub>f<sub>c</sub>bh<sub>0</sub><sup>2</sup>)。</div>');
@@ -217,18 +260,20 @@
 
                 // 支座负弯矩配筋（按 b, h0 计算）
                 for (var s = 1; s < n; s++) {
-                    var r = calcFlex(Msup[s]);
+                    var r = calcFlex(supEnvelope[s].min);
                     rebarResults.push({
                         loc: '支座 ' + s + '（负弯矩）',
-                        M: Msup[s], As: r.As, rho: r.rho, over: r.over, gamma_s: r.gamma_s
+                        M: supEnvelope[s].min, As: r.As, rho: r.rho, over: r.over, gamma_s: r.gamma_s,
+                        caseLabel: supEnvelope[s].minCase ? supEnvelope[s].minCase.label : '端支座'
                     });
                 }
                 // 跨中正弯矩
                 for (var i = 0; i < n; i++) {
-                    var r2 = calcFlex(spanResults[i].MmaxPos);
+                    var r2 = calcFlex(spanEnvelope[i].pos);
                     rebarResults.push({
                         loc: '跨 ' + (i+1) + ' 跨中',
-                        M: spanResults[i].MmaxPos, As: r2.As, rho: r2.rho, over: r2.over, gamma_s: r2.gamma_s
+                        M: spanEnvelope[i].pos, As: r2.As, rho: r2.rho, over: r2.over, gamma_s: r2.gamma_s,
+                        caseLabel: spanEnvelope[i].posCase ? spanEnvelope[i].posCase.label : ''
                     });
                 }
 
@@ -242,8 +287,8 @@
                 var Vc = 0.7 * ft * b * h0 / 1000;
 
                 for (var i = 0; i < n; i++) {
-                    var Vl = Math.abs(spanResults[i].Vleft);
-                    var Vr = Math.abs(spanResults[i].Vright);
+                    var Vl = shearEnvelope[i].left;
+                    var Vr = shearEnvelope[i].right;
                     var VmaxSpan = Math.max(Vl, Vr);
                     var secOk = VmaxSpan <= Vmax;
                     var needAsv_s = VmaxSpan > Vc ? (VmaxSpan - Vc) / (1.25 * fyv * h0) * 1000 : 0; // mm²/mm
@@ -251,7 +296,7 @@
                     shearResults.push({
                         span: i+1, Vl: Vl, Vr: Vr, Vmax: VmaxSpan,
                         secOk: secOk, needAsv_s: needAsv_s,
-                        rsvMin: rsvMin
+                        rsvMin: rsvMin, caseLabel: shearEnvelope[i].maxCase ? shearEnvelope[i].maxCase.label : ''
                     });
                 }
 
@@ -260,14 +305,14 @@
                 var supHtml = '<div style="overflow-x:auto;"><table class="mini"><tr><th>支座</th><th>0（左）</th>';
                 for (var s = 1; s < n; s++) supHtml += '<th>' + s + '</th>';
                 supHtml += '<th>' + n + '（右）</th></tr><tr><td>弯矩 M (kN·m)</td><td>0</td>';
-                for (var s = 1; s < n; s++) supHtml += '<td style="font-weight:600;color:#991b1b;">' + fmt(Msup[s],2) + '</td>';
+                for (var s = 1; s < n; s++) supHtml += '<td style="font-weight:600;color:#991b1b;">' + fmt(supEnvelope[s].min,2) + '<br><small>' + (supEnvelope[s].minCase ? supEnvelope[s].minCase.label : '仅恒载') + '</small></td>';
                 supHtml += '<td>0</td></tr></table></div>';
-                supHtml += '<div style="margin-top:10px;font-size:12.5px;color:#64748b;">注：正号表示下部受拉（此处支座弯矩一般为负，即上部受拉）；连续梁中间支座负弯矩用于支座上部配筋。</div>';
+                supHtml += '<div style="margin-top:10px;font-size:12.5px;color:#64748b;">注：表中支座值为活载布置包络的负弯矩控制值；正号表示下部受拉，支座负弯矩用于上部配筋。</div>';
                 outSup.innerHTML = supHtml;
 
                 // 跨中弯矩 + 配筋表
                 var midHtml = '<div style="overflow-x:auto;"><table class="mini"><tr>';
-                midHtml += '<th>截面位置</th><th>弯矩 M (kN·m)</th><th>所需 A<sub>s</sub> (mm²)</th><th>配筋率 ρ</th><th>最小配筋 ρ<sub>min</sub></th><th>判定</th></tr>';
+                midHtml += '<th>截面位置</th><th>弯矩 M (kN·m)</th><th>控制工况</th><th>所需 A<sub>s</sub> (mm²)</th><th>配筋率 ρ</th><th>最小配筋 ρ<sub>min</sub></th><th>判定</th></tr>';
                 rebarResults.sort(function (a, b) { return Math.abs(b.M) - Math.abs(a.M); }); // 按 |M| 排序
                 var allFlexOk = true;
                 rebarResults.forEach(function (r) {
@@ -276,7 +321,7 @@
                     var ok = !r.over && r.As >= AsMin ? 'ok' : (r.over ? 'err' : 'warn');
                     var txt = r.over ? '超筋，按界限' : (r.As >= AsMin ? '满足' : '配筋不足');
                     if (ok !== 'ok') allFlexOk = false;
-                    midHtml += '<tr><td>' + r.loc + '</td><td>' + fmt(r.M, 2) + '</td>' +
+                    midHtml += '<tr><td>' + r.loc + '</td><td>' + fmt(r.M, 2) + '</td><td>' + r.caseLabel + '</td>' +
                         '<td style="font-weight:600;color:#2563eb;">' + fmt(r.As, 0) + '</td>' +
                         '<td>' + rhoPct + '</td><td>' + minPct + '</td>' +
                         '<td>' + badge(ok === 'ok' ? 'badge-ok' : ok === 'err' ? 'badge-err' : 'badge-warn', txt) + '</td></tr>';
@@ -315,7 +360,7 @@
                         '<td>' + fmt(Vmax, 1) + '</td>' +
                         '<td style="font-weight:600;color:#2563eb;">' + (s.needAsv_s > 0 ? fmt(s.needAsv_s, 3) : '构造') + '</td>' +
                         '<td>' + fmt(s.rsvMin * 100, 3) + '%</td>' +
-                        '<td>' + badge(s.secOk ? 'badge-ok' : 'badge-err', txt) + '</td></tr>';
+                        '<td>' + badge(s.secOk ? 'badge-ok' : 'badge-err', txt) + '<br><small>' + s.caseLabel + '</small></td></tr>';
                 });
                 shHtml += '</table></div>';
                 shHtml += '<div style="margin-top:10px;font-size:12.5px;color:#64748b;">截面限制 V<sub>max</sub> = ' + fmt(Vmax, 1) + ' kN（h<sub>w</sub>/b = ' + fmt(hwb, 2) + '，按 6.3.1 条）；混凝土项 V<sub>c</sub> = 0.7f<sub>t</sub>bh<sub>0</sub> = ' + fmt(Vc, 1) + ' kN。</div>';
@@ -325,8 +370,8 @@
                 var procHtml = '';
                 procHtml += st.join('');
                 procHtml += '<div class="step"><b>⑥ 结果汇总</b>　最大支座负弯矩 M<sub>max-</sub> = ' +
-                    fmt(Math.min.apply(null, Msup), 2) + ' kN·m；最大跨中正弯矩 M<sub>max+</sub> = ' +
-                    fmt(Math.max.apply(null, spanResults.map(function(s){return s.MmaxPos;})), 2) + ' kN·m；最大剪力 V<sub>max</sub> = ' +
+                    fmt(Math.min.apply(null, supEnvelope.map(function(s){return s.min;})), 2) + ' kN·m；最大跨中正弯矩 M<sub>max+</sub> = ' +
+                    fmt(Math.max.apply(null, spanEnvelope.map(function(s){return s.pos;})), 2) + ' kN·m；最大剪力 V<sub>max</sub> = ' +
                     fmt(Math.max.apply(null, shearResults.map(function(s){return s.Vmax;})), 1) + ' kN。</div>';
                 proc.innerHTML = (function () {
                     var originalSteps = procHtml;
@@ -353,7 +398,8 @@
                     rebGrade: document.getElementById('cb_reb').value,
                     stirGrade: document.getElementById('cb_stir').value,
                     gG: gG, gQ: gQ, qDesign: qDesign,
-                    Msup: Msup, spanResults: spanResults,
+                    Msup: Msup, spanResults: spanResults, cases: cases,
+                    supEnvelope: supEnvelope, spanEnvelope: spanEnvelope, shearEnvelope: shearEnvelope,
                     rebarResults: rebarResults, shearResults: shearResults,
                     Vmax: Vmax, Vc: Vc, AsMin: AsMin, rho_min: rho_min,
                     allFlexOk: allFlexOk, allShearOk: allShearOk
