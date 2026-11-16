@@ -22,7 +22,7 @@
         [5400,[19,21,22,25,26],17,105,0.189,473],
         [5700,[20,21,22,24,26],19,125,0.200,499],
         [6000,[21,23,25,27,29],19,125,0.210,525],
-        [6300,[25,25,27,30,31],20,125,0.221,551],
+        [6300,[23,25,27,30,31],20,125,0.221,551],
         [6600,[13,13,14,16,17],22,140,0.264,660],
         [6900,[14,15,16,17,18],22,140,0.276,690],
         [7200,[14,15,16,17,18],24,160,0.288,720],
@@ -109,6 +109,7 @@
 
     // 根据标志跨度查找表行（精确匹配，找不到向上取整并返回提示）
     function findRow(table, span) {
+        if (!Number.isFinite(span) || span < 2100 || span > 9600) return null;
         for (var i = 0; i < table.length; i++) {
             if (table[i][0] === span) return { row: table[i], snapped: false };
             if (table[i][0] > span) return { row: table[i], snapped: true, snappedSpan: table[i][0] };
@@ -118,6 +119,7 @@
 
     // 根据荷载等级选 q级（0~4 对应 q6~q10）
     function pickQLevel(q) {
+        if (!Number.isFinite(q) || q < 0) return -1;
         if (q <= 6) return 0;
         if (q <= 7) return 1;
         if (q <= 8) return 2;
@@ -155,6 +157,12 @@
     }
 
     window.L22ZG401 = {
+        SOURCE_URL: 'https://ebook.chinabuilding.com.cn/zbooklib/book/detail/show?SiteID=1&bookID=153988',
+        REVIEW_NOTE: '已按用户提供的 L22ZG401 原文核对编制说明第2～6页及三种标准宽度选用表第13～19、23～29、33～39页。仅核对图集数据与公式，不代表完成工程设计；施工模块只计算荷载效应，不判定承载力合格。',
+        tablePage: function (width, span) {
+            var starts = {1000: 13, 1700: 23, 2100: 33};
+            return starts[width] + Math.floor((span - 2100) / 1200);
+        },
         TABLES: L22_TABLES,
         STD_SPANS: STD_SPANS,
         STD_WIDTH_TRANS: STD_WIDTH_TRANS,

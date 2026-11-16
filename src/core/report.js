@@ -821,7 +821,11 @@ function exportBook() {
          downloadDoc('保温外墙锚固件设计计算书.doc', buildAnchorBook(window._AN_RESULT, t));
          return;
      }
-     if (CUR_TOOL === 'l22zg401' && window._L22_RESULT) {
+     if (CUR_TOOL === 'l22zg401') {
+         if (!window._L22_RESULT) {
+             alert('请先按当前参数重新计算，再导出计算书。');
+             return;
+         }
          downloadDoc('L22ZG401预应力钢管桁架叠合板计算书.doc', buildL22Book(window._L22_RESULT, t));
          return;
      }

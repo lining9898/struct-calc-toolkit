@@ -5,4 +5,5 @@ Thumbs.db
 *~
 # 日志
 *.log
+tmp/
 # 本仓库为纯静态前端，src/ 与 index.html 全部纳入版本控制

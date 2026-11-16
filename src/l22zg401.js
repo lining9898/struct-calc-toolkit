@@ -8,9 +8,9 @@
         meta: {
             standard: 'L22ZG401 预应力混凝土钢管桁架叠合板（鲁2022）',
             formulaSource: '山东省建筑标准设计图集',
-            limitations: '叠合板底板选用、荷载等级计算、施工阶段验算',
-            unit: '跨度:mm, 荷载:kN/m², M:kN·m/m',
-            version: '1.0.0'
+            limitations: '标准宽底板表格查询、单项均布活荷载等级估算、简支模型施工荷载效应；未完成承载力、裂缝、挠度及连接验算',
+            unit: '跨度:mm, 荷载:kN/m², 整板弯矩:kN·m',
+            version: '1.1.0'
         },
         render: function () {
             var spanOpts = [];
@@ -20,10 +20,7 @@
             var widthOpts = [
                 { v: 1000, t: '1000 mm（标准宽）' },
                 { v: 1700, t: '1700 mm（标准宽）' },
-                { v: 2100, t: '2100 mm（标准宽）' },
-                { v: 900, t: '900 mm（非标，按1000mm宽折算）' },
-                { v: 1100, t: '1100 mm（非标，按1000mm宽折算）' },
-                { v: 1200, t: '1200 mm（非标，按1000mm宽折算）' }
+                { v: 2100, t: '2100 mm（标准宽）' }
             ];
             var qOpts = [
                 { v: 6, t: '6 kN/m²（6级）' },
@@ -38,11 +35,26 @@
             ];
 
             return (
+                '<div class="panel"><div class="panel-title">图集参照与计算范围</div>' +
+                '<p>' + window.L22ZG401.REVIEW_NOTE + '</p>' +
+                '<p><a href="' + window.L22ZG401.SOURCE_URL + '" target="_blank" rel="noopener noreferrer">查看 L22ZG401 官方图集目录</a> · 下列引用为用户提供原文的图内印刷页码；PDF页序 = 印刷页码 + 4。</p>' +
+                '<div class="table-wrap"><table class="mini"><tr><th>计算内容</th><th>参照章节</th><th>印刷页码</th></tr>' +
+                '<tr><td>荷载口径与分阶段设计</td><td>编制说明</td><td>2～9</td></tr>' +
+                '<tr><td>1000 / 1700 / 2100mm 宽底板</td><td>对应底板选用表</td><td>13～19 / 23～29 / 33～39</td></tr>' +
+                '<tr><td>排板与叠合层配筋</td><td>排板参考、平面拆分、叠合层配筋</td><td>40～42</td></tr>' +
+                '<tr><td>支承、板端连接、拼缝</td><td>相应节点详图</td><td>43～51</td></tr></table></div>' +
+                '<p>非标准宽度须按第10～12、20～22、30～32页参数表配置桁架、吊点及纵筋；本模块暂仅查询标准宽度。制作、吊装、运输须按实际支承及吊点布置复核；使用阶段还须验算承载力、裂缝、挠度、叠合面与连接。</p>' +
+                '<details><summary>施工支撑要求（第8页十一.1）</summary>' +
+                '<p>混凝土梁/墙支座：两端距梁/墙500mm处各设支撑。跨内净距Lb（梁内边净距）范围如下。</p>' +
+                '<table class="mini"><tr><th>总厚</th><th>跨内净距 Lb</th><th>跨内支撑</th></tr>' +
+                '<tr><td>110mm</td><td>≤2.9m / ＞2.9m</td><td>不增设 / 增设1道</td></tr>' +
+                '<tr><td>≥120mm</td><td>≤3.3m / (3.3,5.4]m / (5.4,7.8]m / (7.8,9.6]m</td><td>不增设 / 跨中1道 / 均布2道 / 均布3道</td></tr></table>' +
+                '<p>钢梁支座：无需梁边支撑。总厚110mm时，支撑到梁边及支撑之间距≤1.9m；总厚≥120mm且Lb≤3.9m时，浇筑前施工荷载≤1.5kN/m²可不设支撑，浇筑时跨中设1道；Lb＞3.9m时支撑间距≤2.3m。特殊桁架或支撑须另算。支撑系统强度、刚度、稳定性及拆撑条件另验。</p></details></div>' +
                 // 模块一：底板选用查询
                 '<div class="panel"><div class="panel-title">一、底板选用查询</div>' +
                 '<form id="f-l22-select"><div class="grid2">' +
                 selField('l22_span', '标志跨度 L', opts(spanOpts, 3600), '2100 ~ 9600mm，每300mm一级；非标准跨度自动向上取整') +
-                selField('l22_width', '底板标准宽度', opts(widthOpts, 1000), '标准宽度 1000/1700/2100mm；900/1100/1200mm 按1000mm宽折算') +
+                selField('l22_width', '底板标准宽度', opts(widthOpts, 1000), '仅查询 1000/1700/2100mm 标准宽度') +
                 selField('l22_qlevel', '允许附加荷载设计值 q', opts(qOpts, 6), '按图集选用表 q6~q10 五级；不含底板自重与叠合层自重') +
                 '</div><div class="btn-group">' +
                 '<button type="button" class="btn btn-primary" id="l22_sel_calc">查询底板型号</button>' +
@@ -55,9 +67,11 @@
                 '<form id="f-l22-load"><div class="grid2">' +
                 numField('l22_gk', '附加永久荷载标准值 g<sub>k</sub>', 'kN/m²', 2.0, '面层、吊顶、隔墙等自重，不含底板自重与叠合层自重') +
                 numField('l22_qk', '可变荷载标准值 q<sub>k</sub>', 'kN/m²', 2.0, '使用阶段活荷载标准值') +
+                numField('l22_self', '选用表对应板自重标准值 g<sub>s</sub>', 'kN/m²', 2.75, '底板与表列叠合层合计自重；普通混凝土可按25×表列总厚度(m)估算') +
+                numField('l22_extra', '超出表列厚度的新增自重 Δg', 'kN/m²', 0, '实际叠合层较表列厚度增加部分，按25×增加厚度(m)；不得重复计入附加永久荷载') +
                 selField('l22_gamma0', '结构安全等级', opts(safeOpts, 1.0), '一级 γ₀=1.1，二级 γ₀=1.0') +
-                numField('l22_gammaG', '永久荷载分项系数 γ<sub>G</sub>', '—', 1.3, 'GB 50009 基本组合') +
-                numField('l22_gammaQ', '可变荷载分项系数 γ<sub>Q</sub>', '—', 1.5, '工业房屋楼面 qk>4kN/m² 时可取 1.4') +
+                numField('l22_gammaG', '永久荷载分项系数 γ<sub>G</sub>', '—', 1.3, '按项目采用规范及图集荷载口径复核') +
+                numField('l22_gammaQ', '可变荷载分项系数 γ<sub>Q</sub>', '—', 1.5, '仅考虑一项不利均布可变荷载；特殊取值须核实适用条件') +
                 '</div><div class="btn-group">' +
                 '<button type="button" class="btn btn-primary" id="l22_load_calc">计算并选等级</button>' +
                 '<button type="button" class="btn btn-secondary" id="l22_load_reset">重置</button>' +
@@ -65,7 +79,7 @@
                 '<div class="panel"><div class="panel-title">荷载等级结果</div><div id="l22_load_result"></div></div>' +
 
                 // 模块三：施工阶段验算
-                '<div class="panel"><div class="panel-title">三、施工阶段验算（按图集编制说明七）</div>' +
+                '<div class="panel"><div class="panel-title">三、施工阶段荷载效应（简支模型）</div>' +
                 '<form id="f-l22-stage"><div class="grid2">' +
                 numField('l22_st_span', '底板标志跨度', 'mm', 3600, '用于查底板厚度、自重、混凝土等级') +
                 numField('l22_st_width', '底板宽度 B', 'mm', 1000, '底板计算宽度') +
@@ -79,7 +93,7 @@
                     {v:'st2',t:'第二阶段：叠合板施工阶段（叠合层+施工荷载）'}
                 ], 'st2')) +
                 '</div><div class="btn-group">' +
-                '<button type="button" class="btn btn-primary" id="l22_st_calc">验算</button>' +
+                '<button type="button" class="btn btn-primary" id="l22_st_calc">计算荷载效应</button>' +
                 '<button type="button" class="btn btn-secondary" id="l22_st_reset">重置</button>' +
                 '</div></form></div>' +
                 '<div class="panel"><div class="panel-title">施工阶段验算结果</div><div id="l22_st_result"></div></div>' +
@@ -90,15 +104,35 @@
         },
         bind: function () {
             var D = window.L22ZG401;
+            window._L22_RESULT = null;
+            function beginCalculation() {
+                window._L22_RESULT = null;
+                document.getElementById('l22_proc').innerHTML = '';
+            }
+            function invalid(out, message) {
+                out.innerHTML = '<div class="warn-box">' + message + '</div>';
+            }
+            ['f-l22-select', 'f-l22-load', 'f-l22-stage'].forEach(function (id) {
+                var form = document.getElementById(id);
+                form.addEventListener('input', beginCalculation);
+                form.addEventListener('change', beginCalculation);
+                form.addEventListener('reset', beginCalculation);
+            });
 
             // ---------- 模块一：底板选用 ----------
             function calcSelect() {
+                beginCalculation();
                 var out = document.getElementById('l22_sel_result');
                 var proc = document.getElementById('l22_proc');
                 var span = parseInt(document.getElementById('l22_span').value);
                 var width = parseInt(document.getElementById('l22_width').value);
                 var qLevelInput = parseInt(document.getElementById('l22_qlevel').value); // 6/7/8/9/10
                 var qIdx = qLevelInput - 6; // 0~4
+                if (!Number.isInteger(span) || span < 2100 || span > 9600 ||
+                    [1000, 1700, 2100].indexOf(width) < 0 || !Number.isInteger(qIdx) || qIdx < 0 || qIdx > 4) {
+                    invalid(out, '请输入范围内跨度、标准宽度及 q6～q10 荷载等级；非标宽度需专项设计。');
+                    return;
+                }
 
                 var st = [];
                 st.push('<div class="step"><b>一、底板选用查询</b>（依据 L22ZG401 选用表）</div>');
@@ -123,6 +157,7 @@
                     return;
                 }
 
+                st.push('<div class="step">来源：L22ZG401 第' + D.tablePage(baseWidth, found.row[0]) + '页，' + baseWidth + 'mm宽底板选用表；PDF第' + (D.tablePage(baseWidth, found.row[0]) + 4) + '页。</div>');
                 var row = found.row;
                 var actualSpan = row[0]; // 实际采用的标准跨度
                 var snapped = found.snapped;
@@ -189,11 +224,11 @@
 
                 // 结果面板
                 var html = '';
-                html += '<div class="result-big pass">';
+                html += '<div class="result-big">';
                 html += '<div class="big-label">底板编号</div>';
                 html += '<div class="big-value">' + modelNo + '<span style="font-size:0.45em;font-weight:400;color:var(--ink-mute);margin-left:12px;">总厚 ' + totalH + 'mm · ' + grade + '</span></div>';
-                html += '<div class="big-sub">L22ZG401 预应力混凝土钢管桁架叠合板</div>';
-                if (snapped) html += '<div style="margin-top:6px;font-size:0.85em;color:var(--lemon);">跨度已向上取整：' + span + ' → ' + actualSpan + 'mm（实际板长可取任意值）</div>';
+                html += '<div class="big-sub">L22ZG401 底板表格查询 · 表内数据已按原文核对</div>';
+                if (snapped) html += '<div style="margin-top:6px;font-size:0.85em;color:var(--lemon);">查询跨度已向上取档：' + span + ' → ' + actualSpan + 'mm；实际板长及构造须另行复核。</div>';
                 html += '</div>';
 
                 html += '<div style="margin-top:16px;"><div style="font-weight:600;margin-bottom:8px;">底板参数</div>';
@@ -218,7 +253,7 @@
                 var _p = proc.closest('.proc-wrap'); if (_p) _p.classList.add('open');
 
                 window._L22_RESULT = {
-                    module: 'select',
+                    module: 'select', sourcePage: D.tablePage(baseWidth, actualSpan),
                     span: span, actualSpan: actualSpan, snapped: snapped,
                     width: width, isStdWidth: isStdWidth, baseWidth: baseWidth,
                     qLevel: qLevelInput, qIdx: qIdx,
@@ -240,6 +275,7 @@
 
             // ---------- 模块二：荷载等级 ----------
             function calcLoad() {
+                beginCalculation();
                 var out = document.getElementById('l22_load_result');
                 var proc = document.getElementById('l22_proc');
                 var gk = parseFloat(document.getElementById('l22_gk').value);
@@ -247,6 +283,13 @@
                 var gamma0 = parseFloat(document.getElementById('l22_gamma0').value);
                 var gammaG = parseFloat(document.getElementById('l22_gammaG').value);
                 var gammaQ = parseFloat(document.getElementById('l22_gammaQ').value);
+                var gSelf = Number(document.getElementById('l22_self').value.trim() || NaN);
+                var extraG = Number(document.getElementById('l22_extra').value.trim() || NaN);
+                if (![gk, qk, gamma0, gammaG, gammaQ, gSelf, extraG].every(Number.isFinite) ||
+                    gk < 0 || qk < 0 || gSelf <= 0 || extraG < 0 || gamma0 < 1 || gammaG <= 0 || gammaQ <= 0) {
+                    invalid(out, '荷载须为非负有限数，重要性系数及分项系数须为正有限数。');
+                    return;
+                }
 
                 var st = [];
                 st.push('<div class="step"><b>一、荷载等级计算</b>（依据 L22ZG401 选用步骤）</div>');
@@ -256,13 +299,20 @@
                 st.push('<div class="step">永久荷载分项系数 γ<sub>G</sub> = ' + gammaG.toFixed(2) + '</div>');
                 st.push('<div class="step">可变荷载分项系数 γ<sub>Q</sub> = ' + gammaQ.toFixed(2) + '</div>');
 
-                var q = gammaG * gk + gammaQ * qk;
-                var qWithGamma0 = gamma0 * q;
+                var q = gammaG * (gk + extraG) + gammaQ * qk;
+                // 第6页例2：表已承担原有自重，但一级重要性系数引起的自重增量仍须补入。
+                var selfIncrement = (gamma0 - 1) * gammaG * gSelf;
+                var qWithGamma0 = gamma0 * q + selfIncrement;
+                if (!Number.isFinite(qWithGamma0)) {
+                    invalid(out, '荷载组合计算超出数值范围，请检查输入。');
+                    return;
+                }
 
                 st.push('<div class="step"><b>二、允许附加荷载设计值</b></div>');
-                st.push('<div class="step">q = γ<sub>G</sub>g<sub>k</sub> + γ<sub>Q</sub>q<sub>k</sub> = ' + gammaG.toFixed(2) + '×' + fmt(gk,2) + ' + ' + gammaQ.toFixed(2) + '×' + fmt(qk,2) + ' = <b>' + fmt(q,2) + ' kN/m²</b></div>');
+                st.push('<div class="step">q = γ<sub>G</sub>(g<sub>k</sub> + Δg) + γ<sub>Q</sub>q<sub>k</sub> = ' + gammaG.toFixed(2) + '×(' + fmt(gk,2) + '+' + fmt(extraG,3) + ') + ' + gammaQ.toFixed(2) + '×' + fmt(qk,2) + ' = <b>' + fmt(q,3) + ' kN/m²</b></div>');
+                st.push('<div class="step">按图集第5页八.8、第6页例2：q<sub>d</sub> = γ<sub>0</sub>q + (γ<sub>0</sub>−1)γ<sub>G</sub>g<sub>s</sub>；表列自重 g<sub>s</sub> = ' + fmt(gSelf,3) + ' kN/m²，重要性自重增量 = ' + fmt(selfIncrement,3) + ' kN/m²。</div>');
                 if (gamma0 !== 1.0) {
-                    st.push('<div class="step">考虑重要性系数：γ<sub>0</sub>q = ' + gamma0.toFixed(1) + ' × ' + fmt(q,2) + ' = <b>' + fmt(qWithGamma0,2) + ' kN/m²</b></div>');
+                    st.push('<div class="step">q<sub>d</sub> = ' + gamma0.toFixed(1) + ' × ' + fmt(q,3) + ' + ' + fmt(selfIncrement,3) + ' = <b>' + fmt(qWithGamma0,3) + ' kN/m²</b></div>');
                 }
 
                 var qDesign = gamma0 !== 1.0 ? qWithGamma0 : q;
@@ -272,7 +322,7 @@
                 st.push('<div class="step"><b>三、等级判定</b></div>');
                 if (level < 0) {
                     st.push('<div class="step" style="color:var(--danger);">✗ q = ' + fmt(qDesign,2) + ' kN/m² > 10 kN/m²，超出图集允许附加荷载范围</div>');
-                    st.push('<div class="step">建议：加大叠合层厚度、调整板跨布置，或选用更高荷载等级的板型。</div>');
+                    st.push('<div class="step">超出内置表格范围，需专项设计；改变叠合层厚度或板跨后须重新验算。</div>');
                 } else {
                     var lvlNum = level + 6;
                     st.push('<div class="step">✓ q = ' + fmt(qDesign,2) + ' kN/m² ≤ ' + lvlNum + ' kN/m²，选用 <b>' + lvlNum + ' 级</b> 底板（' + levelLabel + '）</div>');
@@ -284,12 +334,12 @@
                     html += '<div class="result-big fail">';
                     html += '<div class="big-label">超出图集范围</div>';
                     html += '<div class="big-value fail-text">q = ' + fmt(qDesign,2) + ' kN/m²</div>';
-                    html += '<div class="big-sub">允许附加荷载设计值 > 10 kN/m²，请加大叠合层厚度或调整布置</div>';
+                    html += '<div class="big-sub">附加荷载比较值 > 10 kN/m²，超出内置选用表，需专项设计</div>';
                     html += '</div>';
                 } else {
                     var lvlNum = level + 6;
-                    html += '<div class="result-big pass">';
-                    html += '<div class="big-label">推荐荷载等级</div>';
+                    html += '<div class="result-big">';
+                    html += '<div class="big-label">附加荷载对应等级（图集第5～6页）</div>';
                     html += '<div class="big-value">' + lvlNum + ' 级 <span style="font-size:0.45em;font-weight:400;color:var(--ink-mute);margin-left:12px;">q ≤ ' + lvlNum + ' kN/m²</span></div>';
                     html += '<div class="big-sub">附加荷载设计值 q = ' + fmt(qDesign,2) + ' kN/m²</div>';
                     html += '</div>';
@@ -312,6 +362,7 @@
                 window._L22_RESULT = {
                     module: 'load',
                     gk: gk, qk: qk, gamma0: gamma0, gammaG: gammaG, gammaQ: gammaQ,
+                    gSelf: gSelf, extraG: extraG, selfIncrement: selfIncrement,
                     q: q, qWithGamma0: qWithGamma0, qDesign: qDesign,
                     level: level, levelLabel: levelLabel,
                     outOfRange: level < 0,
@@ -327,6 +378,7 @@
 
             // ---------- 模块三：施工阶段验算 ----------
             function calcStage() {
+                beginCalculation();
                 var out = document.getElementById('l22_st_result');
                 var proc = document.getElementById('l22_proc');
                 var span = parseFloat(document.getElementById('l22_st_span').value);
@@ -337,6 +389,13 @@
                 var gammaG = parseFloat(document.getElementById('l22_st_gammaG').value);
                 var gammaQ = parseFloat(document.getElementById('l22_st_gammaQ').value);
                 var stage = document.getElementById('l22_st_stage').value;
+                if (![span, Bmm, hc, L2, qQ1, gammaG, gammaQ].every(Number.isFinite) ||
+                    span < 2100 || span > 9600 || Bmm <= 0 || hc <= 0 || L2 <= 0 ||
+                    (stage === 'st2' && L2 > (span - 180) / 1000) || qQ1 < 0 || gammaG <= 0 || gammaQ <= 0 ||
+                    ['st1', 'st2'].indexOf(stage) < 0) {
+                    invalid(out, '请检查参数：跨度 2100～9600mm，宽度、厚度、支撑间距及系数为正数，施工活荷载非负；施工支撑间距不得超过底板长度。');
+                    return;
+                }
 
                 var st = [];
                 var B = Bmm / 1000; // 宽度 m
@@ -347,11 +406,11 @@
                 var gBase = 25 * hb / 1000; // 25kN/m³ × 厚度m
                 var gSuper = 25 * hc / 1000; // 叠合层自重
 
-                st.push('<div class="step"><b>施工阶段验算</b>（依据 L22ZG401 编制说明 · 七、设计计算）</div>');
+                st.push('<div class="step"><b>施工阶段荷载效应</b>（L22ZG401 第4～5页，式7-1、7-2）</div>');
                 st.push('<div class="step">底板标志跨度：' + span + ' mm → 底板厚度 h<sub>b</sub> = ' + hb + ' mm（' + grade + '）</div>');
                 st.push('<div class="step">底板宽度 B = ' + Bmm + ' mm = ' + fmt(B,3) + ' m</div>');
                 st.push('<div class="step">叠合层厚度 h<sub>c</sub> = ' + hc + ' mm</div>');
-                st.push('<div class="step">底板自重标准值 g<sub>b</sub> = 25 × ' + (hb/1000) + ' = ' + fmt(gBase,3) + ' kN/m²</div>');
+                st.push('<div class="step">底板混凝土自重估算 g<sub>b</sub> = 25 × ' + (hb/1000) + ' = ' + fmt(gBase,3) + ' kN/m²</div>');
                 st.push('<div class="step">叠合层自重标准值 g<sub>c</sub> = 25 × ' + (hc/1000) + ' = ' + fmt(gSuper,3) + ' kN/m²</div>');
 
                 var html = '';
@@ -397,10 +456,10 @@
 
                     st.push('<div class="step"><b>提示</b>：底板生产过程中正截面边缘混凝土法向拉应力应不大于相应施工环节混凝土抗拉强度标准值 f<sub>tk</sub>。详细截面应力分析需结合有效预应力、预应力筋位置和截面几何特性计算，建议按选用表复核板型。</div>');
 
-                    html += '<div class="result-big pass">';
+                    html += '<div class="result-big">';
                     html += '<div class="big-label">第一阶段（底板制作）</div>';
                     html += '<div class="big-value" style="font-size:1.4em;">' + fmt(Math.max(M_demold, M_transport, M_stack),3) + ' <span style="font-size:0.5em;font-weight:400;">kN·m</span></div>';
-                    html += '<div class="big-sub">最不利环节跨中弯矩设计值（脱模/运输/堆放）</div>';
+                    html += '<div class="big-sub">最不利环节跨中弯矩标准值（脱模/运输/堆放）；未作承载力判定</div>';
                     html += '</div>';
 
                     html += '<div style="margin-top:16px;"><div style="font-weight:600;margin-bottom:8px;">各环节跨中弯矩</div>';
@@ -432,7 +491,7 @@
 
                     st.push('<div class="step"><b>提示</b>：施工阶段由预制底板承受全部施工荷载。建议按 L22ZG401 选用表中对应板型复核抗弯承载力，或结合第一阶段有效预应力进行截面应力分析。第三阶段（使用阶段）按整体受弯构件设计，斜截面及叠合面受剪按 GB 50010 附录 H 计算。</div>');
 
-                    html += '<div class="result-big pass">';
+                    html += '<div class="result-big">';
                     html += '<div class="big-label">第二阶段跨中弯矩</div>';
                     html += '<div class="big-value">' + fmt(M1,3) + ' <span style="font-size:0.5em;font-weight:400;">kN·m</span></div>';
                     html += '<div class="big-sub">施工阶段叠合层自重 + 施工活荷载，q<sub>1</sub> = ' + fmt(q1,3) + ' kN/m²</div>';
@@ -467,6 +526,7 @@
                 html += '· 支座按 200mm 宽混凝土梁考虑；叠合板总厚度为 110mm 时标志跨度不宜大于 3.9m';
                 html += '</div></div>';
 
+                html += '<div class="warn-box">仅为假定简支模型下的荷载效应。尚未比较抗力或应力限值，不能据此判定施工安全；吊点、悬挑段、负弯矩及连续支撑效应须另行计算。材料及动力系数参照图集第3～5页。</div>';
                 out.innerHTML = html;
                 proc.innerHTML = st.join('');
                 var _p = proc.closest('.proc-wrap'); if (_p) _p.classList.add('open');
@@ -512,9 +572,12 @@
         h += '<h1>L22ZG401 预应力混凝土钢管桁架叠合板</h1>';
         h += '<p style="text-align:center;color:#666;">依据山东省建筑标准设计图集《L22ZG401 预应力混凝土钢管桁架叠合板》</p>';
         h += '<p style="text-align:center;color:#666;">计算日期：' + dateStr + '</p>';
+        h += '<p><b>核验状态：</b>' + esc(window.L22ZG401.REVIEW_NOTE) + '</p>';
+        h += '<p>图集目录来源：<a href="' + window.L22ZG401.SOURCE_URL + '">国标电子书库 L22ZG401</a>。本计算书页码引用均指原文印刷页码（PDF页序加4）。</p>';
 
         if (r.module === 'select') {
             h += '<h2>一、底板选用查询</h2>';
+            h += '<p>来源：L22ZG401 第' + r.sourcePage + '页（PDF第' + (r.sourcePage + 4) + '页），对应标准宽度选用表。</p>';
             h += '<table><tr><th style="width:40%;">参数</th><th>取值</th></tr>';
             h += '<tr><td>标志跨度</td><td>' + r.actualSpan + ' mm（' + (r.actualSpan/1000).toFixed(1) + ' m）' + (r.snapped ? '（已向上取整）' : '') + '</td></tr>';
             h += '<tr><td>底板宽度</td><td>' + r.width + ' mm' + (r.isStdWidth ? '' : '（非标准宽度，按 1000mm 宽底板折算）') + '</td></tr>';
@@ -534,7 +597,7 @@
             h += '<tr><td>底板自重</td><td>' + r.weight + ' kg</td></tr>';
             h += '</table>';
         } else if (r.module === 'load') {
-            h += '<h2>二、荷载等级计算</h2>';
+            h += '<h2>一、荷载等级计算</h2>';
             h += '<table><tr><th style="width:40%;">参数</th><th>取值</th></tr>';
             h += '<tr><td>附加永久荷载标准值 g<sub>k</sub></td><td>' + r.gk.toFixed(2) + ' kN/m²</td></tr>';
             h += '<tr><td>可变荷载标准值 q<sub>k</sub></td><td>' + r.qk.toFixed(2) + ' kN/m²</td></tr>';
@@ -543,22 +606,25 @@
             h += '<tr><td>可变荷载分项系数 γ<sub>Q</sub></td><td>' + (r.gammaQ||1.5).toFixed(2) + '</td></tr>';
             h += '</table>';
             h += '<h2>二、计算结果</h2>';
-            h += '<p>附加荷载设计值 q = γ<sub>G</sub>g<sub>k</sub> + γ<sub>Q</sub>q<sub>k</sub> = ' + r.q_design.toFixed(2) + ' kN/m²</p>';
-            if (r.out_of_range) {
-                h += '<p><b>超出图集范围</b>：q > 10 kN/m²，建议加大叠合层厚度或调整板跨布置。</p>';
+            h += '<p>表列板自重 g<sub>s</sub> = ' + r.gSelf.toFixed(3) + ' kN/m²；新增自重 Δg = ' + r.extraG.toFixed(3) + ' kN/m²。</p>';
+            h += '<p>附加荷载组合值 q = γ<sub>G</sub>(g<sub>k</sub>+Δg) + γ<sub>Q</sub>q<sub>k</sub> = ' + r.q.toFixed(3) + ' kN/m²</p>';
+            h += '<p>等级比较值 q<sub>d</sub> = γ<sub>0</sub>q + (γ<sub>0</sub>−1)γ<sub>G</sub>g<sub>s</sub> = ' + r.qDesign.toFixed(3) + ' kN/m²（图集第5～6页）。</p>';
+            if (r.outOfRange) {
+                h += '<p><b>超出内置选用表范围</b>：q<sub>d</sub> > 10 kN/m²，需专项设计；调整厚度或跨度后须重新验算。</p>';
             } else {
                 h += '<p><b>推荐荷载等级：' + (r.level+6) + ' 级</b>（允许附加荷载 ' + (r.level+6) + ' kN/m²）</p>';
             }
         } else if (r.module === 'stage') {
-            h += '<h2>三、施工阶段验算</h2>';
+            h += '<h2>一、施工阶段荷载效应</h2>';
+            h += '<p>简支模型计算；未比较抗力或应力限值，不构成施工安全合格结论。吊点及支撑布置须另行复核。</p>';
             h += '<table><tr><th style="width:40%;">参数</th><th>取值</th></tr>';
-            h += '<tr><td>底板标志跨度</td><td>' + r.span_mm + ' mm</td></tr>';
-            h += '<tr><td>底板宽度 B</td><td>' + r.width_mm + ' mm</td></tr>';
-            h += '<tr><td>底板厚度 / 叠合层厚度</td><td>' + r.hb_mm + ' mm / ' + r.hc_mm + ' mm</td></tr>';
+            h += '<tr><td>底板标志跨度</td><td>' + r.span + ' mm</td></tr>';
+            h += '<tr><td>底板宽度 B</td><td>' + r.width + ' mm</td></tr>';
+            h += '<tr><td>底板厚度 / 叠合层厚度</td><td>' + r.hb + ' mm / ' + r.hc + ' mm</td></tr>';
             h += '<tr><td>底板混凝土等级</td><td>' + esc(r.concrete) + '</td></tr>';
             h += '<tr><td>验算阶段</td><td>' + (r.stage === 'st1' ? '第一阶段：底板制作' : '第二阶段：叠合板施工') + '</td></tr>';
             if (r.stage === 'st2') {
-                h += '<tr><td>支撑间距 L<sub>2</sub></td><td>' + r.L2_m.toFixed(3) + ' m</td></tr>';
+                h += '<tr><td>支撑间距 L<sub>2</sub></td><td>' + r.L2.toFixed(3) + ' m</td></tr>';
                 h += '<tr><td>施工活荷载标准值</td><td>' + r.qQ1.toFixed(2) + ' kN/m²</td></tr>';
                 h += '<tr><td>荷载设计值 q<sub>1</sub></td><td>' + r.q1.toFixed(3) + ' kN/m²</td></tr>';
                 h += '<tr><td>跨中弯矩设计值 M<sub>1</sub></td><td><b>' + r.M1.toFixed(3) + ' kN·m</b></td></tr>';

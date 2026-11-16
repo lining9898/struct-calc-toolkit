@@ -145,42 +145,53 @@ document.addEventListener('touchend', function (e) {
     }
 }, { passive: false });
 
+var routeTimer = null;
+var routeVersion = 0;
+function cancelPendingRoute() {
+    routeVersion++;
+    if (routeTimer !== null) clearInterval(routeTimer);
+    routeTimer = null;
+}
+function showHome() {
+    CUR_TOOL = null;
+    window.CUR_TOOL = null;
+    renderHome();
+    navActive('');
+    closeSidebar();
+}
  function route() {
+    cancelPendingRoute();
     var id = parseHash();
-    if (!id) { renderHome(); return; }
+    if (!id) { showHome(); return; }
+    if (id === CUR_TOOL && TOOLS[id]) return;
     if (TOOLS[id]) { renderTool(id); return; }
     // 工具可能在稍后加载的外部脚本中注册（如 l22zg401），最多等待 2 秒
     var waited = 0;
+    var version = routeVersion;
     var timer = setInterval(function () {
+        if (version !== routeVersion || parseHash() !== id) {
+            clearInterval(timer);
+            return;
+        }
+        waited += 100;
         if (TOOLS[id]) {
             clearInterval(timer);
+            routeTimer = null;
             renderTool(id);
         } else if (waited >= 2000) {
             clearInterval(timer);
-            renderHome();
+            routeTimer = null;
+            showHome();
         }
-        waited += 100;
     }, 100);
+    routeTimer = timer;
 }
 window.addEventListener('hashchange', route);
 /* 点击兜底：部分预览 iframe 会拦截 <a href="#/..."> 的默认 hash 跳转，
    此处用事件委托在点击导航 / 首页卡片时直接渲染，不依赖 hashchange 事件 */
 function goTool(id) {
     try { if (location.hash !== '#/' + id) location.hash = '#/' + id; } catch (e) {}
-    if (!id) { renderHome(); return; }
-    if (TOOLS[id]) { renderTool(id); return; }
-    // 工具可能在稍后加载的外部脚本中注册，最多等待 2 秒
-    var waited = 0;
-    var timer = setInterval(function () {
-        if (TOOLS[id]) {
-            clearInterval(timer);
-            renderTool(id);
-        } else if (waited >= 2000) {
-            clearInterval(timer);
-            renderHome();
-        }
-        waited += 100;
-    }, 100);
+    route();
 }
 document.addEventListener('click', function (e) {
     var el = e.target;

@@ -2,6 +2,6 @@
   "name": "struct-calc-toolkit-audit",
   "private": true,
   "scripts": {
-    "test": "node --check src/tools/concrete/beam-rect.js && node --check src/tools/concrete/beam-shear.js && node --check src/tools/concrete/beam-t.js && node tests/beam-rect-audit.js && node tests/concrete-batch-audit.js && node tests/beam-cont-envelope.js && node tests/lizheng-reference-audit.js"
+    "test": "node --check src/tools/concrete/beam-rect.js && node --check src/tools/concrete/beam-shear.js && node --check src/tools/concrete/beam-t.js && node tests/l22zg401-audit.js && node tests/router-audit.js && node tests/beam-rect-audit.js && node tests/concrete-batch-audit.js && node tests/beam-cont-envelope.js && node tests/lizheng-reference-audit.js"
   }
 }
