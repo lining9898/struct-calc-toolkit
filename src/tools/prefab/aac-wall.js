@@ -84,6 +84,7 @@
         bind: function () {
             function calc() {
                 var out = document.getElementById('aw_result'), proc = document.getElementById('aw_proc');
+                window._AW_RESULT = null;
                 function err(m) { out.innerHTML = '<div class="error-box">' + m + '</div>'; proc.innerHTML = ''; return; }
                 var std = 'jgj';
                 var isCECS = false;
@@ -222,8 +223,8 @@
                     var xUse = overRein ? xMax : x;
                     Mu = 0.75 * fc * b * xUse * (h0 - xUse / 2) / 1e6;
                     rhoMax = 0.5 * fc / fy * 100;
-                    capOk = gamma0 * M <= Mu;
-                    st.push('<div class="step"><b>⑤ 正截面受弯承载力（JGJ/T 17-2020 5.4.1）</b>　受压区高度 x = f<sub>y</sub>·A<sub>s</sub>/(f<sub>c</sub>·b) = ' + fmt(fy, 0) + '×' + fmt(As, 1) + '/(' + fmt(fc, 2) + '×' + fmt(b, 0) + ') = <b>' + fmt(x, 1) + ' mm</b>。限值 x ≤ 0.5h<sub>0</sub> = ' + fmt(xMax, 1) + ' mm' + (overRein ? '（超筋，按界限取值）' : '（适筋）') + '。最大配筋率 ρ<sub>max</sub> = 0.5·f<sub>c</sub>/f<sub>y</sub> = <b>' + fmt(rhoMax, 2) + '%</b>。<br>　　M<sub>u</sub> = 0.75·f<sub>c</sub>·b·x·(h<sub>0</sub>−x/2) = <b>' + fmt(Mu, 2) + ' kN·m</b>。γ<sub>0</sub>·M = ' + fmt(gamma0 * M, 2) + ' ' + (capOk ? '≤' : '&gt;') + ' M<sub>u</sub> = ' + fmt(Mu, 2) + ' ⇒ ' + (capOk ? '满足' : '不满足') + '</div>');
+                    capOk = !overRein && gamma0 * M <= Mu;
+                    st.push('<div class="step"><b>⑤ 正截面受弯承载力（JGJ/T 17-2020 5.4.1）</b>　受压区高度 x = f<sub>y</sub>·A<sub>s</sub>/(f<sub>c</sub>·b) = ' + fmt(fy, 0) + '×' + fmt(As, 1) + '/(' + fmt(fc, 2) + '×' + fmt(b, 0) + ') = <b>' + fmt(x, 1) + ' mm</b>。限值 x ≤ 0.5h<sub>0</sub> = ' + fmt(xMax, 1) + ' mm' + (overRein ? '（超筋；界限估算不构成通过判定）' : '（适筋）') + '。最大配筋率 ρ<sub>max</sub> = 0.5·f<sub>c</sub>/f<sub>y</sub> = <b>' + fmt(rhoMax, 2) + '%</b>。<br>　　M<sub>u</sub> = 0.75·f<sub>c</sub>·b·x<sub>e</sub>·(h<sub>0</sub>−x<sub>e</sub>/2)，x<sub>e</sub> = min(x, 0.5h<sub>0</sub>) = <b>' + fmt(Mu, 2) + ' kN·m</b>。γ<sub>0</sub>·M = ' + fmt(gamma0 * M, 2) + ' ' + (gamma0 * M <= Mu ? '≤' : '&gt;') + ' M<sub>u</sub> = ' + fmt(Mu, 2) + ' ⇒ ' + (overRein ? '超筋，不满足截面条件；界限估算不构成承载力通过判定' : capOk ? '满足' : '不满足') + '</div>');
                 }
                 /* 受剪验算 */
                 var Vmax = qWind_d * L / 2;
@@ -344,6 +345,11 @@
                 var b1NodeOk = b1WindSwingOk && b1WindPipeOk && b1WindPlateOk;
                 var nodeSeisOk = seisOn ? (Vsj <= Rd_node) : true;
                 var nodeOk = b1NodeOk;
+                var nodeChecks = [
+                    { name: '预埋件摇摆', resistance: b1SwingRd, ok: b1WindSwingOk },
+                    { name: '钢管锚', resistance: b1PipeRd, ok: b1WindPipeOk },
+                    { name: '平板螺栓', resistance: b1PlateRd, ok: b1WindPlateOk }
+                ];
                 st.push('<div class="step"><b>' + stepNo() + ' 连接节点支座反力复核（19CJ85 B1 B1 结构说明）</b>　每块板连接件 n<sub>j</sub> = ' + fmt(nj, 0) + ' 个，连接件重要性系数 γ<sub>0j</sub> = ' + fmt(gamma0j, 2) + '（安全等级提高一级，JGJ/T 17-2020 第5.4.7条）。<br>');
                 st.push('　　每块板受风面积 A = L×b = ' + fmt(L, 2) + '×' + fmt(b / 1000, 2) + ' = ' + fmt(L * b / 1000, 3) + ' m²；风荷载总力标准值 W<sub>k</sub> = w<sub>k</sub>×A = ' + fmt(wk, 3) + '×' + fmt(L * b / 1000, 3) + ' = <b>' + fmt(Apanel, 2) + ' kN</b>。<br>');
                 st.push('　　<b>风荷载工况</b>：支座反力设计值 N<sub>w</sub> = γ<sub>0j</sub>·γ<sub>W</sub>·W<sub>k</sub> = ' + fmt(gamma0j, 2) + '×' + fmt(gammaW, 1) + '×' + fmt(Apanel, 2) + ' = ' + fmt(Nw_total, 2) + ' kN → 单个连接件 N<sub>wj</sub> = N<sub>w</sub>/n<sub>j</sub> = <b>' + fmt(Nwj, 2) + ' kN</b>。<br>');
@@ -356,7 +362,7 @@
                 if (seisOn) {
                     st.push('　　参考作用比较（非节点抗力验算）：V<sub>sj</sub> = ' + fmt(Vsj, 2) + ' kN ' + (nodeSeisOk ? '≤' : '&gt;') + ' 两倍风荷载需求 = ' + fmt(Rd_node, 2) + ' kN ⇒ ' + (nodeSeisOk ? '参考地震作用未超过两倍风作用' : '参考地震作用超过两倍风作用') + '<br>');
                 }
-                st.push('　　板材竖向自重由托件或主体结构承担，本节点面外验算不计自重。19CJ85-1 B1表承载力：预埋件摇摆 ' + fmt(b1SwingRd, 2) + ' kN、钢管锚 ' + fmt(b1PipeRd, 2) + ' kN、平板螺栓 ' + fmt(b1PlateRd, 2) + ' kN。<br>　　<b>结论</b>：风荷载作用下三种节点分别' + (b1WindSwingOk ? '满足' : '不满足') + '、' + (b1WindPipeOk ? '满足' : '不满足') + '、' + (b1WindPlateOk ? '满足' : '不满足') + '；抗震开启时另按水平地震作用比较。两种工况取大值控制。</div>');
+                st.push('　　板材竖向自重由托件或主体结构承担，本节点面外比较不计自重。内置参考抗力：预埋件摇摆 ' + fmt(b1SwingRd, 2) + ' kN、钢管锚 ' + fmt(b1PipeRd, 2) + ' kN、平板螺栓 ' + fmt(b1PlateRd, 2) + ' kN，图集取值及适用条件待核验。<br>　　<b>参考数值比较</b>：控制作用取两倍单个连接件风荷载需求' + (seisOn ? '与单个连接件水平地震作用的较大值' : '（地震作用未验算）') + '；预埋件摇摆' + (b1WindSwingOk ? '满足' : '不满足') + '、钢管锚' + (b1WindPipeOk ? '满足' : '不满足') + '、平板螺栓' + (b1WindPlateOk ? '满足' : '不满足') + '。三种方案分别比较，不构成实际选用节点的合格结论。</div>');
                 window._AW_RESULT = {
                     std: std, stdName: stdName, isCECS: isCECS,
                     grade: grade, rebGrade: rebGrade, L: L, b: b, h: h, h0: h0, asV: asV,
@@ -374,7 +380,7 @@
                     I0: I0, Bs: Bs, B: B, defl: defl, deflLim: deflLim, deflOk: deflOk,
                     nj: nj, gamma0j: gamma0j, Apanel: Apanel,
                     Nw_total: Nw_total, Nwj: Nwj,
-                    Ve_total: Ve_total, Vsj: Vsj, Rd_node: Rd_node, nodeOk: nodeOk, reviewRequired: true,
+                    Ve_total: Ve_total, Vsj: Vsj, Rd_node: Rd_node, nodeOk: nodeOk, nodeDemand: nodeDemand, nodeChecks: nodeChecks, reviewRequired: true,
                     steps: st.join('')
                 };
                 var html = '';
@@ -386,7 +392,7 @@
                 html += resultRow('自重线荷载 q<sub>gk</sub>', fmt(qgk, 3) + ' kN/m');
                 html += resultRow('设计弯矩 γ<sub>0</sub>·M', '<span class="highlight">' + fmt(gamma0 * M, 2) + ' kN·m</span>');
                 if (!isCECS) html += resultRow('受压区高度 x', fmt(x, 1) + ' mm ' + (overRein ? tag('err', '超筋') : tag('ok', '适筋')));
-                html += resultRow('受弯承载力 M<sub>u</sub>', fmt(Mu, 2) + ' kN·m ' + (capOk ? tag('ok', '满足') : tag('err', '不满足')));
+                html += resultRow('受弯承载力 M<sub>u</sub>', fmt(Mu, 2) + ' kN·m ' + (overRein ? tag('err', '超筋，不满足截面条件；所列值仅为界限估算') : capOk ? tag('ok', '满足') : tag('err', '不满足')));
                 html += resultRow('受剪 V ≤ 0.45·f<sub>t</sub>·b·h<sub>0</sub>', fmt(Vmax, 2) + ' ≤ ' + fmt(0.45 * ft * b * h0 / 1000, 2) + ' kN ' + (tauOk ? tag('ok', '满足') : tag('err', '不满足')));
                 if (seisOn) {
                     html += resultRow('地震组合弯矩', fmt(Mcomb, 2) + ' kN·m ' + (seisOk ? tag('ok', '满足（现有模型数值比较）') : tag('err', '不满足（现有模型数值比较）')));
@@ -397,12 +403,14 @@
                 }
                 html += resultRow('挠度 f ≤ l<sub>0</sub>/200', fmt(defl, 1) + ' ≤ ' + fmt(deflLim, 1) + ' mm ' + (deflOk ? tag('ok', '满足') : tag('err', '不满足')));
                 html += resultRow('节点风荷载 N<sub>wj</sub>', fmt(Nwj, 2) + ' kN');
-                if (seisOn) {
-                    html += resultRow('19CJ85-1 B1节点（不计竖向自重）', '预埋件摇摆 ' + fmt(b1SwingRd, 2) + ' kN：' + (b1WindSwingOk ? '满足' : '不满足') + '；钢管锚 ' + fmt(b1PipeRd, 2) + ' kN：' + (b1WindPipeOk ? '满足' : '不满足') + '；平板螺栓 ' + fmt(b1PlateRd, 2) + ' kN：' + (b1WindPlateOk ? '满足' : '不满足'));
-                }
-                var knownFailure = !capOk || !tauOk || !crackOk || !deflOk || !b1NodeOk || (seisOn && !seisOk);
-                                html += resultRow('节点控制作用', fmt(nodeDemand, 2) + ' kN/个（风荷载需求与水平地震作用取大值）');
-                html += resultRow('综合判定', knownFailure ? badge('badge-err', '存在不满足项；其余项目待核验，不能判定整体满足') : badge('badge-warn', '已计算项目均满足；未纳入本模块的项目待核验'));
+                nodeChecks.forEach(function (node) {
+                    html += resultRow(node.name + '（参考数值比较）', fmt(nodeDemand, 2) + ' ' + (node.ok ? '≤' : '＞') + ' ' + fmt(node.resistance, 2) + ' kN/个；' + (node.ok ? '数值比较满足' : '数值比较不满足') + '，抗力及适用条件待核验');
+                });
+                html += resultRow('节点控制作用', fmt(nodeDemand, 2) + ' kN/个（两倍风荷载需求' + (seisOn ? '与水平地震作用取大值' : '；地震作用未验算') + '）');
+                var conclusion = aacWallConclusion(window._AW_RESULT);
+                st.push('<div class="step"><b>综合判定</b>：' + conclusion.text + '</div>');
+                window._AW_RESULT.steps = st.join('');
+                html += resultRow('综合判定', badge(conclusion.hasFailure ? 'badge-err' : 'badge-warn', conclusion.text));
                 out.innerHTML = html; proc.innerHTML = st.join('');
                 var _p = proc ? proc.closest('.proc-wrap') : document.querySelector('#view .proc-wrap'); if (_p) _p.classList.add('open');
             }
