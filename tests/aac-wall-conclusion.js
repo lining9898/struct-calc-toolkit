@@ -37,27 +37,28 @@ function checkBook(env) {
     assert.match(html, /钢管锚（参考数值比较）/);
     for (const output of [env.element('aw_result').innerHTML, env.element('aw_proc').innerHTML, html]) {
         assert.doesNotMatch(output, /风荷载作用下三种节点|抗震开启时另按/);
-        assert.match(output, /节点控制作用/);
+        assert.match(output, /两倍风荷载需求（2×N<sub>wj<\/sub>）(?:<[^>]+>|[:\s　])*2 × [\d.]+ = [\d.]+ kN\/个/);
+        assert.match(output, /节点作用比较/);
     }
     return summary;
 }
 let env = run();
 assert.match(checkBook(env), /地震作用未验算/);
-assert.match(env.element('aw_result').innerHTML, /风荷载控制（地震作用未验算）/);
+assert.match(env.element('aw_result').innerHTML, /仅计算两倍风荷载，需求为 [\d.]+ kN\/个/);
 // 模拟页面上打开抗震选项，确认计算与导出都使用更新后的工况。
 env.element('aw_seis').value = 'y';
 env.element('aw_seis').handlers.change();
 env.result = env.context.window._AW_RESULT;
-assert.match(checkBook(env), /节点参考比较计入了水平地震作用，风荷载控制。地震作用计算依据及项目参数待核验/);
+assert.match(checkBook(env), /节点作用比较中，两倍风荷载较大。地震作用计算依据及项目参数待核验/);
 assert.doesNotMatch(env.element('aw_proc').innerHTML, /地震作用未验算/);
-assert.match(env.element('aw_result').innerHTML, /节点控制作用: [^<]*风荷载控制/);
-assert.match(env.element('aw_result').innerHTML, /风荷载满足，水平地震作用满足/);
+assert.match(env.element('aw_result').innerHTML, /节点作用比较: 两倍风荷载较大，取 [\d.]+ kN\/个/);
+assert.match(env.element('aw_result').innerHTML, /两倍风荷载满足，水平地震作用满足/);
 
 // 有意使用极端作用值来覆盖节点方案在两种工况下判定相反的情况。
 env = run({ aw_seis: 'y', aw_w0: 0.01, aw_amax: 5 });
-assert.match(checkBook(env), /节点参考比较计入了水平地震作用，水平地震作用控制/);
+assert.match(checkBook(env), /节点作用比较中，水平地震作用较大/);
 assert.equal(env.result.nodeDemand, env.result.Vsj);
-assert.match(env.element('aw_result').innerHTML, /水平地震作用控制/);
+assert.match(env.element('aw_result').innerHTML, /节点作用比较: 水平地震作用较大，取 [\d.]+ kN\/个/);
 assert.match(env.element('aw_result').innerHTML, /钢管锚（参考数值比较）: [^<]*风荷载满足，水平地震作用不满足。控制作用比较不满足/);
 env = run({ aw_seis: 'y', aw_w0: 3 });
 checkBook(env);

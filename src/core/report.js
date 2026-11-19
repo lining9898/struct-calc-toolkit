@@ -552,33 +552,33 @@ function aacWallConclusion(r) {
             if (!node.ok) nodeFailed.push(node.name);
         });
     } else pending.push('节点参考比较未完成');
-    pending.push('实际选用连接节点的抗力取值、构造及适用条件待核验');
+    pending.push('采用 19CJ85-1 表 B1 参考抗力前，应核对实际节点构造和承载力检测报告');
     var text = failed.length ? '板材验算存在不满足项：' + failed.join('、') + '。' :
         (pending.some(function (item) { return item.indexOf('未完成判定') >= 0; }) ? '板材验算尚未完成判定。' : '板材已验算项目未见不满足项。');
     if (r.seisOn && Number.isFinite(r.Vsj) && Number.isFinite(r.Rd_node)) {
-        text += '节点参考比较计入了水平地震作用，' + aacWallNodeControl(r) + '。';
+        text += '节点作用比较中，' + aacWallNodeComparison(r) + '。';
     }
     if (nodeFailed.length) text += '节点参考数值比较未满足的方案：' + nodeFailed.join('、') + '；各方案应按实际选型分别复核。';
     text += pending.join('；') + '。不能据此判定外墙板及连接系统整体满足设计要求。';
     return { text: text, hasFailure: failed.length > 0, failedItems: failed, nodeFailed: nodeFailed, pendingItems: pending };
 }
-function aacWallNodeControl(r) {
-    if (r.Vsj > r.Rd_node) return '水平地震作用控制';
-    if (r.Vsj < r.Rd_node) return '风荷载控制';
-    return '风荷载与水平地震作用并列控制';
+function aacWallNodeComparison(r) {
+    if (r.Vsj > r.Rd_node) return '水平地震作用较大';
+    if (r.Vsj < r.Rd_node) return '两倍风荷载较大';
+    return '两倍风荷载与水平地震作用相等';
 }
 function aacWallNodeRows(r) {
     function demand(value) { return fmt(value, 3) + ' kN/个'; }
     function status(ok) { return ok ? '满足' : '不满足'; }
-    var control = r.seisOn ? aacWallNodeControl(r) : '风荷载控制（地震作用未验算）';
+    var comparison = r.seisOn ? aacWallNodeComparison(r) + '，取 ' + demand(r.nodeDemand) : '仅计算两倍风荷载，需求为 ' + demand(r.nodeDemand);
     var rows = [
-        ['节点风荷载参考需求（2×N<sub>wj</sub>）', demand(r.Rd_node)],
+        ['两倍风荷载需求（2×N<sub>wj</sub>）', '2 × ' + fmt(r.Nwj, 3) + ' = ' + demand(r.Rd_node)],
         ['节点水平地震需求（V<sub>sj</sub>）', r.seisOn ? demand(r.Vsj) : '未验算'],
-        ['节点控制作用', demand(r.nodeDemand) + '，' + control]
+        ['节点作用比较', comparison]
     ];
     r.nodeChecks.forEach(function (node) {
         rows.push([node.name + '（参考数值比较）',
-            '参考抗力 ' + demand(node.resistance) + '。风荷载' + status(node.windOk) + '，' +
+            '参考抗力 ' + demand(node.resistance) + '。两倍风荷载' + status(node.windOk) + '，' +
             (r.seisOn ? '水平地震作用' + status(node.seismicOk) : '水平地震作用未验算') + '。控制作用比较' + status(node.ok) + '。']);
     });
     return rows;

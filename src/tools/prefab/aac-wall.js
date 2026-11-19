@@ -70,7 +70,7 @@
                 numField('aw_xi', '位置系数 ξ', '—', 1.5, '顶点取 2.0，底部取 1.0，沿高度线性分布') +
                 '</div></form></div>' +
                 '<div class="panel"><div class="panel-title">连接节点参数（19CJ85 B1）</div>' +
-                '<div class="hint">JGJ/T 17-2020 第5.4.7条要求连接件承载力设计安全等级提高一级；连接节点采用19CJ85 B1。此处仅计算作用需求，实际节点抗力及节点构造适用条件需另行核验。</div>' +
+                '<div class="hint">JGJ/T 17-2020 第5.4.7条要求连接件承载力设计安全等级提高一级。程序计算单个连接件的作用需求，并用内置参考抗力比较三种节点。实际抗力按选用节点的构造和检测报告核实。</div>' +
                 '<form id="f-aw4"><div class="grid2">' +
                 numField('aw_nj', '每块板连接件数量 n<sub>j</sub>', '个', 4, '每块板连接件总数（上下支座各 n<sub>j</sub>/2）') +
                 numField('aw_gamma0j', '连接件重要性系数 γ<sub>0j</sub>', '—', 1.1, '安全等级提高一级，二级→一级取1.1') +
@@ -360,7 +360,7 @@
                 if (seisOn) {
                     st.push('　　<b>地震作用工况</b>：支座反力设计值 V<sub>e</sub> = γ<sub>0j</sub>·γ<sub>E</sub>·F<sub>Ehk</sub> = ' + fmt(gamma0j, 2) + '×1.3×' + fmt(FEk, 2) + ' = ' + fmt(Ve_total, 2) + ' kN → 单个连接件 V<sub>sj</sub> = <b>' + fmt(Vsj, 2) + ' kN</b>。<br>');
                 }
-                st.push('　　板材竖向自重由托件或主体结构承担，以下为面外作用比较。实际选用节点的抗力取值及适用条件待核验。<br>');
+                st.push('　　板材竖向自重由托件或主体结构承担，以下为面外作用比较。<br>');
                 window._AW_RESULT = {
                     std: std, stdName: stdName, isCECS: isCECS,
                     grade: grade, rebGrade: rebGrade, L: L, b: b, h: h, h0: h0, asV: asV,
