@@ -338,31 +338,29 @@
                 var b1SwingRd = h <= 150 ? 12 : h <= 200 ? 12 + (h-150)*3/50 : h <= 250 ? 15 + (h-200)*3/50 : h <= 300 ? 18 + (h-250)*2/50 : 20;
                 var b1PipeRd = h <= 150 ? 5 : h <= 200 ? 5 + (h-150)*2/50 : h <= 250 ? 7 + (h-200)/50 : h <= 300 ? 8 + (h-250)*2/50 : 10;
                 var b1PlateRd = h <= 150 ? 8 : h <= 200 ? 8 + (h-150)*2/50 : h <= 250 ? 10 + (h-200)*3/50 : h <= 300 ? 13 + (h-250)*3/50 : 16;
-                                var b1SeisSwingOk = !seisOn || Vsj <= b1SwingRd, b1SeisPipeOk = !seisOn || Vsj <= b1PipeRd, b1SeisPlateOk = !seisOn || Vsj <= b1PlateRd;
-                var Rd_node = 2 * Nwj;
-                var nodeDemand = seisOn ? Math.max(Rd_node, Vsj) : Rd_node;
-                var b1WindSwingOk = nodeDemand <= b1SwingRd, b1WindPipeOk = nodeDemand <= b1PipeRd, b1WindPlateOk = nodeDemand <= b1PlateRd;
-                var b1NodeOk = b1WindSwingOk && b1WindPipeOk && b1WindPlateOk;
-                var nodeSeisOk = seisOn ? (Vsj <= Rd_node) : true;
-                var nodeOk = b1NodeOk;
+                var windNodeDemand = 2 * Nwj;
+                if (!Number.isFinite(windNodeDemand) || windNodeDemand < 0 || !Number.isFinite(Vsj) || Vsj < 0) {
+                    return err('节点风荷载和水平地震需求须为非负有限值，请检查作用参数及系数。');
+                }
+                var nodeDemand = seisOn ? Math.max(windNodeDemand, Vsj) : windNodeDemand;
                 var nodeChecks = [
-                    { name: '预埋件摇摆', resistance: b1SwingRd, ok: b1WindSwingOk },
-                    { name: '钢管锚', resistance: b1PipeRd, ok: b1WindPipeOk },
-                    { name: '平板螺栓', resistance: b1PlateRd, ok: b1WindPlateOk }
+                    { name: '预埋件摇摆', resistance: b1SwingRd },
+                    { name: '钢管锚', resistance: b1PipeRd },
+                    { name: '平板螺栓', resistance: b1PlateRd }
                 ];
-                st.push('<div class="step"><b>' + stepNo() + ' 连接节点支座反力复核（19CJ85 B1 B1 结构说明）</b>　每块板连接件 n<sub>j</sub> = ' + fmt(nj, 0) + ' 个，连接件重要性系数 γ<sub>0j</sub> = ' + fmt(gamma0j, 2) + '（安全等级提高一级，JGJ/T 17-2020 第5.4.7条）。<br>');
+                nodeChecks.forEach(function (node) {
+                    node.windOk = windNodeDemand <= node.resistance;
+                    node.seismicOk = seisOn ? Vsj <= node.resistance : null;
+                    node.ok = nodeDemand <= node.resistance;
+                });
+                var nodeOk = nodeChecks.every(function (node) { return node.ok; });
+                st.push('<div class="step"><b>' + stepNo() + ' 连接节点支座反力参考比较（19CJ85 B1）</b>　每块板连接件 n<sub>j</sub> = ' + fmt(nj, 0) + ' 个，连接件重要性系数 γ<sub>0j</sub> = ' + fmt(gamma0j, 2) + '（安全等级提高一级，JGJ/T 17-2020 第5.4.7条）。<br>');
                 st.push('　　每块板受风面积 A = L×b = ' + fmt(L, 2) + '×' + fmt(b / 1000, 2) + ' = ' + fmt(L * b / 1000, 3) + ' m²；风荷载总力标准值 W<sub>k</sub> = w<sub>k</sub>×A = ' + fmt(wk, 3) + '×' + fmt(L * b / 1000, 3) + ' = <b>' + fmt(Apanel, 2) + ' kN</b>。<br>');
                 st.push('　　<b>风荷载工况</b>：支座反力设计值 N<sub>w</sub> = γ<sub>0j</sub>·γ<sub>W</sub>·W<sub>k</sub> = ' + fmt(gamma0j, 2) + '×' + fmt(gammaW, 1) + '×' + fmt(Apanel, 2) + ' = ' + fmt(Nw_total, 2) + ' kN → 单个连接件 N<sub>wj</sub> = N<sub>w</sub>/n<sub>j</sub> = <b>' + fmt(Nwj, 2) + ' kN</b>。<br>');
                 if (seisOn) {
                     st.push('　　<b>地震作用工况</b>：支座反力设计值 V<sub>e</sub> = γ<sub>0j</sub>·γ<sub>E</sub>·F<sub>Ehk</sub> = ' + fmt(gamma0j, 2) + '×1.3×' + fmt(FEk, 2) + ' = ' + fmt(Ve_total, 2) + ' kN → 单个连接件 V<sub>sj</sub> = <b>' + fmt(Vsj, 2) + ' kN</b>。<br>');
-                } else {
-                    st.push('　　（未验算地震作用，地震工况不计）<br>');
                 }
-                st.push('　　参考需求（图集适用条件待核验）：2×N<sub>wj</sub> = 2×' + fmt(Nwj, 2) + ' = <b>' + fmt(Rd_node, 2) + ' kN</b>。<br>');
-                if (seisOn) {
-                    st.push('　　参考作用比较（非节点抗力验算）：V<sub>sj</sub> = ' + fmt(Vsj, 2) + ' kN ' + (nodeSeisOk ? '≤' : '&gt;') + ' 两倍风荷载需求 = ' + fmt(Rd_node, 2) + ' kN ⇒ ' + (nodeSeisOk ? '参考地震作用未超过两倍风作用' : '参考地震作用超过两倍风作用') + '<br>');
-                }
-                st.push('　　板材竖向自重由托件或主体结构承担，本节点面外比较不计自重。内置参考抗力：预埋件摇摆 ' + fmt(b1SwingRd, 2) + ' kN、钢管锚 ' + fmt(b1PipeRd, 2) + ' kN、平板螺栓 ' + fmt(b1PlateRd, 2) + ' kN，图集取值及适用条件待核验。<br>　　<b>参考数值比较</b>：控制作用取两倍单个连接件风荷载需求' + (seisOn ? '与单个连接件水平地震作用的较大值' : '（地震作用未验算）') + '；预埋件摇摆' + (b1WindSwingOk ? '满足' : '不满足') + '、钢管锚' + (b1WindPipeOk ? '满足' : '不满足') + '、平板螺栓' + (b1WindPlateOk ? '满足' : '不满足') + '。三种方案分别比较，不构成实际选用节点的合格结论。</div>');
+                st.push('　　板材竖向自重由托件或主体结构承担，以下为面外作用比较。实际选用节点的抗力取值及适用条件待核验。<br>');
                 window._AW_RESULT = {
                     std: std, stdName: stdName, isCECS: isCECS,
                     grade: grade, rebGrade: rebGrade, L: L, b: b, h: h, h0: h0, asV: asV,
@@ -380,9 +378,11 @@
                     I0: I0, Bs: Bs, B: B, defl: defl, deflLim: deflLim, deflOk: deflOk,
                     nj: nj, gamma0j: gamma0j, Apanel: Apanel,
                     Nw_total: Nw_total, Nwj: Nwj,
-                    Ve_total: Ve_total, Vsj: Vsj, Rd_node: Rd_node, nodeOk: nodeOk, nodeDemand: nodeDemand, nodeChecks: nodeChecks, reviewRequired: true,
-                    steps: st.join('')
+                    Ve_total: Ve_total, Vsj: Vsj, Rd_node: windNodeDemand, nodeOk: nodeOk, nodeDemand: nodeDemand, nodeChecks: nodeChecks, reviewRequired: true
                 };
+                var nodeRows = aacWallNodeRows(window._AW_RESULT);
+                nodeRows.forEach(function (row) { st.push('　　<b>' + row[0] + '</b>　' + row[1] + '<br>'); });
+                st.push('</div>');
                 var html = '';
                 html += resultRow('设计标准', stdName);
                 html += resultRow('材料 f<sub>c</sub> / f\'<sub>tk</sub> / f<sub>t</sub>', fmt(fc, 2) + ' / ' + fmt(ftk, 2) + ' / ' + fmt(ft, 2) + ' N/mm²');
@@ -403,10 +403,7 @@
                 }
                 html += resultRow('挠度 f ≤ l<sub>0</sub>/200', fmt(defl, 1) + ' ≤ ' + fmt(deflLim, 1) + ' mm ' + (deflOk ? tag('ok', '满足') : tag('err', '不满足')));
                 html += resultRow('节点风荷载 N<sub>wj</sub>', fmt(Nwj, 2) + ' kN');
-                nodeChecks.forEach(function (node) {
-                    html += resultRow(node.name + '（参考数值比较）', fmt(nodeDemand, 2) + ' ' + (node.ok ? '≤' : '＞') + ' ' + fmt(node.resistance, 2) + ' kN/个；' + (node.ok ? '数值比较满足' : '数值比较不满足') + '，抗力及适用条件待核验');
-                });
-                html += resultRow('节点控制作用', fmt(nodeDemand, 2) + ' kN/个（两倍风荷载需求' + (seisOn ? '与水平地震作用取大值' : '；地震作用未验算') + '）');
+                nodeRows.forEach(function (row) { html += resultRow(row[0], row[1]); });
                 var conclusion = aacWallConclusion(window._AW_RESULT);
                 st.push('<div class="step"><b>综合判定</b>：' + conclusion.text + '</div>');
                 window._AW_RESULT.steps = st.join('');

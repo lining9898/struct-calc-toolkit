@@ -555,9 +555,33 @@ function aacWallConclusion(r) {
     pending.push('实际选用连接节点的抗力取值、构造及适用条件待核验');
     var text = failed.length ? '板材验算存在不满足项：' + failed.join('、') + '。' :
         (pending.some(function (item) { return item.indexOf('未完成判定') >= 0; }) ? '板材验算尚未完成判定。' : '板材已验算项目未见不满足项。');
+    if (r.seisOn && Number.isFinite(r.Vsj) && Number.isFinite(r.Rd_node)) {
+        text += '节点参考比较计入了水平地震作用，' + aacWallNodeControl(r) + '。';
+    }
     if (nodeFailed.length) text += '节点参考数值比较未满足的方案：' + nodeFailed.join('、') + '；各方案应按实际选型分别复核。';
     text += pending.join('；') + '。不能据此判定外墙板及连接系统整体满足设计要求。';
     return { text: text, hasFailure: failed.length > 0, failedItems: failed, nodeFailed: nodeFailed, pendingItems: pending };
+}
+function aacWallNodeControl(r) {
+    if (r.Vsj > r.Rd_node) return '水平地震作用控制';
+    if (r.Vsj < r.Rd_node) return '风荷载控制';
+    return '风荷载与水平地震作用并列控制';
+}
+function aacWallNodeRows(r) {
+    function demand(value) { return fmt(value, 3) + ' kN/个'; }
+    function status(ok) { return ok ? '满足' : '不满足'; }
+    var control = r.seisOn ? aacWallNodeControl(r) : '风荷载控制（地震作用未验算）';
+    var rows = [
+        ['节点风荷载参考需求（2×N<sub>wj</sub>）', demand(r.Rd_node)],
+        ['节点水平地震需求（V<sub>sj</sub>）', r.seisOn ? demand(r.Vsj) : '未验算'],
+        ['节点控制作用', demand(r.nodeDemand) + '，' + control]
+    ];
+    r.nodeChecks.forEach(function (node) {
+        rows.push([node.name + '（参考数值比较）',
+            '参考抗力 ' + demand(node.resistance) + '。风荷载' + status(node.windOk) + '，' +
+            (r.seisOn ? '水平地震作用' + status(node.seismicOk) : '水平地震作用未验算') + '。控制作用比较' + status(node.ok) + '。']);
+    });
+    return rows;
 }
 function buildAacWallBook(r, t) {
     var vw = document.getElementById('view');
@@ -602,9 +626,9 @@ function buildAacWallBook(r, t) {
     resRows += rrow('挠度 f ≤ l<sub>0</sub>/200', fmt(r.defl, 1) + ' ≤ ' + fmt(r.deflLim, 1) + ' mm ' + (r.deflOk ? '满足' : '不满足'));
     if (!r.isCECS) resRows += rrow('抗裂 σ<sub>ck</sub> ≤ f<sub>tk</sub>', fmt(r.sigmaCk, 2) + ' / ' + fmt(r.ftk, 2) + ' N/mm² ' + (r.crack1Ok ? '满足' : '不满足'));
     resRows += rrow('地震验算状态', r.seisOn ? '已作当前模型数值比较，依据及项目参数待核验' : '未验算');
-    (r.nodeChecks || []).forEach(function (node) {
-        resRows += rrow(node.name + '（参考数值比较）', fmt(r.nodeDemand, 2) + ' ' + (node.ok ? '≤' : '＞') + ' ' + fmt(node.resistance, 2) + ' kN/个；' + (node.ok ? '数值比较满足' : '数值比较不满足') + '，抗力及适用条件待核验');
-    });
+    if (r.nodeChecks && r.nodeChecks.length) {
+        aacWallNodeRows(r).forEach(function (row) { resRows += rrow(row[0], row[1]); });
+    }
     resRows += rrow('综合判定', aacWallConclusion(r).text);
     var calcProc = r.steps || '';
     var now = new Date();
