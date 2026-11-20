@@ -3465,7 +3465,7 @@
         tool_id: 'aac-wall',
         tool_name: '蒸压加气混凝土外墙板',
         category: '装配式',
-        description: '竖向外墙板风荷载面外受弯、受剪、抗裂、挠度、地震作用与连接节点验算，支持 JGJ/T 17-2020 / T/CECS 553-2018 两套公式。',
+        description: '竖向外墙板风荷载面外受弯、受剪、抗裂、挠度、地震作用与连接节点验算。面板取 JGJ/T 17-2020，多遇地震按 GB 55002-2021 与 T/CECS 553-2018 简化验算。',
         applicable_scenarios: 'AAC/ALC 竖向外墙板在风荷载及地震作用下的面外受弯、受剪、抗裂、挠度与连接节点验算。',
         limitations: [
             '仅做竖向外墙单板，按两端简支面外受弯计算，不支持多跨连续、开洞、悬臂板',
@@ -3477,7 +3477,7 @@
         keywords: ['AAC', '加气混凝土', '外墙板', 'ALC', '蒸压加气', '装配式墙板', '蒸压加气混凝土', 'AAC板', 'ALC板', '加气板'],
         related_standards: [
             { standard: 'JGJ/T 17-2020', articles: ['5.4.1', '5.4.2', '5.4.3', '5.4.4'], note: '蒸压加气混凝土制品应用技术标准' },
-            { standard: 'T/CECS 553-2018', articles: ['5.2.1', '5.2.5', '5.2.6', '5.3.3'], note: '蒸压加气混凝土墙板应用技术规程' },
+            { standard: 'T/CECS 553-2018', articles: ['5.2.3'], note: '蒸压加气混凝土墙板应用技术规程' },
             { standard: 'GB 50009-2012', articles: ['8.1', '8.2', '8.6'], note: '建筑结构荷载规范·风荷载' },
             { standard: '19CJ85-1', articles: [], note: '装配式建筑蒸压加气混凝土板围护系统' }
         ],
@@ -3510,8 +3510,8 @@
             }
             // nj > 0 整数
             var njv = parseFloat(p.nj);
-            if (!(njv > 0) || Math.floor(njv) !== njv) {
-                errors.push('连接件数量 nj 必须为正整数（当前: ' + p.nj + '）');
+            if (!(njv > 0) || njv % 2 !== 0) {
+                errors.push('连接件数量 nj 必须为正偶数（当前: ' + p.nj + '）');
             }
             // a_s < h
             var asV = parseFloat(p.a_s);
@@ -3519,23 +3519,11 @@
             if (asV > 0 && hv > 0 && asV >= hv) {
                 errors.push('a_s 必须小于板厚（as=' + asV + ', h=' + hv + '）');
             }
-            // w0 >= 0, psiW >= 0
             var w0v = parseFloat(p.w0);
-            if (isNaN(w0v) || w0v < 0) errors.push('基本风压 w0 不能为负或非法');
-            var psiWv = parseFloat(p.psiW);
-            if (isNaN(psiWv) || psiWv < 0) errors.push('风荷载组合值系数 psiW 不能为负或非法');
-            // z > 0
-            var zv = parseFloat(p.z);
-            if (!(zv > 0)) errors.push('计算高度 z 必须为正数');
-
-            // CECS 标准下 grade 只能 A3.5/A5.0
-            var std = p.std;
-            var grd = p.grade;
-            if (std === 'cecs' && grd) {
-                if (grd !== 'A3.5' && grd !== 'A5.0') {
-                    errors.push('T/CECS 553-2018 仅支持 A3.5 和 A5.0，当前: ' + grd);
-                }
-            }
+            if (!Number.isFinite(w0v) || w0v < 0) errors.push('基本风压 w0 不能为负或非法');
+            if (p.psiW != null && ![0, 0.2].includes(Number(p.psiW))) errors.push('地震组合风荷载系数仅可取 0 或 0.2');
+            if (p.std && p.std !== 'jgj') errors.push('墙板抗力按 JGJ/T 17-2020 计算');
+            if (!['A3.5', 'A5.0', 'A7.5'].includes(p.grade)) errors.push('配筋受弯板材的强度等级至少为 A3.5');
 
             // seis=y 时 alpha_max/eta/xi 必填且合法
             if (p.seis === 'y') {
@@ -3553,10 +3541,10 @@
         required_parameters: [
             { name: 'std', label: '计算依据标准', type: 'string', unit: '', required: true, default: 'jgj',
               aliases: ['std', '标准', '依据', '规范', '计算标准', '计算依据'],
-              description: 'jgj=JGJ/T 17-2020，cecs=T/CECS 553-2018。默认 jgj。' },
+              description: '固定为 jgj，板材抗力采用 JGJ/T 17-2020。' },
             { name: 'L', label: '板计算跨度 L', type: 'number', unit: 'm', required: true, default: 3.0,
               aliases: ['L', '跨度', '板跨', '计算跨度', '板跨度', '墙板跨度', '层高'],
-              description: '墙板水平支承跨度，单位 m。注意：是板的跨度，不是墙高。' },
+              description: '竖装墙板上下两端简支的计算跨度，单位 m。' },
             { name: 'b', label: '板宽 b', type: 'number', unit: 'mm', required: true, default: 600,
               aliases: ['b', '板宽', '宽度', '墙板宽度', '板宽b'],
               description: '单块板宽度，单位 mm。标准板宽 600mm。注意：b 是板宽，不是梁宽。' },
@@ -3565,7 +3553,7 @@
               description: '墙板厚度，单位 mm。常用 150/175/200/250/300。注意：h 是板厚，不是梁高。' },
             { name: 'grade', label: 'AAC 强度等级', type: 'string', unit: '', required: true, default: 'A5.0',
               aliases: ['grade', '强度等级', 'AAC等级', '加气强度', '混凝土强度等级'],
-              description: 'A2.5/A3.5/A5.0/A7.5。外墙板应≥A5.0。CECS 仅含 A3.5/A5.0。' },
+              description: 'A3.5/A5.0/A7.5。' },
             { name: 'steel', label: '钢筋级别', type: 'string', unit: '', required: true, default: 'CRB600H',
               aliases: ['steel', 'steel_grade', '钢筋', '钢筋级别', '钢筋等级', '纵筋', '受力筋'],
               description: 'HPB300 / CRB600H / HRB400。推荐 CRB600H。' },
@@ -3574,7 +3562,7 @@
               description: '单根纵筋直径，单位 mm。范围 5~10mm。' },
             { name: 'bar_count', label: '受拉钢筋根数 n', type: 'number', unit: '根', required: true, default: 4,
               aliases: ['bar_count', 'n', '根数', '钢筋根数', '纵筋根数'],
-              description: '板宽方向底部受拉钢筋总根数，正整数。' },
+              description: '内侧受拉纵筋根数，正整数。外侧未填写时沿用内侧配筋。' },
             { name: 'a_s', label: '受拉筋合力点距 a_s', type: 'number', unit: 'mm', required: true, default: 35,
               aliases: ['a_s', 'as', 'as_value', '钢筋合力点距', '受拉筋合力点距', '保护层as'],
               description: '受拉钢筋合力点至受拉边缘距离，单位 mm。AAC 板保护层一般≥25mm。' },
@@ -3589,7 +3577,7 @@
               description: '墙板计算位置距地面高度，单位 m。' },
             { name: 'mu_s', label: '体型系数 μ_s', type: 'number', unit: '', required: true, default: 1.2,
               aliases: ['mu_s', 'mus', 'μs', '体型系数', '风载体型系数'],
-              description: '风荷载体型系数，取控制值（绝对值）。' },
+              description: '风压净局部体型系数，按幅值计算。反向体型系数留空时沿用该幅值。' },
             { name: 'gamma0', label: '结构重要性系数 γ0', type: 'number', unit: '', required: true, default: 1.0,
               aliases: ['gamma0', 'γ0', 'gamma_0', '重要性系数', '结构重要性系数'],
               description: '一级=1.1，二级=1.0，三级=0.9。' },
@@ -3598,10 +3586,10 @@
               description: 'JGJ 默认 1.3，CECS 取 1.3。' },
             { name: 'gammaW', label: '风荷载分项系数 γW', type: 'number', unit: '', required: true, default: 1.5,
               aliases: ['gammaW', 'γW', 'gamma_W', '风载分项系数', '风荷载分项系数'],
-              description: 'JGJ 默认 1.4，CECS 取 1.5。' },
-            { name: 'psiW', label: '风荷载组合值系数 ψW', type: 'number', unit: '', required: true, default: 0.6,
+              description: '默认 1.5。' },
+            { name: 'psiW', label: '地震组合风荷载系数 ψW', type: 'number', unit: '', required: false, default: 0.2,
               aliases: ['psiW', 'ψW', 'psi_w', '风载组合值系数', '风荷载组合值系数'],
-              description: '持久状况取 0.6，地震状况取 0.2。' },
+              description: '一般建筑结构取 0，风荷载起控制作用时取 0.2。' },
             { name: 'seis', label: '是否验算地震', type: 'string', unit: '', required: true, default: 'n',
               aliases: ['seis', '地震', '抗震', '是否验算地震', '是否考虑地震'],
               description: 'y=验算，n=不验算。默认 n。' },
@@ -3626,7 +3614,7 @@
               aliases: ['seismic_intensity', '烈度', '设防烈度', '抗震设防烈度', '抗震烈度'],
               description: '6/7/8 度。给出烈度时自动换算为 alpha_max：6度→0.04，7度→0.08，8度→0.16。仅语义层，不直接写入DOM。' }
         ],
-        // 23 项 DOM 映射（全静态）
+        // 计算页面参数映射
         parameter_mapping: {
             std:          { domId: 'aw_std',      unit: '' },
             L:            { domId: 'aw_L',        unit: 'm' },
@@ -3644,7 +3632,7 @@
             gamma0:       { domId: 'aw_gamm0',    unit: '' },
             gammaG:       { domId: 'aw_gammaG',   unit: '' },
             gammaW:       { domId: 'aw_gammaW',   unit: '' },
-            psiW:         { domId: 'aw_psiW',     unit: '' },
+            psiW:         { domId: 'aw_psiW_seis',     unit: '' },
             seis:         { domId: 'aw_seis',     unit: '' },
             alpha_max:    { domId: 'aw_amax',     unit: '' },
             eta:          { domId: 'aw_eta',      unit: '' },
@@ -3658,17 +3646,7 @@
             var self = this;
             var mapping = self.parameter_mapping;
 
-            // ===== 写入顺序：先 std（触发联动） → 再 grade/gammaG/gammaW 覆盖联动值 → 其余参数 =====
-            var writeOrder = [
-                'std',                          // 1. 先写标准（change 事件会联动改 gammaG/gammaW/grade）
-                'grade', 'gammaG', 'gammaW',    // 2. 立即覆盖 grade 和分项系数（覆盖联动产生的值）
-                'L', 'b', 'h',                  // 3. 几何尺寸
-                'steel', 'bar_diameter', 'bar_count', 'a_s', // 4. 钢筋参数
-                'w0', 'terrain', 'z', 'mu_s',   // 5. 风荷载
-                'gamma0', 'psiW',               // 6. 其他系数
-                'seis', 'alpha_max', 'eta', 'xi', // 7. 地震
-                'nj', 'gamma0j'                 // 8. 节点
-            ];
+            var writeOrder = Object.keys(mapping);
 
             var written = {};
             for (var wi = 0; wi < writeOrder.length; wi++) {
@@ -3692,10 +3670,7 @@
                 written_keys: Object.keys(written)
             });
 
-            // ===== 23 项全量 verify =====
-            var allKeys = ['std','L','b','h','grade','steel','bar_diameter','bar_count','a_s',
-                           'w0','terrain','z','mu_s','gamma0','gammaG','gammaW','psiW',
-                           'seis','alpha_max','eta','xi','nj','gamma0j'];
+            var allKeys = writeOrder;
             var verifyFails = [];
             for (var vi = 0; vi < allKeys.length; vi++) {
                 var kk = allKeys[vi];
@@ -3851,6 +3826,7 @@
                     M_earthquake: raw.Mseis,
                     M_comb: raw.Mcomb,
                     seis_ok: raw.seisOk,
+                    seis_shear_ok: raw.seisShearOk,
 
                     // 抗裂
                     sigma_ck: raw.sigmaCk,
@@ -3877,12 +3853,13 @@
                     Ve_total: raw.Ve_total,
 
                     // 综合判定
-                    all_ok: raw.capOk && raw.tauOk && raw.nodeOk && raw.crackOk && raw.deflOk && (!raw.seisOn || raw.seisOk),
+                    all_ok: null,
+                    plate_checks_ok: raw.capOk && raw.tauOk && raw.crackOk && raw.deflOk && (!raw.seisOn || raw.seisOk),
 
                     notes: [
                         '容重/自重由强度等级查表得出，不支持用户单独输入',
                         '竖向外墙板自重沿板面方向（面内），面外受弯荷载仅考虑风+地震',
-                        '连接节点为支座反力复核，非正式节点设计'
+                        '节点为作用需求和内置抗力参考比较，中震、大震和层间位移未验算'
                     ]
                 };
 

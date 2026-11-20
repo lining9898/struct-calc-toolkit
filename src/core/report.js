@@ -535,37 +535,61 @@ var doc = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:
      return doc;
  }
 
-// 页面与计算书共用结论，区分板材验算、可选节点参考比较和待核验事项。
+// 页面和计算书使用同一组工况与判定。
+function aacWallCheckRows(r) {
+    var rows = [];
+    function compare(demand, capacity, digits, unit) {
+        return fmt(demand, digits) + (demand <= capacity ? ' ≤ ' : ' &gt; ') + fmt(capacity, digits) + ' ' + unit;
+    }
+    if (!r.equalWindChecks) {
+        rows.push(['风荷载控制工况', '受弯 ' + r.windFlexControl + '。受剪 ' + r.windShearControl + '。']);
+    }
+    var directions = r.equalWindChecks ? r.directions.slice(0, 1) : r.directions;
+    directions.forEach(function (c) {
+        var direction = r.equalWindChecks ? '控制风荷载（两侧同算）' : c.name;
+        rows.push([direction + '标准值', fmt(c.wk, 3) + ' kN/m²（净局部体型系数幅值 ' + fmt(c.coefficient, 2) + '）']);
+        rows.push([direction + '受弯 γ<sub>0</sub>M / M<sub>u</sub>',
+            compare(c.windM, c.Mu, 3, 'kN·m') + '。x = ' + fmt(c.x, 1) + ' mm，限值 ' + fmt(c.xMax, 1) + ' mm' +
+            (c.overRein ? '（超筋，M<sub>u</sub> 为界限估算）' : ''), c.capOk]);
+        rows.push([direction + '受剪 γ<sub>0</sub>V / V<sub>u</sub>', compare(c.windV, c.Vu, 3, 'kN'), c.tauOk]);
+        rows.push([direction + '抗裂 σ<sub>ck</sub> / f<sub>tk</sub>', compare(c.sigma, r.ftk, 3, 'N/mm²'), c.crackOk]);
+        rows.push([direction + '挠度', compare(c.defl, r.deflLim, 3, 'mm'), c.deflOk]);
+        if (r.seisOn) {
+            rows.push(['多遇地震组合受弯 · ' + direction, compare(c.Mcomb, c.Mu, 3, 'kN·m') +
+                (c.overRein ? '（超筋，M<sub>u</sub> 为界限估算）' : ''), c.seisFlexOk]);
+            rows.push(['多遇地震组合受剪 · ' + direction, compare(c.Vcomb, c.Vu, 3, 'kN'), c.seisShearOk]);
+        }
+    });
+    return rows;
+}
 function aacWallConclusion(r) {
     var failed = [], pending = [], nodeFailed = [];
     if (r.overRein) failed.push('受压区高度超过限值（超筋）');
-    [['受弯承载力', r.capOk], ['受剪承载力', r.tauOk], ['抗裂', r.crackOk], ['挠度', r.deflOk]].forEach(function (item) {
+    [['风荷载受弯', r.capOk], ['风荷载受剪', r.tauOk], ['抗裂', r.crackOk], ['挠度', r.deflOk]].forEach(function (item) {
         if (item[1] === false) failed.push(item[0]);
         else if (item[1] !== true) pending.push(item[0] + '未完成判定');
     });
     if (r.seisOn) {
-        if (r.seisOk === false) failed.push('地震组合承载力（当前模型数值比较）');
-        pending.push('地震作用计算依据及项目参数待核验');
+        if (r.seisFlexOk === false) failed.push('多遇地震组合受弯');
+        if (r.seisShearOk === false) failed.push('多遇地震组合受剪');
+        pending.push('多遇地震验算采用简化模型，类别系数及抗震抗力取值按项目复核');
     } else pending.push('地震作用未验算');
-    if (r.nodeChecks && r.nodeChecks.length) {
-        r.nodeChecks.forEach(function (node) {
-            if (!node.ok) nodeFailed.push(node.name);
-        });
-    } else pending.push('节点参考比较未完成');
-    pending.push('采用 19CJ85-1 表 B1 参考抗力前，应核对实际节点构造和承载力检测报告');
+    r.nodeChecks.forEach(function (node) {
+        if (!node.ok) nodeFailed.push(node.name);
+    });
+    if (nodeFailed.length) pending.push('节点参考数值比较未满足的方案：' + nodeFailed.join('、'));
+    if (!r.nodeChecks.length) pending.push('当前板厚无内置节点参考抗力，已列出作用需求');
+    pending.push('实际节点抗力按选用构造及检测报告确定，中震弹性、大震不屈服和层间位移适应性未验算');
     var text = failed.length ? '板材验算存在不满足项：' + failed.join('、') + '。' :
-        (pending.some(function (item) { return item.indexOf('未完成判定') >= 0; }) ? '板材验算尚未完成判定。' : '板材已验算项目未见不满足项。');
-    if (r.seisOn && Number.isFinite(r.Vsj) && Number.isFinite(r.Rd_node)) {
-        text += '节点作用比较中，' + aacWallNodeComparison(r) + '。';
-    }
-    if (nodeFailed.length) text += '节点参考数值比较未满足的方案：' + nodeFailed.join('、') + '；各方案应按实际选型分别复核。';
-    text += pending.join('；') + '。不能据此判定外墙板及连接系统整体满足设计要求。';
+        (pending.some(function (item) { return item.includes('未完成判定'); }) ? '板材验算尚未完成判定。' : '板材已验算项目未见不满足项。');
+    if (r.seisOn) text += '节点作用比较中，' + aacWallNodeComparison(r) + '。';
+    text += pending.join('。') + '。';
     return { text: text, hasFailure: failed.length > 0, failedItems: failed, nodeFailed: nodeFailed, pendingItems: pending };
 }
 function aacWallNodeComparison(r) {
-    if (r.Vsj > r.Rd_node) return '水平地震作用较大';
-    if (r.Vsj < r.Rd_node) return '两倍风荷载较大';
-    return '两倍风荷载与水平地震作用相等';
+    if (r.VsjCombo > r.Rd_node) return '多遇地震组合较大';
+    if (r.VsjCombo < r.Rd_node) return '两倍风荷载较大';
+    return '两倍风荷载与多遇地震组合相等';
 }
 function aacWallNodeRows(r) {
     function demand(value) { return fmt(value, 3) + ' kN/个'; }
@@ -573,13 +597,14 @@ function aacWallNodeRows(r) {
     var comparison = r.seisOn ? aacWallNodeComparison(r) + '，取 ' + demand(r.nodeDemand) : '仅计算两倍风荷载，需求为 ' + demand(r.nodeDemand);
     var rows = [
         ['两倍风荷载需求（2×N<sub>wj</sub>）', '2 × ' + fmt(r.Nwj, 3) + ' = ' + demand(r.Rd_node)],
-        ['节点水平地震需求（V<sub>sj</sub>）', r.seisOn ? demand(r.Vsj) : '未验算'],
-        ['节点作用比较', comparison]
+        ['节点水平地震需求（V<sub>sj</sub>）', r.seisOn ? demand(r.Vsj) : '未验算']
     ];
+    if (r.seisOn) rows.push(['节点多遇地震组合需求', demand(r.VsjCombo)]);
+    rows.push(['节点作用比较', comparison]);
     r.nodeChecks.forEach(function (node) {
         rows.push([node.name + '（参考数值比较）',
-            '参考抗力 ' + demand(node.resistance) + '。两倍风荷载' + status(node.windOk) + '，' +
-            (r.seisOn ? '水平地震作用' + status(node.seismicOk) : '水平地震作用未验算') + '。控制作用比较' + status(node.ok) + '。']);
+            '内置参考抗力（待核对表值）' + demand(node.resistance) + '。两倍风荷载' + status(node.windOk) + '。' +
+            (r.seisOn ? '多遇地震组合' + status(node.seismicOk) : '多遇地震组合未验算') + '。']);
     });
     return rows;
 }
@@ -604,31 +629,10 @@ function buildAacWallBook(r, t) {
     var pRows = params.map(function (p, i) { return '<tr><td>' + (i + 1) + '</td><td>' + esc(p.label) + '</td><td>' + esc(p.unit) + '</td><td>' + esc(p.val) + '</td></tr>'; }).join('');
     var resRows = '';
     function rrow(label, val) { return '<tr><td>' + label + '</td><td>' + val + '</td></tr>'; }
-    resRows += rrow('材料 f<sub>c</sub> / f\'<sub>tk</sub> / f<sub>t</sub>', fmt(r.fc, 2) + ' / ' + fmt(r.ftk, 2) + ' / ' + fmt(r.ft, 2) + ' N/mm²');
-    resRows += rrow('有效截面 b×h<sub>0</sub>', fmt(r.b, 0) + '×' + fmt(r.h0, 0) + ' mm');
-    resRows += rrow('配筋 A<sub>s</sub> / ρ', fmt(r.As, 1) + ' mm² / ' + fmt(r.rho, 3) + '%');
-    if (!r.isCECS) resRows += rrow('最大配筋率 ρ<sub>max</sub>', fmt(r.rhoMax, 2) + '%');
-    resRows += rrow('自重线荷载 q<sub>gk</sub>', fmt(r.qgk, 3) + ' kN/m');
-    resRows += rrow('设计弯矩 γ<sub>0</sub>·M', fmt(r.gamma0 * r.M, 2) + ' kN·m');
-    resRows += rrow('受弯承载力 M<sub>u</sub>', fmt(r.Mu, 2) + ' kN·m ' + (r.capOk ? '满足' : '不满足'));
-    if (r.isCECS) {
-        resRows += rrow('受剪 V ≤ 0.45·f<sub>t</sub>·b·h<sub>0</sub>', fmt(r.Vmax, 2) + ' kN ' + (r.tauOk ? '满足' : '不满足'));
-    } else {
-        resRows += rrow('受剪 τ ≤ 0.45·f<sub>t</sub>', fmt(r.tau, 3) + ' ≤ ' + fmt(0.45 * r.ft, 3) + ' N/mm² ' + (r.tauOk ? '满足' : '不满足'));
-    }
-    if (r.seisOn) {
-        resRows += rrow('地震组合弯矩', fmt(r.Mcomb, 2) + ' kN·m ' + (r.seisOk ? '满足' : '不满足'));
-    }
-    if (r.isCECS) {
-        resRows += rrow('抗裂 σ<sub>ck</sub> ≤ f\'<sub>tk</sub>', fmt(r.sigmaCk, 2) + ' ≤ ' + fmt(r.ftk, 2) + ' N/mm² ' + (r.crack1Ok ? '满足' : '不满足'));
-        resRows += rrow('抗裂 σ<sub>ck</sub> ≤ σ<sub>p</sub>', fmt(r.sigmaCk, 2) + ' ≤ ' + fmt(r.sigmaP, 0) + ' N/mm² ' + (r.crack2Ok ? '满足' : '不满足'));
-    }
-    resRows += rrow('挠度 f ≤ l<sub>0</sub>/200', fmt(r.defl, 1) + ' ≤ ' + fmt(r.deflLim, 1) + ' mm ' + (r.deflOk ? '满足' : '不满足'));
-    if (!r.isCECS) resRows += rrow('抗裂 σ<sub>ck</sub> ≤ f<sub>tk</sub>', fmt(r.sigmaCk, 2) + ' / ' + fmt(r.ftk, 2) + ' N/mm² ' + (r.crack1Ok ? '满足' : '不满足'));
-    resRows += rrow('地震验算状态', r.seisOn ? '已作当前模型数值比较，依据及项目参数待核验' : '未验算');
-    if (r.nodeChecks && r.nodeChecks.length) {
-        aacWallNodeRows(r).forEach(function (row) { resRows += rrow(row[0], row[1]); });
-    }
+    resRows += rrow('自重线荷载', fmt(r.qgk, 3) + ' kN/m');
+    aacWallCheckRows(r).concat(aacWallNodeRows(r)).forEach(function (row) {
+        resRows += rrow(row[0], row[1] + (row[2] === undefined ? '' : row[2] ? ' 满足' : ' 不满足'));
+    });
     resRows += rrow('综合判定', aacWallConclusion(r).text);
     var calcProc = r.steps || '';
     var now = new Date();
@@ -644,7 +648,7 @@ function buildAacWallBook(r, t) {
         '<table><tr><th>项目</th><th>取值</th></tr>' +
         '<tr><td>AAC 强度等级</td><td>' + r.grade + '</td></tr>' +
         '<tr><td>抗压强度设计值 f<sub>c</sub></td><td>' + fmt(r.fc, 2) + ' N/mm²</td></tr>' +
-        '<tr><td>劈拉强度标准值 f\'<sub>tk</sub></td><td>' + fmt(r.ftk, 2) + ' N/mm²</td></tr>' +
+        '<tr><td>劈拉强度标准值 f<sub>tk</sub></td><td>' + fmt(r.ftk, 2) + ' N/mm²</td></tr>' +
         '<tr><td>劈拉强度设计值 f<sub>t</sub></td><td>' + fmt(r.ft, 2) + ' N/mm²</td></tr>' +
         '<tr><td>弹性模量 E<sub>c</sub></td><td>' + fmt(r.Ec, 0) + ' N/mm²</td></tr>' +
         '<tr><td>干密度 ρ<sub>0</sub></td><td>' + fmt(r.rho0, 0) + ' kg/m³</td></tr>' +
@@ -658,8 +662,9 @@ function buildAacWallBook(r, t) {
         '<p>2. 《蒸压加气混凝土墙板应用技术规程》T/CECS 553-2018</p>' +
         '<p>3. 《建筑结构荷载规范》GB 50009-2012</p>' +
         '<p>4. 《蒸压加气混凝土板》GB/T 15762</p>' +
-        '<p>5. 《建筑抗震设计规范》GB 50011</p>' +
-        (r.rebGrade === 'CRB600H' ? '<p>6. 《冷轧带肋钢筋混凝土结构技术规范》JGJ 95</p>' : '') +
+        '<p>5. 《建筑与市政工程抗震通用规范》GB 55002-2021 与《工程结构通用规范》GB 55001-2021</p>' +
+        '<p>6. 《装配式建筑蒸压加气混凝土板围护系统》19CJ85-1 B1</p>' +
+        (r.rebGrade === 'CRB600H' ? '<p>7. 《冷轧带肋钢筋混凝土结构技术规范》JGJ 95</p>' : '') +
         '<div class="note">注：本计算书用于设计初算验证。实际工程应结合构造规定、连接节点、拼缝防水等综合设计，重要构件请以专业计算软件或设计院复核为准。</div>' +
         calcBookSign() +
         calcBookFooter() +
@@ -868,7 +873,8 @@ function exportBook() {
              return;
          }
      }
-     if (CUR_TOOL === 'aac-wall' && window._AW_RESULT) {
+     if (CUR_TOOL === 'aac-wall') {
+         if (!window._AW_RESULT) { alert('请先完成有效的外墙板计算。'); return; }
          downloadDoc('蒸压加气混凝土外墙板计算书.doc', buildAacWallBook(window._AW_RESULT, t));
          return;
      }
