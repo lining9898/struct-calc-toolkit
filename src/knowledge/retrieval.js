@@ -19,11 +19,14 @@
 
     var allArticles = [];
     var loaded = false;
+    var loading = false;
     var loadCallbacks = [];
 
     function loadAll(callback) {
         if (loaded) { callback(allArticles); return; }
         if (callback) loadCallbacks.push(callback);
+        if (loading) return;
+        loading = true;
 
         var remaining = STANDARD_FILES.length;
         STANDARD_FILES.forEach(function (path) {
@@ -229,7 +232,16 @@
             var found = allArticles.filter(function (art) {
                 return art.related_tools && art.related_tools.indexOf(toolId) >= 0;
             });
-            callback(found.map(function (art) {
+            // Prefer the standard-specific entry when a cross-standard digest repeats it.
+            found.sort(function (a, b) {
+                return STANDARD_FILES.indexOf(a.source_file) - STANDARD_FILES.indexOf(b.source_file);
+            });
+            var seen = new Set();
+            callback(found.filter(function (art) {
+                if (art.id && seen.has(art.id)) return false;
+                seen.add(art.id);
+                return true;
+            }).map(function (art) {
                 return {
                     id: art.id,
                     standard: art.standard,
@@ -237,6 +249,9 @@
                     chapter: art.chapter,
                     article: art.article,
                     title: art.title,
+                    content: art.content,
+                    content_type: art.content_type,
+                    source_url: art.source_url,
                     status: art.status
                 };
             }));

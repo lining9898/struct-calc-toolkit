@@ -16,6 +16,19 @@ with sync_playwright() as p:
  ids=page.evaluate('Object.keys(TOOLS)');results=[]
  for id in ids:
   page.evaluate("(id)=>{goTool(id);if(id==='l22zg401')document.getElementById('l22_sel_calc').click()}",id);page.wait_for_timeout(120)
+  if id=='beam-rect-design':page.locator('#bd_calc').click()
+  if id=='rebar-pick':page.locator('#rp_calc').click()
+  page.evaluate('RESULT_ADVISOR.openForCurrent()')
+  clauses=page.evaluate('(id)=>new Promise(done=>KNOWLEDGE_BASE.getStandardsForTool(id,done))',id)
+  assert clauses and len({a['id'] for a in clauses})==len(clauses),id
+  assert page.locator('#rsAdvisor .rs-clause p').all_text_contents()==[a['content'] for a in clauses],id
+  advisor=page.locator('#rsAdvisor')
+  assert advisor.locator('.rs-t').text_content()=='结果解读',id
+  verdict=page.evaluate('RESULT_ADVISOR.analyze().verdict')
+  if id in ('anchor','aac-wall','steel-beam','pool-rect','punching','load-combo'):
+   assert verdict=='result' and '整改建议' not in advisor.text_content(),id
+  if id in ('deep-beam','pool-circ','steel-column'):
+   assert verdict=='fail',id
   with page.expect_download(timeout=15000) as dl:page.evaluate('exportBook()')
   file=out/(id+'.docx');dl.value.save_as(file)
   assert dl.value.suggested_filename.endswith('.docx'),id

@@ -337,7 +337,7 @@
             '<button type="button" class="ux-bar-btn" id="uxLoadPlan">载入</button>' +
             '<button type="button" class="ux-bar-btn" id="uxDelPlan">删除</button>' +
             '<span class="ux-bar-spacer"></span>' +
-            '<button type="button" class="ux-bar-btn" id="uxExplain">结果解读与建议</button>' +
+            '<button type="button" class="ux-bar-btn" id="uxExplain">结果解读</button>' +
             '<button type="button" class="ux-bar-btn" id="uxWord">生成计算书（Word）</button>' +
             '<button type="button" class="ux-bar-btn" id="uxPrint">打印结果</button>';
         head.parentNode.insertBefore(bar, head.nextSibling);

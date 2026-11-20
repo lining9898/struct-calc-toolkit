@@ -382,14 +382,14 @@
       "status": "本地整理_需与规范正文核对"
     },
     {
-      "id": "GB50009-7-1-1",
+      "id": "GB50009-8-1-1",
       "standard": "GB 50009",
       "version": "2012",
-      "chapter": "第7章 风荷载",
-      "article": "7.1.1",
+      "chapter": "第8章 风荷载",
+      "article": "8.1.1",
       "title": "风荷载标准值计算",
       "keywords": ["风荷载", "基本风压", "风压高度变化系数", "体型系数", "风振系数", "阵风系数"],
-      "content": "垂直于建筑物表面的风荷载标准值 wk = βz·μs·μz·w0，其中 βz 为风振系数（或阵风系数），μs 为风荷载体型系数，μz 为风压高度变化系数，w0 为基本风压。",
+      "content": "风荷载标准值应按受力对象计算。主要受力结构采用风振系数和体型系数，围护结构采用阵风系数和局部风压体型系数。两类计算均计入风压高度变化系数和基本风压。",
       "explanation": "基本风压按 50 年重现期取值，对风敏感结构可取 100 年重现期。μz 随地面粗糙度类别与高度变化（A、B、C、D 四类）。μs 由建筑体型决定，正压为迎风面、负压为背风及侧风面，屋面负压区在轻型屋面设计中尤其重要。风振系数用于考虑脉动风对高柔结构的影响。",
       "related_tools": ["wind-snow", "aac-wall", "anchor"],
       "status": "本地整理_需与规范正文核对"
@@ -434,17 +434,124 @@
       "status": "本地整理_需与规范正文核对"
     },
     {
-      "id": "JGT17-5-1-1",
+      "id": "JGJT17-5-4-1",
       "standard": "JGJ/T 17",
       "version": "2020",
-      "chapter": "第5章 墙板",
-      "article": "5.x",
-      "title": "蒸压加气混凝土墙板设计与连接",
-      "keywords": ["蒸压加气混凝土", "AAC", "外墙板", "风荷载", "面外受弯", "连接节点", "地震作用"],
-      "content": "加气混凝土墙板应验算风荷载作用下的面外受弯、受剪、抗裂与挠度，并验算地震作用与连接节点的承载力；板与主体的连接应能传递水平力与竖向自重。",
-      "explanation": "AAC 板自重轻但强度较低，风荷载往往是控制工况；连接节点是薄弱环节，需考虑施工偏差、温度变形与地震作用下的位移能力（宜采用具有一定变形能力的柔性连接）。板缝处理应有防水与抗裂措施。",
-      "related_tools": ["aac-wall", "anchor", "wind-snow"],
-      "status": "本地整理_需与规范正文核对"
+      "chapter": "5.4 板材设计计算",
+      "article": "5.4.1",
+      "title": "正截面受弯承载力",
+      "content": "按式（5.4.1-1）比较弯矩设计值和正截面抗弯承载力。由纵筋与受压区的内力平衡求 x，且 x 不得超过有效高度的一半。",
+      "related_tools": [
+        "aac-wall"
+      ],
+      "status": "已与2020版核对",
+      "content_type": "条文要点",
+      "source_url": "https://oss.ydd17.com/data/upload/20201217/16081769694567.pdf"
+    },
+    {
+      "id": "JGJT17-5-4-2",
+      "standard": "JGJ/T 17",
+      "version": "2020",
+      "chapter": "5.4 板材设计计算",
+      "article": "5.4.2",
+      "title": "截面受剪承载力",
+      "content": "验算剪力设计值 V ≤ 0.45 fₜ b h₀，其中 fₜ 取板材的劈拉强度设计值。",
+      "related_tools": [
+        "aac-wall"
+      ],
+      "status": "已与2020版核对",
+      "content_type": "条文要点",
+      "source_url": "https://oss.ydd17.com/data/upload/20201217/16081769694567.pdf"
+    },
+    {
+      "id": "JGJT17-5-4-3",
+      "standard": "JGJ/T 17",
+      "version": "2020",
+      "chapter": "5.4 板材设计计算",
+      "article": "5.4.3",
+      "title": "抗裂验算",
+      "content": "采用荷载标准组合，比较截面边缘拉应力与板材的劈拉强度标准值，前者不得超过后者。",
+      "related_tools": [
+        "aac-wall"
+      ],
+      "status": "已与2020版核对",
+      "content_type": "条文要点",
+      "source_url": "https://oss.ydd17.com/data/upload/20201217/16081769694567.pdf"
+    },
+    {
+      "id": "JGJT17-5-4-4",
+      "standard": "JGJ/T 17",
+      "version": "2020",
+      "chapter": "5.4 板材设计计算",
+      "article": "5.4.4",
+      "title": "挠度限值",
+      "content": "按标准组合计算最大挠度并计入长期影响，限值为计算跨度的 1/200。",
+      "related_tools": [
+        "aac-wall"
+      ],
+      "status": "已与2020版核对",
+      "content_type": "条文要点",
+      "source_url": "https://oss.ydd17.com/data/upload/20201217/16081769694567.pdf"
+    },
+    {
+      "id": "JGJT17-5-4-5",
+      "standard": "JGJ/T 17",
+      "version": "2020",
+      "chapter": "5.4 板材设计计算",
+      "article": "5.4.5",
+      "title": "短期刚度与长期刚度",
+      "content": "先根据弹性模量和换算截面惯性矩计算短期刚度，再依据标准组合和准永久组合的跨中弯矩及长期影响系数确定长期刚度。",
+      "related_tools": [
+        "aac-wall"
+      ],
+      "status": "已与2020版核对",
+      "content_type": "条文要点",
+      "source_url": "https://oss.ydd17.com/data/upload/20201217/16081769694567.pdf"
+    },
+    {
+      "id": "JGJT17-5-4-6",
+      "standard": "JGJ/T 17",
+      "version": "2020",
+      "chapter": "5.4 板材设计计算",
+      "article": "5.4.6",
+      "title": "外墙板承载力验算工况",
+      "content": "须分别验算风荷载和地震作用下的外墙板承载力。",
+      "related_tools": [
+        "aac-wall"
+      ],
+      "status": "已与2020版核对",
+      "content_type": "条文要点",
+      "source_url": "https://oss.ydd17.com/data/upload/20201217/16081769694567.pdf"
+    },
+    {
+      "id": "JGJT17-5-4-7",
+      "standard": "JGJ/T 17",
+      "version": "2020",
+      "chapter": "5.4 板材设计计算",
+      "article": "5.4.7",
+      "title": "连接件设计安全等级",
+      "content": "外墙板与主体结构连接件承载力设计的安全等级应提高一级。",
+      "related_tools": [
+        "aac-wall"
+      ],
+      "status": "已与2020版核对",
+      "content_type": "原文",
+      "source_url": "https://oss.ydd17.com/data/upload/20201217/16081769694567.pdf"
+    },
+    {
+      "id": "JGJT17-5-4-8",
+      "standard": "JGJ/T 17",
+      "version": "2020",
+      "chapter": "5.4 板材设计计算",
+      "article": "5.4.8",
+      "title": "罕遇地震下的稳定与连接",
+      "content": "罕遇地震工况下，须保证板体整体稳定，且板与主体的连接可靠。",
+      "related_tools": [
+        "aac-wall"
+      ],
+      "status": "已与2020版核对",
+      "content_type": "条文要点",
+      "source_url": "https://oss.ydd17.com/data/upload/20201217/16081769694567.pdf"
     },
     {
       "id": "GB50010-9-1-1",
@@ -484,6 +591,63 @@
       "explanation": "基本组合中永久荷载分项系数取 1.3（不利时）、可变荷载取 1.5；各可变荷载需乘组合值系数 ψc。标准组合用于挠度验算，准永久组合用于裂缝宽度与长期变形验算。注意水平荷载（风、地震）的参与方式与偶然荷载工况。",
       "related_tools": ["load-combo", "deflection", "crack-width", "seismic"],
       "status": "本地整理_需与规范正文核对"
+    },
+    {
+      "id": "JGJ94-5-7",
+      "standard": "JGJ 94",
+      "version": "2008",
+      "article": "5.7 节",
+      "title": "单桩水平承载力取值",
+      "content": "受水平荷载较大且设计等级为甲级或乙级的建筑桩基，单桩水平承载力特征值应由单桩水平静载试验确定。",
+      "related_tools": [
+        "pile-horizontal"
+      ],
+      "content_type": "条文要点",
+      "status": "已核对对应内容",
+      "source_url": "https://jncc.jinan.gov.cn/module/download/downfile.jsp?classid=0&filename=43ef748669884f88bdf857d009f6f998.pdf"
+    },
+    {
+      "id": "GB55008-4-4-6",
+      "standard": "GB 55008",
+      "version": "2021",
+      "article": "4.4.6 及表 4.4.6",
+      "title": "纵向受力普通钢筋的最小配筋率",
+      "content": "按构件类型及钢筋受力情况从表 4.4.6 取相应下限，并核对本条规定的调整条件。",
+      "related_tools": [
+        "rho-min"
+      ],
+      "content_type": "条文要点",
+      "status": "已核对对应内容",
+      "source_url": "https://gf.cabr-fire.com/m/article-39674.htm"
+    },
+    {
+      "id": "GB1499-2-5-2",
+      "standard": "GB 1499.2",
+      "version": "2024",
+      "article": "5.2 及表 2",
+      "title": "热轧带肋钢筋的公称截面面积",
+      "content": "表 2 按热轧带肋钢筋的公称直径列出单根公称横截面面积和理论单位重量。",
+      "related_tools": [
+        "rebar-area",
+        "rebar-pick"
+      ],
+      "content_type": "条文要点",
+      "status": "已核对对应内容",
+      "source_url": "https://openstd.samr.gov.cn/bzgk/std/newGbInfo?hcno=B54C4769E4CA87CFF4F0E6D00C20AFF8"
+    },
+    {
+      "id": "L22ZG401-selection",
+      "standard": "L22ZG401",
+      "version": "",
+      "article": "印刷页 13～19、23～29、33～39",
+      "title": "标准宽度底板选用表",
+      "content": "三组表依次对应 1000、1700 和 2100 mm 宽底板。按标志跨度和荷载等级查底板配筋，再从同一行读取叠合层厚度、底板自重等参数。",
+      "related_tools": [
+        "l22zg401"
+      ],
+      "content_type": "图集选用表说明",
+      "status": "已核对对应内容",
+      "source_url": "https://ebook.chinabuilding.com.cn/zbooklib/book/detail/show?SiteID=1&bookID=153988"
     }
   ]
 }
