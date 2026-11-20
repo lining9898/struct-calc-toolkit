@@ -541,13 +541,13 @@ function aacWallCheckRows(r) {
     function compare(demand, capacity, digits, unit) {
         return fmt(demand, digits) + (demand <= capacity ? ' ≤ ' : ' &gt; ') + fmt(capacity, digits) + ' ' + unit;
     }
+    rows.push(['最不利方向风荷载标准值', fmt(r.wk, 3) + ' kN/m²（体型系数绝对值 ' + fmt(Math.abs(r.mus), 2) + '）']);
     if (!r.equalWindChecks) {
-        rows.push(['风荷载控制工况', '受弯 ' + r.windFlexControl + '。受剪 ' + r.windShearControl + '。']);
+        rows.push(['截面控制侧', '受弯 ' + r.windFlexControl + '。受剪 ' + r.windShearControl + '。']);
     }
     var directions = r.equalWindChecks ? r.directions.slice(0, 1) : r.directions;
     directions.forEach(function (c) {
-        var direction = r.equalWindChecks ? '控制风荷载（两侧同算）' : c.name;
-        rows.push([direction + '标准值', fmt(c.wk, 3) + ' kN/m²（净局部体型系数幅值 ' + fmt(c.coefficient, 2) + '）']);
+        var direction = r.equalWindChecks ? '风荷载' : c.name;
         rows.push([direction + '受弯 γ<sub>0</sub>M / M<sub>u</sub>',
             compare(c.windM, c.Mu, 3, 'kN·m') + '。x = ' + fmt(c.x, 1) + ' mm，限值 ' + fmt(c.xMax, 1) + ' mm' +
             (c.overRein ? '（超筋，M<sub>u</sub> 为界限估算）' : ''), c.capOk]);
@@ -555,9 +555,10 @@ function aacWallCheckRows(r) {
         rows.push([direction + '抗裂 σ<sub>ck</sub> / f<sub>tk</sub>', compare(c.sigma, r.ftk, 3, 'N/mm²'), c.crackOk]);
         rows.push([direction + '挠度', compare(c.defl, r.deflLim, 3, 'mm'), c.deflOk]);
         if (r.seisOn) {
-            rows.push(['多遇地震组合受弯 · ' + direction, compare(c.Mcomb, c.Mu, 3, 'kN·m') +
+            var side = r.equalWindChecks ? '' : ' · ' + c.name;
+            rows.push(['多遇地震组合受弯' + side, compare(c.Mcomb, c.Mu, 3, 'kN·m') +
                 (c.overRein ? '（超筋，M<sub>u</sub> 为界限估算）' : ''), c.seisFlexOk]);
-            rows.push(['多遇地震组合受剪 · ' + direction, compare(c.Vcomb, c.Vu, 3, 'kN'), c.seisShearOk]);
+            rows.push(['多遇地震组合受剪' + side, compare(c.Vcomb, c.Vu, 3, 'kN'), c.seisShearOk]);
         }
     });
     return rows;

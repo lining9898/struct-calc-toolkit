@@ -26,7 +26,7 @@
     var defaults = {
         aw_L: 3, aw_b: 600, aw_h: 200, aw_grade: 'A5.0', aw_reb: 'CRB600H', aw_d: 8, aw_n: 4, aw_as: 35,
         aw_d_outer: '', aw_n_outer: '', aw_as_outer: '', aw_w0: 0.45, aw_terrain: 'B', aw_z: 10, aw_mus: 1.2,
-        aw_mus_suction: '', aw_gamm0: 1, aw_gammaG: 1.3, aw_gammaW: 1.5, aw_seis: 'n',
+        aw_gamm0: 1, aw_gammaG: 1.3, aw_gammaW: 1.5, aw_seis: 'n',
         aw_amax: 0.08, aw_eta: 1, aw_eta_cat: 1, aw_state: 1.2, aw_xi: 1.5, aw_psiW_seis: 0.2, aw_nj: 4, aw_gamma0j: 1.1
     };
     function interpolate(table, height) {
@@ -78,8 +78,7 @@
                     { v: 'D', t: 'D类（密集建筑群且房屋较高的城市）' }
                 ], 'B'), 'GB 50009-2012 表8.2.1') +
                 numField('aw_z', '计算高度 z', 'm', 10.0, '墙板计算位置距地面高度') +
-                numField('aw_mus', '风压或控制净局部体型系数', '—', 1.2, '只取最不利方向时，填控制幅值并将下一项留空。系数应计入内外压影响') +
-                numField('aw_mus_suction', '风吸净局部体型系数', '—', '', '分方向计算时填写。留空按控制幅值验算两侧') +
+                numField('aw_mus', '体型系数 μ<sub>s</sub>', '—', 1.2, '填写最不利方向的净体型系数，计算时取绝对值。') +
                 '</div></form></div>' +
                 '<div class="panel"><div class="panel-title">荷载分项系数</div>' +
                 '<form id="f-aw2b"><div class="grid2">' +
@@ -125,7 +124,7 @@
                 var d = num('aw_d'), n = num('aw_n'), asV = num('aw_as');
                 var dOuter = num('aw_d_outer', d), nOuter = num('aw_n_outer', n), asOuter = num('aw_as_outer', asV);
                 var w0 = num('aw_w0'), terrain = val('aw_terrain'), zH = num('aw_z');
-                var mus = Math.abs(num('aw_mus')), musSuction = Math.abs(num('aw_mus_suction', mus));
+                var mus = num('aw_mus');
                 var gamma0 = num('aw_gamm0'), gammaG = num('aw_gammaG'), gammaW = num('aw_gammaW');
                 var seisOn = val('aw_seis') === 'y';
                 var amax = num('aw_amax'), gammaFun = num('aw_eta'), etaCat = num('aw_eta_cat');
@@ -139,7 +138,7 @@
                 if (![asV, asOuter].every(positive) || asV + asOuter >= h) {
                     return err('两侧纵筋合力点距离均须大于 0，且两者之和须小于板厚。');
                 }
-                if (![w0, mus, musSuction].every(function (value) { return Number.isFinite(value) && value >= 0; }) ||
+                if (!Number.isFinite(w0) || w0 < 0 || !Number.isFinite(mus) ||
                     !positive(zH) || !['A', 'B', 'C', 'D'].includes(terrain)) return err('请检查基本风压、体型系数、计算高度和粗糙度类别。');
                 if (![gamma0, gammaG, gammaW, gamma0j].every(positive)) return err('重要性系数和荷载分项系数必须为正数。');
                 if (!Number.isInteger(nj) || nj < 2 || nj % 2 !== 0) return err('按上下支座均分反力时，连接件总数须为不小于 2 的偶数。');
@@ -165,6 +164,11 @@
 
                 var muz = interpolate(muzTable[terrain], zH);
                 var bgz = interpolate(bgzTable[terrain], zH);
+                var wk = bgz * Math.abs(mus) * muz * w0;
+                var q = wk * b / 1000;
+                var Mwk = q * L * L / 8;
+                var M = gammaW * Mwk, V = gammaW * q * L / 2;
+                var windM = gamma0 * M, windV = gamma0 * V;
                 var fc = g.fc, ftk = g.ftk, ft = g.ft, Ec = g.Ec, rho0 = g.rho;
                 var fy = rb.fy, Es = rb.Es;
                 var As = Math.PI * d * d * n / 4;
@@ -185,14 +189,15 @@
                 var FEk = seisOn ? gammaFun * etaCat * amax * state * xiPos * Gk : 0;
                 var Fe = gammaE * FEk;
                 var Mseis = Fe * L / 4;
+                var Mcomb = seisOn ? Mseis + psiW * M : 0;
+                var Vcomb = seisOn ? Fe / 2 + psiW * V : 0;
                 var Lmm = L * 1000;
                 var deflLim = Lmm / 200;
+                // 风荷载准永久值为 0，该面外模型中 B = Bs。
+                var defl = 5 * q * Math.pow(Lmm, 4) / (384 * Bs);
                 var rhoMax = 0.5 * fc / fy * 100;
 
-                function checkDirection(name, coefficient, steelArea, edgeDistance, tensionEdge) {
-                    var wk = bgz * muz * coefficient * w0;
-                    var q = wk * b / 1000;
-                    var Mwk = q * L * L / 8;
+                function checkSection(name, steelArea, edgeDistance, tensionEdge) {
                     var h0 = h - edgeDistance;
                     var x = fy * steelArea / (fc * b);
                     var xMax = 0.5 * h0;
@@ -200,25 +205,17 @@
                     var xUse = Math.min(x, xMax);
                     var Mu = 0.75 * fc * b * xUse * (h0 - xUse / 2) / 1e6;
                     var Vu = 0.45 * ft * b * h0 / 1000;
-                    var M = gammaW * Mwk;
-                    var V = gammaW * q * L / 2;
-                    var windM = gamma0 * M, windV = gamma0 * V;
-                    var Mcomb = seisOn ? Mseis + psiW * M : 0;
-                    var Vcomb = seisOn ? Fe / 2 + psiW * V : 0;
                     var sigma = Mwk * 1e6 * tensionEdge / I0;
-                    // 风荷载准永久值为 0，该面外模型中 B = Bs。
-                    var defl = 5 * q * Math.pow(Lmm, 4) / (384 * Bs);
-                    return { name: name, coefficient: coefficient, wk: wk, q: q, Mwk: Mwk, As: steelArea, h0: h0,
+                    return { name: name, coefficient: Math.abs(mus), wk: wk, q: q, Mwk: Mwk, As: steelArea, h0: h0,
                         x: x, xMax: xMax, overRein: overRein, Mu: Mu, Vu: Vu, M: M, V: V, windM: windM, windV: windV,
                         Mcomb: Mcomb, Vcomb: Vcomb, sigma: sigma, defl: defl,
                         capOk: !overRein && windM <= Mu, tauOk: windV <= Vu,
                         seisFlexOk: !overRein && Mcomb <= Mu, seisShearOk: Vcomb <= Vu,
                         crackOk: sigma <= ftk, deflOk: defl <= deflLim };
                 }
-                var pressure = checkDirection('风压（内侧受拉）', mus, As, asV, h - centroid);
-                var suction = checkDirection('风吸（外侧受拉）', musSuction, AsOuter, asOuter, centroid);
+                var pressure = checkSection('内侧受拉', As, asV, h - centroid);
+                var suction = checkSection('外侧受拉', AsOuter, asOuter, centroid);
                 var directions = [pressure, suction];
-                var wind = pressure.wk >= suction.wk ? pressure : suction;
                 var flex = pressure;
                 if ((pressure.capOk && !suction.capOk) ||
                     (pressure.capOk === suction.capOk && suction.windM / suction.Mu > pressure.windM / pressure.Mu)) {
@@ -226,7 +223,7 @@
                 }
                 var shear = pressure.windV / pressure.Vu >= suction.windV / suction.Vu ? pressure : suction;
 
-                var Nwj = gamma0j * gammaW * wind.q * L / nj;
+                var Nwj = gamma0j * gammaW * q * L / nj;
                 var windNodeDemand = 2 * Nwj;
                 var Vsj = gamma0j * Fe / nj;
                 var VsjCombo = Vsj + (seisOn ? psiW * Nwj : 0);
@@ -249,21 +246,23 @@
                     L: L, b: b, h: h, h0: flex.h0, asV: asV, As: flex.As, AsInner: As, AsOuter: AsOuter,
                     d: d, n: n, fc: fc, ftk: ftk, ft: ft, Ec: Ec, fy: fy, Es: Es, rho0: rho0, rhoSelf: rhoSelf,
                     rho: flex.As / (b * flex.h0) * 100, rhoMax: rhoMax, qgk: qgk, qg: qgk * gammaG,
-                    w0: w0, terrain: terrain, zH: zH, mus: mus, musSuction: musSuction, muz: muz, bgz: bgz,
-                    wk: wind.wk, qWind_k: wind.q, qWind_d: gammaW * wind.q, Mwk: wind.Mwk, Md: wind.M, Mwk_ctrl: wind.Mwk,
+                    w0: w0, terrain: terrain, zH: zH, mus: mus, muz: muz, bgz: bgz,
+                    wk: wk, qWind_k: q, qWind_d: gammaW * q, Mwk: Mwk, Md: M, Mwk_ctrl: Mwk,
                     gamma0: gamma0, gammaG: gammaG, gammaW: gammaW, psiW: psiW, gammaE: gammaE,
                     directions: directions,
-                    equalWindChecks: pressure.wk === suction.wk && pressure.As === suction.As && pressure.h0 === suction.h0,
-                    windFlexControl: flex.name, windShearControl: shear.name, M: flex.M, Mu: flex.Mu, x: flex.x, xMax: flex.xMax,
+                    equalWindChecks: pressure.As === suction.As && pressure.h0 === suction.h0,
+                    windFlexControl: pressure.Mu === suction.Mu && pressure.capOk === suction.capOk ? '两侧相同' : flex.name,
+                    windShearControl: pressure.Vu === suction.Vu ? '两侧相同' : shear.name,
+                    M: M, Mu: flex.Mu, x: flex.x, xMax: flex.xMax,
                     overRein: pressure.overRein || suction.overRein, capOk: both('capOk'),
-                    Vmax: shear.V, Vdesign: shear.windV, tau: shear.windV * 1000 / (b * shear.h0), tauOk: both('tauOk'),
-                    seisOn: seisOn, FEk: FEk, Fe: Fe, Mseis: Mseis, Mcomb: Math.max(pressure.Mcomb, suction.Mcomb),
+                    Vmax: V, Vdesign: windV, tau: windV * 1000 / (b * shear.h0), tauOk: both('tauOk'),
+                    seisOn: seisOn, FEk: FEk, Fe: Fe, Mseis: Mseis, Mcomb: Mcomb,
                     seisFlexOk: seisOn ? both('seisFlexOk') : null, seisShearOk: seisOn ? both('seisShearOk') : null,
                     seisOk: seisOn ? both('seisFlexOk') && both('seisShearOk') : null,
                     sigmaCk: Math.max(pressure.sigma, suction.sigma), crackOk: both('crackOk'), crack1Ok: both('crackOk'),
-                    I0: I0, centroid: centroid, Bs: Bs, B: Bs, defl: Math.max(pressure.defl, suction.defl),
+                    I0: I0, centroid: centroid, Bs: Bs, B: Bs, defl: defl,
                     deflLim: deflLim, deflOk: both('deflOk'), nj: nj, gamma0j: gamma0j,
-                    Apanel: wind.q * L, Nw_total: Nwj * nj, Nwj: Nwj, Ve_total: Vsj * nj,
+                    Apanel: q * L, Nw_total: Nwj * nj, Nwj: Nwj, Ve_total: Vsj * nj,
                     Vsj: Vsj, VsjCombo: VsjCombo, Rd_node: windNodeDemand, nodeDemand: nodeDemand,
                     nodeChecks: nodeChecks, nodeOk: reference ? nodeChecks.every(function (node) { return node.ok; }) : null,
                     reviewRequired: true
@@ -281,13 +280,14 @@
                     ' mm⁴，B = B<sub>s</sub> = 0.85E<sub>c</sub>I<sub>0</sub> = ' + fmt(Bs, 0) + ' N·mm²。')) +
                     step('自重与风荷载', line('板材自重（JGJ/T 17-2020 第3.3.1条）', '干密度 × 1.4，线自重 ' +
                     fmt(qgk, 3) + ' kN/m，单块板重 ' + fmt(Gk, 3) + ' kN。自重沿板面作用。') +
-                    line('风荷载标准值', 'w<sub>k</sub> = β<sub>gz</sub> μ<sub>z</sub> |μ<sub>sl</sub>| w<sub>0</sub>，β<sub>gz</sub> = ' +
-                    fmt(bgz, 3) + '，μ<sub>z</sub> = ' + fmt(muz, 3) + '。') +
-                    line('简支板', 'q = w<sub>k</sub>b，M<sub>wk</sub> = qL²/8，V<sub>wk</sub> = qL/2。')) +
+                    line('最不利方向风荷载', 'w<sub>k</sub> = β<sub>gz</sub>·|μ<sub>s</sub>|·μ<sub>z</sub>·w<sub>0</sub> = ' +
+                    fmt(bgz, 3) + ' × |' + fmt(mus, 2) + '| × ' + fmt(muz, 3) + ' × ' + fmt(w0, 3) + ' = ' + fmt(wk, 3) + ' kN/m²。') +
+                    line('简支板', 'q = w<sub>k</sub>b = ' + fmt(q, 3) + ' kN/m，M<sub>wk</sub> = qL²/8 = ' +
+                    fmt(Mwk, 3) + ' kN·m，V<sub>wk</sub> = qL/2 = ' + fmt(q * L / 2, 3) + ' kN。')) +
                     (seisOn ? step('多遇地震组合', line('水平地震力', 'F<sub>Ehk</sub> = γηα<sub>max</sub>ζ<sub>1</sub>ζ<sub>2</sub>G<sub>k</sub> = ' +
                     fmt(FEk, 3) + ' kN，F<sub>Eh</sub> = 1.4 F<sub>Ehk</sub> = ' + fmt(Fe, 3) + ' kN。') +
-                    line('跨中等效集中力', 'M<sub>E</sub> = F<sub>Eh</sub>L/4，V<sub>E</sub> = F<sub>Eh</sub>/2。两方向分别叠加 ψ<sub>W</sub> = ' +
-                    fmt(psiW, 1) + ' 的同向设计风荷载效应。抗震抗力暂按 γ<sub>RE</sub> = 1.0 比较。')) : '') +
+                    line('跨中等效集中力', 'M<sub>E</sub> = F<sub>Eh</sub>L/4，V<sub>E</sub> = F<sub>Eh</sub>/2。最不利风荷载的设计效应乘以 ψ<sub>W</sub> = ' +
+                    fmt(psiW, 1) + ' 后与地震效应同向叠加。抗震抗力暂按 γ<sub>RE</sub> = 1.0 比较。')) : '') +
                     step('板材验算（JGJ/T 17-2020 第5.4节）',
                         line('受弯', 'x = f<sub>y</sub>A<sub>s</sub>/(f<sub>c</sub>b)，x ≤ 0.5h<sub>0</sub>，' +
                         'M<sub>u</sub> = 0.75f<sub>c</sub>bx(h<sub>0</sub> − x/2)。') +
@@ -324,7 +324,7 @@
                 });
             });
             Object.keys(defaults).forEach(function (id) { document.getElementById(id).addEventListener('change', calc); });
-            ['aw_w0', 'aw_z', 'aw_mus', 'aw_mus_suction'].forEach(function (id) {
+            ['aw_w0', 'aw_z', 'aw_mus'].forEach(function (id) {
                 document.getElementById(id).addEventListener('input', calc);
             });
             calc();

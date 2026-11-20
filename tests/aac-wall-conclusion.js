@@ -49,6 +49,10 @@ function closeTo(actual, expected) {
 
 let env = run();
 closeTo(env.result.wk, 0.918);
+closeTo(env.result.qWind_k, 0.5508);
+closeTo(env.result.qWind_d, 0.8262);
+closeTo(env.result.Md, 0.929475);
+closeTo(env.result.Vmax, 1.2393);
 closeTo(env.result.Nwj, 0.681615);
 closeTo(env.result.Rd_node, 1.36323);
 closeTo(env.result.Mu, 9.0824965);
@@ -93,15 +97,31 @@ closeTo(env.result.Vdesign, 11.19195);
 assert.equal(env.result.tauOk, false);
 assert.match(checkBook(env), /风荷载受剪/);
 
-// 相同板材两面的受拉钢筋和风荷载可以不同。
-env = run({ aw_n_outer: 1, aw_w0: 1.25, aw_mus_suction: -2.3 });
+// 两面配筋不同，截面判定独立，荷载取同一最不利方向的幅值。
+env = run({ aw_n_outer: 1, aw_w0: 1.25, aw_mus: -2.3 });
 const [pressure, suction] = env.result.directions;
 assert.equal(pressure.capOk, true);
 assert.equal(suction.capOk, false);
 assert.ok(pressure.Mu > suction.Mu);
-assert.ok(suction.wk > pressure.wk);
+closeTo(pressure.wk, 4.8875);
+assert.equal(pressure.wk, suction.wk);
 assert.ok(env.result.centroid > 100);
 assert.equal(env.result.capOk, false);
+assert.equal(env.context.aacWallCheckRows(env.result).filter(row => row[0].includes('风荷载标准值')).length, 1);
+checkBook(env);
+
+// 体型系数符号不改变标准值、节点需求或地震组合。C 类 25 m 在表内插值。
+const windCase = { aw_seis: 'y', aw_terrain: 'C', aw_z: 25, aw_w0: 0.6 };
+const negative = run({ ...windCase, aw_mus: -1.7 }).result;
+const positive = run({ ...windCase, aw_mus: 1.7 }).result;
+closeTo(negative.wk, 1.945 * 1.7 * 0.81 * 0.6);
+for (const key of ['wk', 'qWind_k', 'Md', 'Vmax', 'Mcomb', 'Nwj', 'Rd_node', 'VsjCombo']) {
+    assert.equal(negative[key], positive[key], key);
+}
+const calm = run({ ...windCase, aw_mus: 0 }).result;
+assert.equal(calm.wk, 0);
+assert.equal(calm.Nwj, 0);
+closeTo(calm.VsjCombo, calm.Vsj);
 
 env = run({ aw_seis: 'y', aw_psiW_seis: 0 });
 closeTo(env.result.VsjCombo, env.result.Vsj);

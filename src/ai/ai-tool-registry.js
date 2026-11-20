@@ -3577,7 +3577,7 @@
               description: '墙板计算位置距地面高度，单位 m。' },
             { name: 'mu_s', label: '体型系数 μ_s', type: 'number', unit: '', required: true, default: 1.2,
               aliases: ['mu_s', 'mus', 'μs', '体型系数', '风载体型系数'],
-              description: '风压净局部体型系数，按幅值计算。反向体型系数留空时沿用该幅值。' },
+              description: '填写最不利方向的净体型系数，计算时取绝对值。' },
             { name: 'gamma0', label: '结构重要性系数 γ0', type: 'number', unit: '', required: true, default: 1.0,
               aliases: ['gamma0', 'γ0', 'gamma_0', '重要性系数', '结构重要性系数'],
               description: '一级=1.1，二级=1.0，三级=0.9。' },
