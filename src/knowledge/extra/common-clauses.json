@@ -20,15 +20,17 @@
     {
       "id": "GB50010-7-2-2",
       "standard": "GB 50010",
-      "version": "2010",
+      "version": "2010（初版）",
       "chapter": "第7章 正常使用极限状态验算",
       "article": "7.2.2",
-      "title": "受弯构件挠度验算与刚度取值",
+      "title": "受弯构件长期刚度",
       "keywords": ["挠度", "刚度", "短期刚度", "长期刚度", "Bs", "B", "θ", "准永久组合"],
-      "content": "受弯构件的挠度应按荷载标准组合与准永久组合分别计算，采用短期刚度 Bs 与考虑荷载长期作用影响的刚度 B。挠度计算值不应超过规范规定的挠度限值（按跨度与构件类型取用）。",
-      "explanation": "长期刚度 B = Mk / [Mq(θ−1) + Mk] · Bs，其中 θ 为长期作用对挠度增大的影响系数（一般取 2.0，ρ′ = 0 时）。挠度限值通常为 l0/200（一般构件）～l0/250、l0/300（对挠度敏感或悬挑构件更严）。预拱度、施工起拱需另计。",
+      "content": "本条适用于矩形、T 形、倒 T 形和 I 形截面受弯构件。\n按标准组合取 B = [M_k / (M_q(θ − 1) + M_k)] B_s（7.2.2-1）。按准永久组合取 B = B_s/θ（7.2.2-2）。\nM_k、M_q 分别为计算区段内标准组合、准永久组合的最大弯矩。B_s 按第 7.2.3 条计算，θ 按第 7.2.5 条取值。挠度限值见第 7.2.1 条所引用的表 3.4.3。",
+      "explanation": "先按采用的荷载组合确定长期刚度 B，再用于挠度计算。挠度的允许值另按构件类别及跨度查表。",
       "related_tools": ["deflection", "beam-rect", "slab-rect", "stair-slab"],
-      "status": "本地整理_需与规范正文核对"
+      "status": "已对照2010初版",
+      "source_print_page": "97～98",
+      "content_type": "条文要点"
     },
     {
       "id": "GB50010-9-2-11",
@@ -440,13 +442,13 @@
       "chapter": "5.4 板材设计计算",
       "article": "5.4.1",
       "title": "正截面受弯承载力",
-      "content": "按式（5.4.1-1）比较弯矩设计值和正截面抗弯承载力。由纵筋与受压区的内力平衡求 x，且 x 不得超过有效高度的一半。",
+      "content": "受弯验算采用 M ≤ 0.75 f_c b x(h₀ − x/2)（5.4.1-1）。按 f_c b x = f_y A_s 求受压区高度 x（5.4.1-2），并核对 x ≤ 0.5h₀（5.4.1-3）。单面受拉钢筋的最大配筋率按 0.5 f_c/f_y（5.4.1-4）确定，以百分数表示。",
       "related_tools": [
         "aac-wall"
       ],
       "status": "已与2020版核对",
       "content_type": "条文要点",
-      "source_url": "https://oss.ydd17.com/data/upload/20201217/16081769694567.pdf"
+      "source_print_page": "24"
     },
     {
       "id": "JGJT17-5-4-2",
@@ -455,13 +457,13 @@
       "chapter": "5.4 板材设计计算",
       "article": "5.4.2",
       "title": "截面受剪承载力",
-      "content": "验算剪力设计值 V ≤ 0.45 fₜ b h₀，其中 fₜ 取板材的劈拉强度设计值。",
+      "content": "将剪力设计值 V 与 0.45 fₜ b h₀ 比较，V 不得超过该值（5.4.2）。fₜ 为板材的劈拉强度设计值，b 为板宽，h₀ 为截面有效高度。",
       "related_tools": [
         "aac-wall"
       ],
       "status": "已与2020版核对",
       "content_type": "条文要点",
-      "source_url": "https://oss.ydd17.com/data/upload/20201217/16081769694567.pdf"
+      "source_print_page": "24～25"
     },
     {
       "id": "JGJT17-5-4-3",
@@ -470,13 +472,13 @@
       "chapter": "5.4 板材设计计算",
       "article": "5.4.3",
       "title": "抗裂验算",
-      "content": "采用荷载标准组合，比较截面边缘拉应力与板材的劈拉强度标准值，前者不得超过后者。",
+      "content": "用荷载标准组合求出受弯板材截面边缘的拉应力，并以蒸压加气混凝土的劈拉强度标准值作为上限。",
       "related_tools": [
         "aac-wall"
       ],
       "status": "已与2020版核对",
       "content_type": "条文要点",
-      "source_url": "https://oss.ydd17.com/data/upload/20201217/16081769694567.pdf"
+      "source_print_page": "25"
     },
     {
       "id": "JGJT17-5-4-4",
@@ -485,13 +487,13 @@
       "chapter": "5.4 板材设计计算",
       "article": "5.4.4",
       "title": "挠度限值",
-      "content": "按标准组合计算最大挠度并计入长期影响，限值为计算跨度的 1/200。",
+      "content": "按荷载效应标准组合计算板材最大挠度，同时计入荷载的长期作用。挠度上限为 l₀/200，l₀ 为板材的计算跨度。",
       "related_tools": [
         "aac-wall"
       ],
       "status": "已与2020版核对",
       "content_type": "条文要点",
-      "source_url": "https://oss.ydd17.com/data/upload/20201217/16081769694567.pdf"
+      "source_print_page": "25"
     },
     {
       "id": "JGJT17-5-4-5",
@@ -500,13 +502,13 @@
       "chapter": "5.4 板材设计计算",
       "article": "5.4.5",
       "title": "短期刚度与长期刚度",
-      "content": "先根据弹性模量和换算截面惯性矩计算短期刚度，再依据标准组合和准永久组合的跨中弯矩及长期影响系数确定长期刚度。",
+      "content": "短期刚度 B_s = 0.85 E_c I₀（5.4.5-1）。计入长期作用时，可按 B = [M_k / (M_q(θ − 1) + M_k)] B_s 计算（5.4.5-2）。E_c 为板材弹性模量，I₀ 为换算截面惯性矩，M_k、M_q 分别为标准组合与准永久组合下的跨中最大弯矩，θ 一般可取 2.0。",
       "related_tools": [
         "aac-wall"
       ],
       "status": "已与2020版核对",
       "content_type": "条文要点",
-      "source_url": "https://oss.ydd17.com/data/upload/20201217/16081769694567.pdf"
+      "source_print_page": "25"
     },
     {
       "id": "JGJT17-5-4-6",
@@ -515,13 +517,13 @@
       "chapter": "5.4 板材设计计算",
       "article": "5.4.6",
       "title": "外墙板承载力验算工况",
-      "content": "须分别验算风荷载和地震作用下的外墙板承载力。",
+      "content": "外墙板的承载力应分别按风荷载和抗震工况验算。",
       "related_tools": [
         "aac-wall"
       ],
       "status": "已与2020版核对",
       "content_type": "条文要点",
-      "source_url": "https://oss.ydd17.com/data/upload/20201217/16081769694567.pdf"
+      "source_print_page": "25"
     },
     {
       "id": "JGJT17-5-4-7",
@@ -536,7 +538,7 @@
       ],
       "status": "已与2020版核对",
       "content_type": "原文",
-      "source_url": "https://oss.ydd17.com/data/upload/20201217/16081769694567.pdf"
+      "source_print_page": "25"
     },
     {
       "id": "JGJT17-5-4-8",
@@ -545,26 +547,28 @@
       "chapter": "5.4 板材设计计算",
       "article": "5.4.8",
       "title": "罕遇地震下的稳定与连接",
-      "content": "罕遇地震工况下，须保证板体整体稳定，且板与主体的连接可靠。",
+      "content": "罕遇地震工况下，板体须保持整体稳定，板与主体结构的连接须保持可靠。",
       "related_tools": [
         "aac-wall"
       ],
       "status": "已与2020版核对",
       "content_type": "条文要点",
-      "source_url": "https://oss.ydd17.com/data/upload/20201217/16081769694567.pdf"
+      "source_print_page": "25"
     },
     {
       "id": "GB50010-9-1-1",
       "standard": "GB 50010",
-      "version": "2010",
+      "version": "2010（初版）",
       "chapter": "第9章 结构构件的基本规定",
-      "article": "9.1",
-      "title": "板类构件的构造要求",
+      "article": "9.1.1、9.1.3～9.1.4、9.1.7",
+      "title": "板的受力方向与配筋构造",
       "keywords": ["板配筋", "分布钢筋", "受力钢筋间距", "支座负筋", "板厚", "嵌固"],
-      "content": "板中受力钢筋的间距与直径、分布钢筋的配置、板厚与支承长度等应满足规范构造要求。",
-      "explanation": "常用做法：板受力筋常用 Φ8~Φ12、间距 100~200 mm（不宜大于 1.5h 或 200 mm 的较小值）；分布筋不小于受力筋的 15% 且配筋率不低于 0.15%，直径不小于 Φ6、间距不大于 250 mm。支座负筋伸出长度一般为净跨的 1/4（活荷载较大时 1/3）。",
+      "content": "9.1.1（第 111 页）　两对边支承按单向板计算。四边支承时，长短边比 ≤ 2.0 时按双向板计算。在 2.0 与 3.0 之间宜按双向板计算。长短边比 ≥ 3.0 时，宜按短边受力的单向板计算，长边方向配构造筋。\n9.1.3～9.1.4（第 112 页）　板厚 ≤ 150 mm 时，受力筋间距宜 ≤ 200 mm。板厚 > 150 mm 时，间距宜 ≤ 1.5 倍板厚，且宜 ≤ 250 mm。分离式配筋多跨板的支座负筋按负弯矩图确定伸入跨内的长度，并满足锚固要求。\n9.1.7（第 113 页）　单向板沿垂直受力方向布置分布筋。每单位宽度的分布筋面积宜不少于受力筋面积的 15%，配筋率宜 ≥ 0.15%，钢筋直径宜 ≥ 6 mm，间距宜 ≤ 250 mm。集中荷载较大时增加配筋，且间距宜 ≤ 200 mm。有实践经验或可靠措施的预制单向板可按本条所列例外处理。",
+      "explanation": "板的计算方向由支承条件和长短边比决定。受力筋的间距、支座负筋与锚固、分布筋配置分别核对相应条文。",
       "related_tools": ["slab-rect", "rebar-pick", "stair-slab"],
-      "status": "本地整理_需与规范正文核对"
+      "status": "已对照2010初版",
+      "source_print_page": "111～113",
+      "content_type": "条文要点"
     },
     {
       "id": "GB50010-9-2-1",
@@ -604,7 +608,7 @@
       ],
       "content_type": "条文要点",
       "status": "已核对对应内容",
-      "source_url": "https://jncc.jinan.gov.cn/module/download/downfile.jsp?classid=0&filename=43ef748669884f88bdf857d009f6f998.pdf"
+      "source_url": "https://gf.cabr-fire.com/article-17126.htm"
     },
     {
       "id": "GB55008-4-4-6",
@@ -632,14 +636,13 @@
         "rebar-pick"
       ],
       "content_type": "条文要点",
-      "status": "已核对对应内容",
-      "source_url": "https://openstd.samr.gov.cn/bzgk/std/newGbInfo?hcno=B54C4769E4CA87CFF4F0E6D00C20AFF8"
+      "status": "已核对对应内容"
     },
     {
       "id": "L22ZG401-selection",
       "standard": "L22ZG401",
       "version": "",
-      "article": "印刷页 13～19、23～29、33～39",
+      "article": "底板选用表",
       "title": "标准宽度底板选用表",
       "content": "三组表依次对应 1000、1700 和 2100 mm 宽底板。按标志跨度和荷载等级查底板配筋，再从同一行读取叠合层厚度、底板自重等参数。",
       "related_tools": [
@@ -647,7 +650,7 @@
       ],
       "content_type": "图集选用表说明",
       "status": "已核对对应内容",
-      "source_url": "https://ebook.chinabuilding.com.cn/zbooklib/book/detail/show?SiteID=1&bookID=153988"
+      "source_print_page": "13～19、23～29、33～39"
     }
   ]
 }

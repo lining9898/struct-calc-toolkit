@@ -23,6 +23,11 @@ with sync_playwright() as p:
   assert clauses and len({a['id'] for a in clauses})==len(clauses),id
   assert page.locator('#rsAdvisor .rs-clause p').all_text_contents()==[a['content'] for a in clauses],id
   advisor=page.locator('#rsAdvisor')
+  for row, clause in zip(advisor.locator('.rs-clause').all(), clauses):
+   link=row.locator('a,img')
+   if clause.get('source_print_page'):
+    assert f"印刷第 {clause['source_print_page']} 页" in row.text_content(),id
+   assert link.count()==0,id
   assert advisor.locator('.rs-t').text_content()=='结果解读',id
   verdict=page.evaluate('RESULT_ADVISOR.analyze().verdict')
   if id in ('anchor','aac-wall','steel-beam','pool-rect','punching','load-combo'):

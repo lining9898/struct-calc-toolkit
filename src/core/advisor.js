@@ -86,13 +86,12 @@
             var box = document.createElement('div');
             box.className = 'rs-sec rs-extra';
             var articles = (list || []).map(function (article) {
-                var source = /^https?:\/\//i.test(article.source_url || '') ? '<a target="_blank" rel="noopener noreferrer" href="' +
-                    escapeText(article.source_url).replace(/"/g, '&quot;') + '">查看来源</a>' : '';
+                var page = article.source_print_page ? '印刷第 ' + article.source_print_page + ' 页' : '印刷页码待核对';
                 var type = article.content_type || '本地摘编 · 待校核';
                 return '<div class="rs-clause"><b>' + escapeText(article.standard_name) + '　' +
                     escapeText(article.article) + '　' + escapeText(article.title) + '</b>' +
                     '<p>' + escapeText(article.content || '本条暂未收录正文。') + '</p><div class="rs-more">' +
-                    escapeText(type) + (source ? '　' + source : '') + '</div></div>';
+                    escapeText(type) + '　' + escapeText(page) + '</div></div>';
             });
             box.innerHTML = '<div class="rs-sec-title">相关规范条文</div>' +
                 (articles.length ? '<div class="rs-clauses">' +

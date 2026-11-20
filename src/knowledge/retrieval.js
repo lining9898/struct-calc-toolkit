@@ -251,7 +251,7 @@
                     title: art.title,
                     content: art.content,
                     content_type: art.content_type,
-                    source_url: art.source_url,
+                    source_print_page: art.source_print_page,
                     status: art.status
                 };
             }));
