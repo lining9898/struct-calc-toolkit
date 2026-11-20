@@ -232,12 +232,12 @@
 
                 // 正截面受弯配筋（单筋矩形）
                 var a1fc = alpha1 * fc;
-                var as_s = b * h0 * h0;
-                var x = a1fc * b * h0 * (1 - Math.sqrt(1 - 2 * M_ctrl * 1e6 / (a1fc * b * h0 * h0))) / (a1fc * b);
+                var alpha_s = M_ctrl * 1e6 / (a1fc * b * h0 * h0);
+                if (!(h0 > 0 && alpha_s >= 0 && alpha_s < 0.5)) return err('当前截面与弯矩超出单筋反算范围，无法判定配筋和裂缝。');
+                var x = h0 * (1 - Math.sqrt(1 - 2 * alpha_s));
                 // ξ = x/h0
                 var ksi = x / h0;
                 var As_req = a1fc * b * x / fy; // mm²/m
-                if (isNaN(As_req) || As_req < 0) As_req = 0;
                 var rho = As_req / (b * h0);
                 var rho_min = rhoMinFlex(ft, fy).rho; // 受弯最小配筋率
                 var As_min = rho_min * b * h; // 按全截面
@@ -281,7 +281,7 @@
                 html += resultRow('最大侧压力 σ<sub>max</sub>', fmt(press[nDiv].sigma_total,2) + ' kPa（土 ' + fmt(press[nDiv].sigma_s,2) + ' + 水 ' + fmt(press[nDiv].sigma_w,2) + '）');
                 html += resultRow('所需受拉钢筋 A<sub>s</sub>', fmt(useAs, 0) + ' mm²/m（ρ = ' + fmt(useAs/(b*h0)*100,3) + '%）');
                 html += resultRow('裂缝宽度 w<sub>max</sub>', fmt(w_max, 3) + ' / ' + w_lim + ' mm ' + (crackOk ? tag('ok','满足') : tag('err','超限')));
-                html += resultRow('综合判定', badge(crackOk && useAs > 0 ? 'badge-ok' : 'badge-err', crackOk ? '外墙配筋与裂缝均满足' : '外墙验算不满足'));
+                html += resultRow('裂缝计算结论', badge(crackOk ? 'badge-ok' : 'badge-err', crackOk ? '按所需钢筋面积计算，裂缝宽度未超限。实际配筋须复核。' : '按所需钢筋面积计算，裂缝宽度超限。'));
                 out.innerHTML = html;
                 proc.innerHTML = st.join('');
                 var _p = proc ? proc.closest('.proc-wrap') : document.querySelector('#view .proc-wrap'); if (_p) _p.classList.add('open');

@@ -182,13 +182,14 @@
                 st.push('<div class="step"><b>⑦ 分布钢筋（7.2.17条）</b>　ρ<sub>w</sub> = ' + fmt(rhoW*100, 2) + '% ≥ ' + fmt(rhoMin*100, 2) + '% ⇒ ' + (rhoOk ? tag('ok','满足') : tag('err','不足')) + '（间距≤300mm，直径≥8mm，7.2.18条）</div>');
 
                 // ⑧ 整体稳定验算提示 (D.0.4条)
+                var overallOk = null;
                 if (shapeV !== 'rect' && supV !== 'two') {
                     var needOverall = (bf < 2 * bw && bf < 800) || (hw < 2 * bw && hw < 800);
                     if (needOverall) {
                         var I_approx = Math.min(bw * Math.pow(hw, 3) / 12, bw * Math.pow(bf + bw, 3) / 12);
                         var N_overall = N * 1000;
                         var NCr_overall = 1.2 * Ec * I_approx / Math.pow(h_mm, 3);
-                        var overallOk = N_overall <= NCr_overall;
+                        overallOk = N_overall <= NCr_overall;
                         st.push('<div class="step"><b>⑧ 整体稳定验算（D.0.4条）</b>　翼缘或腹板高度小于2倍墙厚且小于800mm，需验算整体稳定</div>');
                         st.push('<div class="step">　　N = ' + fmt(N,0) + '×10³ N；N<sub>cr</sub> = 1.2×E<sub>c</sub>×I/h³ = 1.2×' + fmt(Ec/1000,0) + '×10³×' + fmt(I_approx,0) + '/' + fmt(h_mm,0) + '³ = <b>' + fmt(NCr_overall/1000, 2) + ' kN</b> ⇒ ' + (overallOk ? tag('ok','满足') : tag('err','不满足')) + '</div>');
                     } else {
@@ -203,8 +204,10 @@
                 html += resultRow('轴压比', fmt(n_ratio, 4) + '（限值 ' + fmt(nLimit, 2) + '） ' + (nOk ? tag('ok','满足') : tag('err','超限')));
                 html += resultRow('边缘构件', needConstr ? '需设约束边缘构件（7.2.15条）' : '可设构造边缘构件（7.2.16条）');
                 html += resultRow('分布钢筋', 'ρ = ' + fmt(rhoW*100, 2) + '% ≥ ' + fmt(rhoMin*100, 2) + '% ' + (rhoOk ? tag('ok','满足') : tag('err','不足')));
-                var allOk = stableOk && nOk && thickOk && rhoOk;
-                html += resultRow('综合判定', badge(allOk ? 'badge-ok' : 'badge-err', allOk ? '各项验算均满足' : '存在不满足项'));
+                if (overallOk !== null) html += resultRow('整体稳定（简化计算）', overallOk ? '估算未超限' : '估算超限');
+                var allOk = stableOk && nOk && thickOk && rhoOk && overallOk !== false;
+                var summary = allOk ? '本模块已计算的项目未见不满足项' : overallOk === false ? '存在不满足项，整体稳定估算超限' : '存在不满足项';
+                html += resultRow('综合判定', badge(allOk ? (overallOk === null ? 'badge-ok' : 'badge-warn') : 'badge-err', summary));
                 out.innerHTML = html;
                 proc.innerHTML = st.join('');
                 var _p = proc ? proc.closest('.proc-wrap') : document.querySelector('#view .proc-wrap'); if (_p) _p.classList.add('open');

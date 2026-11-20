@@ -15,7 +15,7 @@ with sync_playwright() as p:
  page.goto('http://127.0.0.1:'+str(server.server_port));page.wait_for_timeout(100)
  ids=page.evaluate('Object.keys(TOOLS)');results=[]
  for id in ids:
-  page.evaluate('(id)=>goTool(id)',id);page.wait_for_timeout(120)
+  page.evaluate("(id)=>{goTool(id);if(id==='l22zg401')document.getElementById('l22_sel_calc').click()}",id);page.wait_for_timeout(120)
   with page.expect_download(timeout=15000) as dl:page.evaluate('exportBook()')
   file=out/(id+'.docx');dl.value.save_as(file)
   assert dl.value.suggested_filename.endswith('.docx'),id
@@ -30,7 +30,15 @@ with sync_playwright() as p:
    assert tree.find('.//w:pgSz',ns).get('{'+ns['w']+'}h')=='16838',id
    assert styles.find('.//w:rFonts',ns).get('{'+ns['w']+'}eastAsia')=='宋体',id
    for table in tree.findall('.//w:tbl',ns):
-    assert sum(int(c.get('{'+ns['w']+'}w')) for c in table.findall('w:tblGrid/w:gridCol',ns))==9638,id
+    width=sum(int(c.get('{'+ns['w']+'}w')) for c in table.findall('w:tblGrid/w:gridCol',ns))
+    parent=table.getparent()
+    if parent.tag=='{'+ns['w']+'}tc':
+     props=parent.find('w:tcPr',ns)
+     cell_width=int(props.find('w:tcW',ns).get('{'+ns['w']+'}w'))
+     padding=sum(int(props.find('w:tcMar/w:'+side,ns).get('{'+ns['w']+'}w')) for side in ('left','right'))
+     assert width==cell_width-padding,id
+    else:
+     assert width==9638,id
   assert 'w:vertAlign' in xml or not page.locator('.proc-body sub').count(),id
   results.append({'tool':id,'paragraphs':len(d.paragraphs),'tables':len(d.tables),'bytes':file.stat().st_size})
   print('PASS',id,flush=True)

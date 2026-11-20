@@ -109,10 +109,10 @@
                 var h0_v = h - asV;
                 var a1fc = alpha1 * fc;
                 var alpha_sv = Mv_bot * 1e6 / (a1fc * b * h0_v * h0_v);
+                if (!(h0_v > 0 && alpha_sv >= 0 && alpha_sv < 0.5)) return err('竖向截面与弯矩超出单筋反算范围，无法给出整组结果。');
                 var ksiv = 1 - Math.sqrt(1 - 2 * alpha_sv);
                 var xv = ksiv * h0_v;
                 var As_v_req = a1fc * b * xv / fy;
-                if (isNaN(As_v_req)) As_v_req = 0;
                 var rho_v_min = Math.max(0.0015, 0.45 * ft / fy); // 竖向最小配筋率 0.15%（另有专门规定，依据正文未取得，2026-09-23 未核对）
                 var As_v_min = rho_v_min * h * 1000; // 双侧
                 var useAs_v = Math.max(As_v_req, As_v_min / 2); // 外侧受拉侧
@@ -149,7 +149,7 @@
                 html += resultRow('底部竖向弯矩', fmt(Mv_bot, 2) + ' kN·m/m');
                 html += resultRow('竖向受弯钢筋（外侧）', fmt(useAs_v, 0) + ' mm²/m');
                 html += resultRow('环向裂缝宽度 w<sub>max</sub>', fmt(w_max_h, 3) + ' / ' + w_lim + ' mm ' + (crackOk ? tag('ok','满足') : tag('err','超限')));
-                html += resultRow('综合判定', badge(crackOk ? 'badge-ok' : 'badge-err', crackOk ? '圆形水池配筋与裂缝均满足' : '水池验算不满足'));
+                html += resultRow('环向裂缝计算结论', badge(crackOk ? 'badge-ok' : 'badge-err', crackOk ? '按所需环向钢筋面积计算，环向裂缝宽度未超限。实际配筋与竖向裂缝须复核。' : '按所需环向钢筋面积计算，环向裂缝宽度超限。'));
                 out.innerHTML = html;
                 proc.innerHTML = st.join('');
                 var _p = proc ? proc.closest('.proc-wrap') : document.querySelector('#view .proc-wrap'); if (_p) _p.classList.add('open');

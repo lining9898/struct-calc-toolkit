@@ -192,7 +192,7 @@
                     st.forEach(function (step, index) {
                         reportSteps.push(step.replace(/<b>[①②③④⑤⑥⑦⑧⑨⑩] /, '<b>第' + (index + 3) + '步：'));
                     });
-                    reportSteps.push('<div class="step"><b>计算结论</b>　原计算结果及判定如下（工程结论待人工核验）：' + out.innerHTML + '</div>');
+                    reportSteps.push('<div class="step"><b>计算结论</b>　梯段板和平台板配筋详见下表。梯梁结果为导荷估算。' + sHtml + pHtml + bHtml + '</div>');
                     return reportSteps.join('');
                 })();
                 var _p = proc ? proc.closest('.proc-wrap') : document.querySelector('#view .proc-wrap'); if (_p) _p.classList.add('open');

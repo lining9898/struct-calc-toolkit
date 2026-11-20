@@ -140,8 +140,9 @@
 
                 st.push('<div class="step"><b>⑤ 分布筋配筋率</b>　水平分布筋 ρ<sub>sh</sub> = ' + fmt(rho_sh*100, 3) + '%，最小 ρ<sub>sh,min</sub> = 0.20%（' + (rho_sh >= rho_sh_min ? '满足' : '不满足') + '）</div>');
 
-                var totalOk = flexOk && shearOk;
-                st.push('<div class="step"><b>⑥ 结论</b>　正截面受弯 ' + (flexOk ? '满足' : '不满足') + '；斜截面受剪 ' + (shearOk ? '满足' : '不满足') + '。</div>');
+                var horizontalRebarOk = rho_sh >= rho_sh_min;
+                var totalOk = flexOk && shearOk && horizontalRebarOk;
+                st.push('<div class="step"><b>⑥ 结论</b>　正截面受弯 ' + (flexOk ? '满足' : '不满足') + '。斜截面受剪 ' + (shearOk ? '满足' : '不满足') + '。水平分布筋配筋率 ' + (horizontalRebarOk ? '满足' : '不满足') + '。</div>');
 
                 var html = resultRow('跨高比 l<sub>0</sub>/h', fmt(l0_h, 3) + '（' + (l0_h <= 2 ? '深梁' : l0_h <= 5 ? '短梁' : '普通梁') + '）');
                 html += resultRow('内力臂系数 α<sub>d</sub>', fmt(alpha_d, 3));
@@ -154,7 +155,7 @@
                 html += resultRow('截面限制 V<sub>max</sub>', fmt(Vmax, 1) + ' kN（0.15f<sub>c</sub>bh<sub>0</sub>）');
                 html += resultRow('斜截面判定', badge(shearOk ? 'badge-ok' : 'badge-err', shearOk ? '受剪承载力满足' : '受剪承载力不足'));
                 html += resultRow('水平分布筋配筋率', fmt(rho_sh*100, 3) + '%（最小 0.2%）' + badge(rho_sh >= rho_sh_min ? 'badge-ok' : 'badge-warn', rho_sh >= rho_sh_min ? '满足' : '配筋不足'));
-                html += resultRow('总体判定', badge(totalOk ? 'badge-ok' : 'badge-err', totalOk ? '深梁正斜截面均满足' : '不满足，需调整'));
+                html += resultRow('总体判定', badge(totalOk ? 'badge-ok' : 'badge-err', totalOk ? '受弯、受剪及水平分布筋配筋率满足' : '本模块已验算项目存在不满足项'));
                 out.innerHTML = html;
                 proc.innerHTML = (function () {
                     var reportSteps = [];

@@ -50,6 +50,7 @@
         },
         bind: function () {
             function calc() {
+                window._AN_RESULT = null;
                 var out = document.getElementById('an_result'), proc = document.getElementById('an_proc');
                 function err(m) { out.innerHTML = '<div class="error-box">' + m + '</div>'; proc.innerHTML = ''; return; }
                 var w0 = parseFloat(document.getElementById('an_w0').value);
@@ -217,13 +218,17 @@
                 st.push('　　⑧ 单块板面积 ' + fmt(Apanel, 3) + ' m²，每块锚固件 ' + fmt(nPanel, 0) + ' 个' + (reqN > 0 ? ' ≥ ' + reqN + ' 个（5.5.13-3 边缘小板）：' + (ckSmall ? '满足' : '不满足') : '（≥1.0m² 按密度控制）：满足') + '<br>');
                 st.push('　　⑨ 墙边缘板面积 ' + fmt(Apanel, 3) + ' m² ≥ 0.3 且短边 ' + fmt(shortSide, 0) + ' mm ≥ 150（5.5.14）：' + (ckEdge ? '满足' : '不满足') + '</div>');
 
-                var deformationPending = true; /* 产品刚度试验数据未输入，不能判定变形满足 */
-                var allOk = !deformationPending && okT && okC && okD && okP && okTe && okCe && okDe && okPe && ckD && ckD8 && ckT && ckTT && ckN && ckL && ckS && ckE && ckSmall && ckEdge;
+                var strengthOk = okT && okC && okD && okP && okTe && okCe && okDe && okPe;
+                var detailingOk = ckD && ckD8 && ckT && ckTT && ckN && ckL && ckS && ckE && ckSmall && ckEdge;
+                var checkedOk = strengthOk && detailingOk;
+                var summary = checkedOk ? '已计算的承载力和构造项目未见不满足项。' :
+                    '存在不满足项：' + (!strengthOk && !detailingOk ? '承载力、构造' : !strengthOk ? '承载力' : '构造') + '。';
+                summary += '缺少产品刚度试验数据，变形未验算。';
+                if (!seisOn) summary += '地震工况未验算。';
 
                 var html = '<table class="result-table"><tbody>';
                 function resultRow(k, v) { return '<tr><td>' + k + '</td><td>' + v + '</td></tr>'; }
                 function tag(ok, txt) { return ok ? '<span class="tag-ok">' + txt + '</span>' : '<span class="tag-err">' + txt + '</span>'; }
-                function badge(ok, txt) { return '<span class="badge ' + (ok ? 'badge-ok' : 'badge-err') + '">' + txt + '</span>'; }
                 html += resultRow('风荷载标准值 w<sub>k</sub>', fmt(wk, 3) + ' kN/m²');
                 html += resultRow('重力荷载 G<sub>k</sub>（保温层+抹面层）', fmt(G_insul, 3) + ' + ' + fmt(G_face, 3) + ' = ' + fmt(Gk, 3) + ' kN/m²');
                 html += resultRow('单个锚固件承担面积 A<sub>1</sub>', fmt(A1, 3) + ' m²（单块 ' + fmt(Apanel, 3) + 'm² / ' + fmt(nPanel, 0) + ' 个；派生密度 ' + fmt(n, 2) + ' 个/m²）');
@@ -244,7 +249,7 @@
                 html += resultRow('构造检查 ⑦距板边缘', fmt(ep, 0) + ' mm ∈ [120,250] ' + (ckE ? tag(true, '满足') : tag(false, '不满足')));
                 html += resultRow('构造检查 ⑧边缘小板数量', '单块 ' + fmt(Apanel, 3) + 'm²，' + fmt(nPanel, 0) + ' 个/块 ' + (ckSmall ? tag(true, '满足') : tag(false, '不满足')));
                 html += resultRow('构造检查 ⑨墙边缘板幅', fmt(Apanel, 3) + 'm²≥0.3 且短边 ' + fmt(shortSide, 0) + 'mm≥150 ' + (ckEdge ? tag(true, '满足') : tag(false, '不满足')));
-                html += resultRow('综合判定', allOk ? badge(true, '已计算项目均满足') : badge(false, deformationPending ? '已验算项目均满足；变形验算待核验' : '存在不满足项，请调整锚固件规格、布置或保温板厚度'));
+                html += resultRow('综合判定', badge(checkedOk ? 'badge-warn' : 'badge-err', summary));
                 html += '</tbody></table>';
                 out.innerHTML = html;
                 proc.innerHTML = st.join('');
@@ -263,7 +268,7 @@
                     bp: bp, hp: hp, sp: sp, ep: ep, Apanel: Apanel, shortSide: shortSide, reqN: reqN,
                     ckS: ckS, ckE: ckE, ckSmall: ckSmall, ckEdge: ckEdge,
                     okT: okT, okC: okC, okD: okD, okP: okP, okTe: okTe, okCe: okCe, okDe: okDe, okPe: okPe,
-                    allOk: allOk, steps: st.join('')
+                    allOk: false, summary: summary, steps: st.join('')
                 };
             }
             function reset() {

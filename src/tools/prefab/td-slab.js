@@ -163,11 +163,11 @@
 
     var tool = {
         title: '钢筋桁架楼板选型',
-        sub: '22G522-1 钢筋桁架混凝土楼板 · 允许荷载值查表 · 自动推荐板型',
-        meta: {"standard": "22G522-1 + GB 55001-2021", "formulaSource": "—", "limitations": "钢筋桁架楼承板选型+施工阶段挠度+受弯+叠合面受剪", "unit": "M:kN·m/m, f:mm, τ:N/mm²", "version": "1.0.0"},
+        sub: '钢筋桁架混凝土楼板 · 按内置荷载参考限值初筛板型',
+        meta: {"standard": "22G522-1 + GB 55001-2021", "formulaSource": "—", "limitations": "三种荷载组合与内置参考限值比较。施工阶段挠度、受弯和叠合面受剪须按实际板型另行验算。", "unit": "荷载:kN/m², 跨度:m", "version": "1.0.0"},
         render: function () {
             var boardOpts = [
-                { v: 'auto', t: '自动推荐' },
+                { v: 'auto', t: '自动筛选候选板型' },
                 { v: 'HB1-70',  t: 'HB1-70  (h=100mm，桁架70)' },
                 { v: 'HB1-80',  t: 'HB1-80  (h=110mm，桁架80)' },
                 { v: 'HB1-90',  t: 'HB1-90  (h=120mm，桁架90)' },
@@ -212,6 +212,7 @@
         },
         bind: function () {
             function calc() {
+                window._TD_RESULT = null;
                 var out = document.getElementById('td_result');
                 var proc = document.getElementById('td_proc');
                 var support = document.getElementById('td_support').value;
@@ -229,8 +230,13 @@
                 var table = TD_TABLES[caseKey];
 
                 // 跨度范围检查
-                if (L < 2.4 || L > 4.0) {
+                if (!Number.isFinite(L) || L < 2.4 || L > 4.0) {
                     out.innerHTML = '<div class="warn-box">跨度超出 22G522-1 选用表范围（2.4 ~ 4.0 m）。</div>';
+                    proc.innerHTML = '';
+                    return;
+                }
+                if (![Gk, Qk, psiq].every(Number.isFinite) || Gk < 0 || Qk < 0 || psiq < 0 || psiq > 1) {
+                    out.innerHTML = '<div class="warn-box">荷载须为非负有限值，准永久值系数须在 0～1 之间。</div>';
                     proc.innerHTML = '';
                     return;
                 }
@@ -284,7 +290,7 @@
 
                 if (isAuto) {
                     selectedModel = recModel;
-                    st.push('<div class="step">板型选择：自动推荐模式</div>');
+                    st.push('<div class="step">板型选择：自动初筛</div>');
                 } else {
                     for (var j = 0; j < allModels.length; j++) {
                         if (allModels[j].model === boardSel) {
@@ -294,7 +300,7 @@
                     }
                     if (!selectedModel && table[boardSel]) {
                         // 板型存在但在此跨度下无数据
-                        out.innerHTML = '<div class="warn-box">所选板型 ' + boardSel + ' 在跨度 ' + fmt(L,2) + 'm 下无可用数据，请换选其他板型或使用自动推荐。</div>';
+                        out.innerHTML = '<div class="warn-box">所选板型 ' + boardSel + ' 在跨度 ' + fmt(L,2) + 'm 下无可用数据，请换选其他板型或使用自动初筛。</div>';
                         proc.innerHTML = st.join('');
                         var _p = proc.closest('.proc-wrap'); if (_p) _p.classList.add('open');
                         return;
@@ -305,11 +311,11 @@
                 if (!selectedModel) {
                     var html = '<div class="result-big fail">';
                     html += '<div class="big-label">选型结果</div>';
-                    html += '<div class="big-value fail-text">无满足要求的板型</div>';
-                    html += '<div class="big-sub">当前工况下 22G522-1 所有板型均不满足荷载要求，建议减小跨度或加厚楼板。</div>';
+                    html += '<div class="big-value fail-text">无候选板型</div>';
+                    html += '<div class="big-sub">在当前跨度及工况下，内置数据未筛出三种组合均未超限的板型。</div>';
                     html += '</div>';
                     out.innerHTML = html;
-                    st.push('<div class="step"><b>结论</b>：当前荷载及跨度条件下，22G522-1 范围内无满足要求的板型。</div>');
+                    st.push('<div class="step"><b>结论</b>　内置数据未筛出三种组合均未超限的板型。</div>');
                     proc.innerHTML = st.join('');
                     var _p = proc.closest('.proc-wrap'); if (_p) _p.classList.add('open');
                     window._TD_RESULT = null;
@@ -319,7 +325,7 @@
                 // 输出所选板型的允许值
                 var sv = selectedModel.interp.vals;
                 var boardData = table[selectedModel.model];
-                var dataTag = boardData && boardData.tag === 'est' ? '（估算值，仅供参考）' : '';
+                var dataTag = boardData.tag === 'est' ? '估算限值，仅供初筛' : '内置表值，须与图集原表复核';
                 var interpInfo = '';
                 if (selectedModel.interp.interp) {
                     interpInfo = '（线性插值：L=' + fmt(selectedModel.interp.L1,1) + 'm → ' + fmt(selectedModel.interp.L2,1) + 'm）';
@@ -334,31 +340,33 @@
                 var okQk = Qk_std <= sv[1];
                 var okQq = Qq <= sv[2];
                 var allOk = okQ && okQk && okQq;
+                var summary = allOk ? '三种组合均未超过内置参考限值。' : '至少一种组合超过内置参考限值。';
 
                 st.push('<div class="step"><b>四、验算判定</b></div>');
-                st.push('<div class="step">基本组合：' + fmt(Q,2) + ' ≤ ' + fmt(sv[0],2) + '  ' + (okQ ? '✓ 满足' : '✗ 不满足（超限 ' + fmt(Q - sv[0],2) + ' kN/m²）') + '</div>');
-                st.push('<div class="step">标准组合：' + fmt(Qk_std,2) + ' ≤ ' + fmt(sv[1],2) + '  ' + (okQk ? '✓ 满足' : '✗ 不满足（超限 ' + fmt(Qk_std - sv[1],2) + ' kN/m²）') + '</div>');
-                st.push('<div class="step">准永久组合：' + fmt(Qq,2) + ' ≤ ' + fmt(sv[2],2) + '  ' + (okQq ? '✓ 满足' : '✗ 不满足（超限 ' + fmt(Qq - sv[2],2) + ' kN/m²）') + '</div>');
+                [['基本组合', Q, okQ], ['标准组合', Qk_std, okQk], ['准永久组合', Qq, okQq]].forEach(function (row, index) {
+                    var limit = sv[index];
+                    st.push('<div class="step">' + row[0] + '　' + fmt(row[1], 2) + (row[2] ? ' ≤ ' : ' ＞ ') + fmt(limit, 2) + ' kN/m²，' + (row[2] ? '未超参考限值' : '超参考限值') + '。</div>');
+                });
 
                 var recInfo = '';
                 if (!isAuto && !allOk && recModel) {
-                    recInfo = '<div style="margin-top:10px;color:var(--ink-mute);">推荐板型：<b style="color:var(--primary);">' + recModel.model + '</b>（h = ' + recModel.h + ' mm）</div>';
+                    recInfo = '<div style="margin-top:10px;color:var(--ink-mute);">可复核的候选板型 <b>' + recModel.model + '</b>（h = ' + recModel.h + ' mm）</div>';
                 } else if (isAuto) {
-                    recInfo = '<div style="margin-top:10px;color:var(--ink-mute);">已自动选择满足要求的最薄板型</div>';
+                    recInfo = '<div style="margin-top:10px;color:var(--ink-mute);">按内置参考限值筛出的最薄候选板型</div>';
                 }
 
                 // 结果面板
                 var html = '';
-                html += '<div class="result-big ' + (allOk ? 'pass' : 'fail') + '">';
-                html += '<div class="big-label">' + (isAuto ? '推荐板型' : '选型结果') + '</div>';
+                html += '<div class="result-big' + (allOk ? '' : ' fail') + '">';
+                html += '<div class="big-label">' + (isAuto ? '候选板型' : '板型参考比较') + '</div>';
                 html += '<div class="big-value">' + selectedModel.model + ' <span style="font-size:0.5em;font-weight:400;color:var(--ink-mute);">h = ' + selectedModel.h + ' mm · 桁架 ' + boardData.truss + ' mm</span></div>';
                 if (dataTag) html += '<div style="margin-top:6px;font-size:0.85em;color:var(--lemon);">' + dataTag.replace('（','').replace('）','') + '</div>';
-                html += '<div class="big-sub">' + (allOk ? '三种组合均满足要求 ✓' : '存在不满足的组合 ✗') + '</div>';
+                html += '<div class="big-sub">' + summary + '</div>';
                 if (recInfo) html += recInfo;
                 html += '</div>';
 
                 html += '<div style="margin-top:16px;">';
-                html += '<div style="font-weight:600;margin-bottom:8px;color:var(--ink);">组合验算明细</div>';
+                html += '<div style="font-weight:600;margin-bottom:8px;color:var(--ink);">荷载组合比较</div>';
                 html += '<div class="table-wrap"><table class="mini">';
                 html += '<tr><th>组合类型</th><th>计算值 (kN/m²)</th><th>允许值 (kN/m²)</th><th>结果</th></tr>';
                 html += '<tr><td>基本组合 [Q]</td><td>' + fmt(Q,2) + '</td><td>' + fmt(sv[0],2) + '</td><td>' + (okQ ? '<span class="badge ok">满足</span>' : '<span class="badge bad">不满足</span>') + '</td></tr>';
@@ -370,7 +378,7 @@
                 html += '<button type="button" class="btn btn-secondary" id="td_export">导出计算书（Word）</button>';
                 html += '</div>';
 
-                st.push('<div class="step"><b>五、结论</b>：' + (allOk ? '板型 ' + selectedModel.model + ' 满足三种荷载组合要求。' : '板型 ' + selectedModel.model + ' 不满足要求，' + (recModel ? '建议选用 ' + recModel.model + ' 及以上板型。' : '无满足要求的板型。')) + '</div>');
+                st.push('<div class="step"><b>五、结论</b>　板型 ' + selectedModel.model + '。' + summary + dataTag + '。</div>');
                 st.push('<div class="step"><b>规范依据</b>：22G522-1《钢筋桁架混凝土楼板》第 9 条选用示例；GB 55001-2021《工程结构通用规范》第 4.2 节荷载组合；GB 50009-2012《建筑结构荷载规范》。</div>');
 
                 out.innerHTML = html;
@@ -382,7 +390,7 @@
                     support: supportText, stage: stageText, L: L, Gk: Gk, Qk: Qk, psiq: psiq,
                     Q: Q, Qk_std: Qk_std, Qq: Qq,
                     model: selectedModel.model, h: selectedModel.h, truss: boardData.truss,
-                    allow: sv, interpInfo: interpInfo, dataTag: dataTag,
+                    allow: sv, interpInfo: interpInfo, dataTag: dataTag, summary: summary,
                     okQ: okQ, okQk: okQk, okQq: okQq, allOk: allOk,
                     recModel: recModel ? recModel.model : '',
                     recH: recModel ? recModel.h : 0,
@@ -415,7 +423,7 @@
                 h += '<tr><td>永久荷载标准值 G<sub>k</sub>（不含自重）</td><td>' + fmt(r.Gk,2) + ' kN/m²</td></tr>';
                 h += '<tr><td>可变荷载标准值 Q<sub>k</sub></td><td>' + fmt(r.Qk,2) + ' kN/m²</td></tr>';
                 h += '<tr><td>准永久值系数 ψ<sub>q</sub></td><td>' + fmt(r.psiq,2) + '</td></tr>';
-                h += '<tr><td>选型模式</td><td>' + (r.isAuto ? '自动推荐' : '手动选择') + '</td></tr>';
+                h += '<tr><td>选型模式</td><td>' + (r.isAuto ? '自动初筛' : '手动比较') + '</td></tr>';
                 h += '</table>';
 
                 h += '<h2>二、荷载组合计算</h2>';
@@ -434,13 +442,9 @@
                 h += '</table>';
 
                 h += '<h2>四、结论</h2>';
-                if (r.allOk) {
-                    h += '<p>所选板型 <b>' + esc(r.model) + '</b>（h = ' + fmt(r.h,0) + ' mm）在三种荷载组合下均满足要求。</p>';
-                    if (r.isAuto) h += '<p>本结果为自动推荐的最薄板型。</p>';
-                } else {
-                    h += '<p>所选板型 ' + esc(r.model) + ' 不满足要求。</p>';
-                    if (r.recModel) h += '<p>建议选用 <b>' + esc(r.recModel) + '</b>（h = ' + fmt(r.recH,0) + ' mm）及以上板型。</p>';
-                }
+                h += '<p>板型 <b>' + esc(r.model) + '</b>。' + esc(r.summary) + esc(r.dataTag) + '。</p>';
+                if (r.isAuto) h += '<p>按内置参考限值筛出的最薄候选板型。</p>';
+                else if (!r.allOk && r.recModel) h += '<p>可复核的候选板型 <b>' + esc(r.recModel) + '</b>（h = ' + fmt(r.recH,0) + ' mm）。</p>';
 
                 h += '<h2>五、规范依据</h2>';
                 h += '<p>1. 22G522-1《钢筋桁架混凝土楼板》（替代 19G522-1）第 9 条选用示例</p>';
@@ -456,6 +460,7 @@
 
             document.getElementById('td_calc').addEventListener('click', calc);
             document.getElementById('td_reset').addEventListener('click', function () {
+                window._TD_RESULT = null;
                 document.getElementById('f-td').reset();
                 document.getElementById('td_L').value = 3.6;
                 document.getElementById('td_Gk').value = 2.0;

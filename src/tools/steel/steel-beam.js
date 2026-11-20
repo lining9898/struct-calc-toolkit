@@ -165,6 +165,7 @@
                 var steel = document.getElementById('sb_steel').value;
                 var gammaX = parseFloat(document.getElementById('sb_gamma').value);
                 var Lb = parseFloat(document.getElementById('sb_Lb').value);
+                if (!Number.isFinite(Lb) || Lb < 0) return err('受压翼缘自由长度须为非负有限数。');
                 var conc = parseFloat(document.getElementById('sb_conc').value);
                 if (spans.length < 2) return err('连续梁至少 2 跨。');
 
@@ -232,7 +233,8 @@
                 // 整体稳定（6.2.2）
                 var phiB = 1.0;
                 var stabOk = true;
-                var needStab = (conc < 1 && Lb > 0); // 无楼板约束且有自由长度
+                var needStab = conc < 1 && Lb > 0;
+                var stabilityNote = conc >= 1 ? '按受压翼缘有可靠侧向约束的假定，未单独计算整体稳定。' : '自由长度取 0，整体稳定未验算。';
                 if (needStab) {
                     // 整体稳定系数 φ_b 近似公式（均布荷载，简支，受压翼缘自由扭转）
                     var lambda_y = Lb * 1000 / Math.sqrt(sec.Iy / sec.A);
@@ -260,10 +262,10 @@
                     stabOk = sigma_stab <= f;
                     st.push('<div class="step"><b>⑤ 整体稳定（6.2.2，近似估算）</b>　受压翼缘自由长度 l<sub>1</sub> = ' + Lb + ' m；λ<sub>y</sub> = ' + fmt(lambda_y,1) + '；φ<sub>b</sub> ≈ ' + fmt(phiB,3) + '</div>');
                     st.push('<div class="step">　　σ = M<sub>max</sub>/(φ<sub>b</sub>·W<sub>x</sub>) = ' + fmt(sigma_stab,1) + ' MPa ≤ f = ' + f + ' MPa ⇒ ' +
-                        (stabOk ? '满足' + tag('ok','整体稳定') : '不满足' + tag('err','整体失稳')) + '</div>');
+                        (stabOk ? '估算值未超过限值' : '估算值超过限值') + '</div>');
                     st.push('<div class="step">　　<span style="font-size:12px;color:var(--muted);">注：φ<sub>b</sub> 为简化估算值，精确值请根据荷载类型、截面类型、侧向支承条件按规范附录 B 计算。</span></div>');
                 } else {
-                    st.push('<div class="step"><b>⑤ 整体稳定</b>　有现浇楼板约束受压翼缘 / 未输入自由长度 ⇒ 不需要验算整体稳定（φ<sub>b</sub> = 1.0）' + tag('ok','无需验算') + '</div>');
+                    st.push('<div class="step"><b>⑤ 整体稳定</b>　' + stabilityNote + '</div>');
                 }
 
                 // 局部承压（有集中荷载处）
@@ -304,10 +306,12 @@
                 html += resultRow('最大剪力 V<sub>max</sub>', fmt(Vmax_abs, 1) + ' kN');
                 html += resultRow('抗弯强度 σ / f', fmt(sigma_bend,1) + ' / ' + f + ' MPa ' + (bendOk ? tag('ok','满足') : tag('err','不足')));
                 html += resultRow('抗剪强度 τ / f<sub>v</sub>', fmt(tau,1) + ' / ' + fv + ' MPa ' + (shearOk ? tag('ok','满足') : tag('err','不足')));
-                html += resultRow('整体稳定 φ<sub>b</sub>', needStab ? (fmt(phiB,3) + ' ' + (stabOk ? tag('ok','满足') : tag('err','不足'))) : tag('ok','无需验算'));
+                html += resultRow('整体稳定 φ<sub>b</sub>', needStab ? (fmt(phiB,3) + ' ' + (stabOk ? tag('warn','估算未超限') : tag('err','估算超限'))) : stabilityNote);
                 if (Pmax > 0) html += resultRow('局部承压', (localOk ? tag('ok','满足') : tag('err','不足')));
                 html += resultRow('挠度 f / [v]', fmt(defl_mm,2) + ' / ' + fmt(lim1,2) + ' mm（l/250）' + (deflOk ? tag('ok','满足') : tag('err','超限')));
-                html += resultRow('综合判定', badge(allOk ? 'badge-ok' : 'badge-err', allOk ? '钢梁各项验算均满足' : '钢梁验算存在不满足项'));
+                var summary = allOk ? '已计算项目未见超限。' : '已计算项目存在超限。';
+                summary += needStab ? '整体稳定及挠度采用近似计算。' : stabilityNote + '挠度采用近似计算。';
+                html += resultRow('综合判定', badge(allOk ? 'badge-warn' : 'badge-err', summary));
                 out.innerHTML = html;
                 proc.innerHTML = st.join('');
                 var _p = proc ? proc.closest('.proc-wrap') : document.querySelector('#view .proc-wrap'); if (_p) _p.classList.add('open');

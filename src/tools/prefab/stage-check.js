@@ -133,6 +133,7 @@
             var f = document.getElementById('f-sc');
             function err(m) { out.innerHTML = '<div class="error-box">' + m + '</div>'; proc.innerHTML = ''; }
             function calc() {
+                window._SC_RESULT = null;
                 console.log('[stage-check] calc 开始');
                 var kind = document.getElementById('sc_kind').value;
                 var slabMode = document.getElementById('sc_slab_mode').value;
@@ -282,6 +283,7 @@
                 var x = fy * As / (alpha1 * fc * b);
                 var xb = xi_b * h0;
                 var over = x > xb;
+                if (support !== 'y' && over) return err('施工阶段预制截面超筋，请调整截面或配筋后重算。');
                 var Mu1 = over ? alpha1 * fc * b * xb * (h0 - xb / 2) / 1e6 : fy * As * (h0 - x / 2) / 1e6;
                 var capOk = M1 <= Mu1;
                 // 钢筋应力
@@ -308,6 +310,7 @@
                 var x2 = fy * As / (alpha1_2 * fc2 * b);
                 var xb2 = xi_b2 * h0all;
                 var over2 = x2 > xb2;
+                if (support !== 'y' && over2) return err('使用阶段叠合截面超筋，请调整截面或配筋后重算。');
                 var Mu2 = over2 ? alpha1_2 * fc2 * b * xb2 * (h0all - xb2 / 2) / 1e6 : fy * As * (h0all - x2 / 2) / 1e6;
                 var cap2Ok = M2 <= Mu2;
                 // 准永久组合：可变荷载仅取使用活载 q2k（施工活载为短期荷载，不计入准永久组合，GB 50009 第 3.1.6 条 + H.0.7 条）
@@ -338,6 +341,7 @@
                     var xs = fy * As / (alpha1_2 * fc2 * b);
                     var xbs = xi_bS * h0allS;
                     var overS = xs > xbs;
+                    if (overS) return err('有支撑工况下整体截面超筋，请调整截面或配筋后重算。');
                     var MuS = overS ? alpha1_2 * fc2 * b * xbs * (h0allS - xbs / 2) / 1e6 : fy * As * (h0allS - xs / 2) / 1e6;
                     var capSOk = Ms <= MuS;
                     var MsK = MsGk + MsQk;
@@ -377,7 +381,7 @@
                     htmlS += resultRow('钢筋应力 σ<sub>sk</sub>', fmt(sigSk, 2) + ' N/mm²' + '<span class="hint">≤ 0.9f<sub>y</sub>=' + fmt(0.9 * fy, 2) + '</span>' + badge(sigSOk ? 'ok' : 'err', sigSOk ? '满足' : '超限'));
                     htmlS += resultRow('叠合面剪应力 V/(bh<sub>0</sub>)', fmt(tauS, 3) + ' N/mm²' + '<span class="hint">≤ 0.40</span>' + badge(faceSOk ? 'ok' : 'err', faceSOk ? '满足' : '超限'));
                     htmlS += resultRow('斜截面受剪 V', fmt(Vs, 3) + ' kN' + '<span class="hint">≤ ' + fmt(vcS, 3) + '</span>' + badge(shearSOk ? 'ok' : 'err', shearSOk ? '满足' : '超限'));
-                    htmlS += resultRow('综合判定', badge(allSOk ? 'ok' : 'err', allSOk ? '有支撑整体验算满足' : '存在不满足项'));
+                    htmlS += resultRow('综合判定', badge(allSOk ? 'ok' : 'err', allSOk ? '整体截面已计算项目满足。临时支撑、裂缝宽度和挠度另验。' : '存在不满足项'));
                     var warnHtmlS = '';
                     if (p.qkWarn) warnHtmlS += '<div class="warn-box">⚠ 施工活荷载标准值 q<sub>k</sub> = ' + fmt(p.qk, 2) + ' kN/m²，低于 GB 50666-2011 第 9.2.3 条第 5 款规定的不宜小于 1.5 kN/m² 的要求。</div>';
                     out.innerHTML = warnHtmlS + htmlS;
@@ -422,7 +426,7 @@
                     'C' + p.d + '@' + p.sVal + '：' + fmt(p.a1, 1) + ' × ' + fmt(1000 / p.sVal, 2) + ' 根/m</span>';
                 window._SC_RESULT = r;
                 var statusCls = r.allOk ? 'ok' : 'err';
-                var statusTxt = r.allOk ? '施工阶段验算全部满足' : '存在不满足项';
+                var statusTxt = r.allOk ? '施工和使用阶段已计算项目满足。裂缝宽度和挠度另验。' : '存在不满足项';
                 var warnHtml = '';
                 if (p.qkWarn) warnHtml += '<div class="warn-box">⚠ 施工活荷载标准值 q<sub>k</sub> = ' + fmt(p.qk, 2) + ' kN/m²，低于 GB 50666-2011 第 9.2.3 条第 5 款规定的不宜小于 1.5 kN/m² 的要求。</div>';
                 var html = '';
@@ -565,6 +569,7 @@
                 var x1 = fy * As / (alpha1 * fc * b);
                 var xb1 = xi_b * h01;
                 var over1 = x1 > xb1;
+                if (support !== 'y' && over1) return err('施工阶段预制截面超筋，请调整截面或配筋后重算。');
                 var Mu1 = over1 ? alpha1 * fc * b * xb1 * (h01 - xb1/2) / 1e6 : fy * As * (h01 - x1/2) / 1e6;
                 var cap1Ok = M1 <= Mu1;
                 // 钢筋应力（施工阶段）
@@ -617,6 +622,7 @@
                     var x2y = fy * As / (alpha1_2 * fc2 * b);
                     var xb2y = xi_b2 * h0y_a;
                     var over2y = x2y > xb2y;
+                    if (support !== 'y' && (over2x || over2y)) return err('使用阶段叠合截面至少一个方向超筋，请调整截面或配筋后重算。');
                     Mu2y = over2y ? alpha1_2 * fc2 * b * xb2y * (h0y_a - xb2y/2) / 1e6 : fy * As * (h0y_a - x2y/2) / 1e6;
                     cap2yOk = M2y <= Mu2y;
                     // 支座负弯矩（板顶，负弯矩区段受压区在板底，混凝土强度按预制构件？
@@ -645,6 +651,7 @@
                     var x2 = fy * As / (alpha1_2 * fc2 * b);
                     var xb2 = xi_b2 * h02;
                     var over2 = x2 > xb2;
+                    if (support !== 'y' && over2) return err('使用阶段叠合截面超筋，请调整截面或配筋后重算。');
                     Mu2 = over2 ? alpha1_2 * fc2 * b * xb2 * (h02 - xb2/2) / 1e6 : fy * As * (h02 - x2/2) / 1e6;
                     cap2Ok = M2 <= Mu2;
                     tau2 = V2 * 1000 / (b * h02);
@@ -688,6 +695,7 @@
                         var xsy = fy * As / (alpha1_2 * fc2 * b);
                         var xbsy = xi_b2 * h0y_a;
                         var oversy = xsy > xbsy;
+                        if (oversx || oversy) return err('有支撑工况下整体截面至少一个方向超筋，请调整截面或配筋后重算。');
                         Mu_sup_y = oversy ? alpha1_2 * fc2 * b * xbsy * (h0y_a - xbsy/2) / 1e6 : fy * As * (h0y_a - xsy/2) / 1e6;
                         cap_sup_y = M_sup_y <= Mu_sup_y;
                         // 剪力（短跨近似）
@@ -703,6 +711,7 @@
                         var xs1 = fy * As / (alpha1_2 * fc2 * b);
                         var xbs1 = xi_b2 * h0all_sup;
                         var over1s = xs1 > xbs1;
+                        if (over1s) return err('有支撑工况下整体截面超筋，请调整截面或配筋后重算。');
                         Mu_sup = over1s ? alpha1_2 * fc2 * b * xbs1 * (h0all_sup - xbs1/2) / 1e6 : fy * As * (h0all_sup - xs1/2) / 1e6;
                         cap_sup = M_sup <= Mu_sup;
                         tau_sup = V_sup * 1000 / (b * h0all_sup);
@@ -722,7 +731,7 @@
                     var html = '';
                     html += resultRow('叠合板宽度 B', fmt(b, 0) + ' mm');
                     var statusCls = allSupOk ? 'ok' : 'err';
-                    var statusTxt = allSupOk ? '整体验算全部满足' : '存在不满足项';
+                    var statusTxt = allSupOk ? '整体截面已计算项目满足。临时支撑、裂缝宽度和挠度另验。' : '存在不满足项';
                     html += '<div class="warn-box">ℹ 有可靠支撑，按 GB/T 50010-2010（2024年版） 第 9.5.1 条按整体受弯构件设计；施工阶段荷载由临时支撑承担，不进行第一阶段预制构件承载力验算与钢筋应力超前验算；斜截面受剪与叠合面受剪仍按附录 H 验算。</div>';
 
                     if (stage2IsTwoway) {
@@ -814,7 +823,7 @@ h0x_a: h0x_a, h0y_a: h0y_a, ftLow: ftLow,
                 var html = '';
                 html += resultRow('叠合板宽度 B', fmt(b, 0) + ' mm');
                 var statusCls = allOk ? 'ok' : 'err';
-                var statusTxt = allOk ? '两阶段验算全部满足' : '存在不满足项';
+                var statusTxt = allOk ? '两阶段已计算项目满足。裂缝宽度和挠度另验。' : '存在不满足项';
 
                 // 警告
                 if (isOnewayHint) {

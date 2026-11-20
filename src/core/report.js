@@ -714,7 +714,7 @@ function buildAnchorBook(r, t) {
     }
     resRows += rrow('变形验算限值 L/100', fmt(r.L100, 2) + ' mm（标准组合内力 N<sub>k</sub> = ' + fmt(r.deflN, 3) + ' kN）');
     resRows += rrow('构造检查', '锚杆直径 ' + (r.ckD && r.ckD8 ? '满足' : '不满足') + '；尾盘直径 ' + (r.ckT ? '满足' : '不满足') + '；尾盘厚度 ' + (r.ckTT ? '满足' : '不满足') + '；数量 ' + (r.ckN ? '满足' : '不满足') + '；锚固长度 ' + (r.ckL ? '满足' : '不满足') + '；间距 ' + (r.ckS ? '满足' : '不满足') + '；边距 ' + (r.ckE ? '满足' : '不满足') + '；边缘小板 ' + (r.ckSmall ? '满足' : '不满足') + '；墙边缘板幅 ' + (r.ckEdge ? '满足' : '不满足'));
-    resRows += rrow('综合判定', r.allOk ? '满足' : '存在不满足项');
+    resRows += rrow('综合判定', esc(r.summary));
     var calcProc = r.steps || '';
     var now = new Date();
     var dateStr = now.getFullYear() + '-' + ('0' + (now.getMonth() + 1)).slice(-2) + '-' + ('0' + now.getDate()).slice(-2);
@@ -861,16 +861,26 @@ function exportBook() {
         downloadDoc(kn + '短暂工况验算书.doc', buildPrecastBook(r, t));
         return;
     }
-     if (CUR_TOOL === 'stage-check' && window._SC_RESULT && typeof window.buildStageBook === 'function') {
-         downloadDoc((window._SC_RESULT.kind === 'slab' ? '叠合板' : '叠合梁') + '施工阶段与使用阶段验算书.doc', buildStageBook(window._SC_RESULT, t));
-         return;
+     if (CUR_TOOL === 'stage-check') {
+         if (!window._SC_RESULT) { alert('请先按当前参数重新计算，再导出计算书。'); return; }
+         if (typeof window.buildStageBook === 'function') {
+             downloadDoc((window._SC_RESULT.kind === 'slab' ? '叠合板' : '叠合梁') + '施工阶段与使用阶段验算书.doc', buildStageBook(window._SC_RESULT, t));
+             return;
+         }
      }
      if (CUR_TOOL === 'aac-wall' && window._AW_RESULT) {
          downloadDoc('蒸压加气混凝土外墙板计算书.doc', buildAacWallBook(window._AW_RESULT, t));
          return;
      }
-     if (CUR_TOOL === 'anchor' && window._AN_RESULT) {
+     if (CUR_TOOL === 'anchor') {
+         if (!window._AN_RESULT) { alert('请先按当前参数重新计算，再导出计算书。'); return; }
          downloadDoc('保温外墙锚固件设计计算书.doc', buildAnchorBook(window._AN_RESULT, t));
+         return;
+     }
+     if (CUR_TOOL === 'td-slab') {
+         var tdExport = document.getElementById('td_export');
+         if (!tdExport || !window._TD_RESULT) { alert('请先完成板型比较，再导出计算书。'); return; }
+         tdExport.click();
          return;
      }
      if (CUR_TOOL === 'l22zg401') {

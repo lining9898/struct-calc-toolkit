@@ -149,10 +149,10 @@
                 // 受弯配筋（单筋矩形）
                 var a1fc = alpha1 * fc;
                 var alpha_s = M_ctrl * 1e6 / (a1fc * b * h0 * h0);
+                if (!(h0 > 0 && alpha_s >= 0 && alpha_s < 0.5)) return err('当前截面与弯矩超出单筋反算范围，无法判定配筋和裂缝。');
                 var ksi = 1 - Math.sqrt(1 - 2 * alpha_s);
                 var x = ksi * h0;
                 var As_req = a1fc * b * x / fy; // mm²/m
-                if (isNaN(As_req) || As_req < 0) As_req = 0;
                 var rho_min = rhoMinFlex(ft, fy).rho;
                 var As_min = rho_min * b * h;
                 var useAs = Math.max(As_req, As_min);
@@ -185,7 +185,7 @@
                 html += resultRow('最大正弯矩 M<sub>max</sub>', fmt(M_inner_max, 2) + ' kN·m/m');
                 html += resultRow('所需受拉钢筋 A<sub>s</sub>', fmt(useAs, 0) + ' mm²/m（ρ = ' + fmt(rho*100, 3) + '%）');
                 html += resultRow('裂缝宽度 w<sub>max</sub>', fmt(w_max, 3) + ' / ' + w_lim + ' mm ' + (crackOk ? tag('ok','满足') : tag('err','超限')));
-                html += resultRow('综合判定', badge(crackOk ? 'badge-ok' : 'badge-err', crackOk ? '池壁配筋与裂缝均满足' : '池壁验算不满足'));
+                html += resultRow('裂缝计算结论', badge(crackOk ? 'badge-ok' : 'badge-err', crackOk ? '按所需钢筋面积计算，池壁裂缝宽度未超限。实际配筋须复核。' : '按所需钢筋面积计算，池壁裂缝宽度超限。'));
                 out.innerHTML = html;
                 proc.innerHTML = st.join('');
                 var _p = proc ? proc.closest('.proc-wrap') : document.querySelector('#view .proc-wrap'); if (_p) _p.classList.add('open');
